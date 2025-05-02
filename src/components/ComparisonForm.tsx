@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Edit } from "lucide-react";
 import ProductModal from "./ProductModal";
 import PriceTable from "./PriceTable";
+import BestPricesByStore from "./BestPricesByStore";
 import { ComparisonData, Product, ProductFormData, Store } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 
@@ -286,7 +286,10 @@ const ComparisonForm: React.FC = () => {
       </div>
 
       {comparisonData.products.length > 0 && (
-        <PriceTable comparisonData={comparisonData} />
+        <>
+          <BestPricesByStore comparisonData={comparisonData} />
+          <PriceTable comparisonData={comparisonData} />
+        </>
       )}
     </div>
   );
