@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for our price comparison app
+				'app-green': '#38A169',
+				'app-blue': '#3182CE',
+				'app-gray': '#F7FAFC',
+				'app-dark': '#2D3748',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
