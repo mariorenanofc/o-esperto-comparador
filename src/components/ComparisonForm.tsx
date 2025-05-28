@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,8 +9,12 @@ import PriceTable from "./PriceTable";
 import BestPricesByStore from "./BestPricesByStore";
 import { ComparisonData, Product, ProductFormData, Store } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
+import { useUser } from "@clerk/clerk-react";
+
+const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
 const ComparisonForm: React.FC = () => {
+  const { isSignedIn } = useUser();
   const [comparisonData, setComparisonData] = useState<ComparisonData>({
     products: [],
     stores: [],
@@ -19,7 +24,36 @@ const ComparisonForm: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<ProductFormData | undefined>(undefined);
   const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null);
 
+  // Carregar do localStorage ao montar
+  useEffect(() => {
+    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        // Ajustar datas
+        if (parsed.date) parsed.date = new Date(parsed.date);
+        setComparisonData(parsed);
+      } catch (e) {
+        // Se erro, ignora.
+      }
+    }
+  }, []);
+
+  // Salvar no localStorage ao mudar
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(comparisonData));
+  }, [comparisonData]);
+
   const handleAddStore = () => {
+    // Limite: 2 para não logado, ilimitado para logado
+    if (!isSignedIn && comparisonData.stores.length >= 2) {
+      toast({
+        title: "Faça login para adicionar mais mercados",
+        description: "Cadastre-se ou entre para poder comparar mais mercados!",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!storeName.trim()) {
       toast({
         title: "Erro",
@@ -28,12 +62,10 @@ const ComparisonForm: React.FC = () => {
       });
       return;
     }
-
     const newStore: Store = {
       id: `store-${Date.now()}`,
       name: storeName.trim(),
     };
-
     setComparisonData({
       ...comparisonData,
       stores: [...comparisonData.stores, newStore],
@@ -46,14 +78,12 @@ const ComparisonForm: React.FC = () => {
     const updatedStores = comparisonData.stores.filter(
       (store) => store.id !== storeId
     );
-
     // Remove this store's prices from all products
     const updatedProducts = comparisonData.products.map((product) => {
       const updatedPrices = { ...product.prices };
       delete updatedPrices[storeId];
       return { ...product, prices: updatedPrices };
     });
-
     setComparisonData({
       ...comparisonData,
       stores: updatedStores,
@@ -62,6 +92,15 @@ const ComparisonForm: React.FC = () => {
   };
 
   const handleOpenProductModal = () => {
+    // Limite: 5 produtos para não logado
+    if (!isSignedIn && comparisonData.products.length >= 5) {
+      toast({
+        title: "Faça login para adicionar mais produtos",
+        description: "Cadastre-se ou entre para poder adicionar quantos produtos quiser!",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingProduct(undefined);
     setEditingProductIndex(null);
     setIsProductModalOpen(true);
@@ -98,6 +137,15 @@ const ComparisonForm: React.FC = () => {
         description: `${newProduct.name} foi atualizado com sucesso.`,
       });
     } else {
+      // Limite reaplicado do lado da modal (caso algo estranho aconteça)
+      if (!isSignedIn && comparisonData.products.length >= 5) {
+        toast({
+          title: "Faça login para adicionar mais produtos",
+          description: "Cadastre-se ou entre para poder adicionar quantos produtos quiser!",
+          variant: "destructive",
+        });
+        return;
+      }
       // Add new product
       setComparisonData({
         ...comparisonData,
@@ -125,17 +173,13 @@ const ComparisonForm: React.FC = () => {
   };
 
   const saveComparisonData = () => {
-    // Here we could save the data to localStorage, database, etc.
-    // For now, let's just show a success toast
     const currentDate = new Date();
     const updatedComparisonData = {
       ...comparisonData,
       date: currentDate,
     };
-    
-    // In a real app, you would save this data to a database or localStorage
     console.log("Saving comparison data:", updatedComparisonData);
-    
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedComparisonData));
     toast({
       title: "Comparação salva",
       description: `Sua comparação de preços foi salva com sucesso.`,

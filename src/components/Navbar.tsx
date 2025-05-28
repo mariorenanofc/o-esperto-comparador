@@ -27,9 +27,11 @@ const Navbar: React.FC = () => {
           <Link to="/comparison" className="text-app-dark hover:text-app-green transition-colors">
             Comparar Preços
           </Link>
-          <Link to="/reports" className="text-app-dark hover:text-app-green transition-colors">
-            Relatórios
-          </Link>
+          <SignedIn>
+            <Link to="/reports" className="text-app-dark hover:text-app-green transition-colors">
+              Relatórios
+            </Link>
+          </SignedIn>
           <Link to="/contribute" className="text-app-dark hover:text-app-green transition-colors">
             Contribuir
           </Link>
@@ -39,7 +41,7 @@ const Navbar: React.FC = () => {
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
           <SignedOut>
-            <SignInButton mode="modal" afterSignInUrl={window.location.pathname}>
+            <SignInButton mode="modal">
               <Button className="bg-app-green hover:bg-green-600 text-white">
                 Login / Cadastro
               </Button>
