@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <span className="text-app-green font-bold text-2xl">
-            O Esperto Comparador
+            Comparador Online
           </span>
         </Link>
         <div className="hidden md:flex space-x-6">

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ComparisonData, Store } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +9,16 @@ interface PriceTableProps {
 const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   const { products, stores } = comparisonData;
 
-  // Calculate the total cost for each store
+  // Calcular o custo total de cada mercado agora corretamente multiplicando preço x quantidade
   const calculateTotalByStore = () => {
     const totals: { [storeId: string]: number } = {};
 
     stores.forEach((store) => {
       let storeTotal = 0;
       products.forEach((product) => {
-        if (product.prices[store.id]) {
-          storeTotal += product.prices[store.id];
+        const price = product.prices[store.id];
+        if (price) {
+          storeTotal += price * product.quantity;
         }
       });
       totals[store.id] = storeTotal;
@@ -27,7 +27,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     return totals;
   };
 
-  // Find the best price for each product
+  // Encontrar o melhor preço para cada produto (menor preço * quantidade)
   const findBestPriceStore = (productIndex: number) => {
     const product = products[productIndex];
     let bestPrice = Infinity;
@@ -35,7 +35,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
 
     stores.forEach((store) => {
       if (
-        product.prices[store.id] && 
+        product.prices[store.id] &&
         product.prices[store.id] < bestPrice
       ) {
         bestPrice = product.prices[store.id];
@@ -46,7 +46,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     return bestStoreId;
   };
 
-  // Calculate how much you'd save by buying each product at its best price
+  // Calcular o quanto economizaria comprando cada produto onde está mais barato, usando quantidade
   const calculateOptimalSavings = () => {
     let optimalTotal = 0;
     let highestTotal = 0;
@@ -54,11 +54,11 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     products.forEach((product, index) => {
       const bestStoreId = findBestPriceStore(index);
       if (bestStoreId) {
-        optimalTotal += product.prices[bestStoreId];
+        optimalTotal += product.prices[bestStoreId] * product.quantity;
       }
     });
 
-    // Find highest total among all stores
+    // Encontrar o maior total entre todos mercados para mostrar economia possível
     const totalsByStore = calculateTotalByStore();
     highestTotal = Math.max(...Object.values(totalsByStore));
 
@@ -157,7 +157,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
                       >
                         {product.prices[store.id] ? (
                           <span className={isLowestPrice ? "font-semibold text-app-green" : ""}>
-                            R$ {product.prices[store.id].toFixed(2)}
+                            R$ {(product.prices[store.id] * product.quantity).toFixed(2)}
                           </span>
                         ) : (
                           <span className="text-gray-400">N/A</span>
