@@ -2,14 +2,13 @@ import React from "react";
 import { ComparisonData, Store } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface PriceTableProps {
-  comparisonData: ComparisonData;
-}
+import PriceTableResultCards from "./PriceTableResultCards";
+import ProductPriceTable from "./ProductPriceTable";
 
 const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   const { products, stores } = comparisonData;
 
-  // Calcular o custo total de cada mercado agora corretamente multiplicando preço x quantidade
+  // Calcular o custo total de cada mercado corretamente multiplicando preço x quantidade (exclui produtos sem preço em cada mercado)
   const calculateTotalByStore = () => {
     const totals: { [storeId: string]: number } = {};
 
@@ -17,7 +16,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
       let storeTotal = 0;
       products.forEach((product) => {
         const price = product.prices[store.id];
-        if (price) {
+        if (typeof price === "number") {
           storeTotal += price * product.quantity;
         }
       });
@@ -27,34 +26,37 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     return totals;
   };
 
-  // Encontrar o melhor preço para cada produto (menor preço * quantidade)
-  const findBestPriceStore = (productIndex: number) => {
+  // Encontra o mercado de menor preço para o produto; se não houver preço válido (todos undefined/null) retorna null
+  const findBestPriceStore = (productIndex: number): string | null => {
     const product = products[productIndex];
     let bestPrice = Infinity;
-    let bestStoreId = null;
+    let bestStoreId: string | null = null;
 
     stores.forEach((store) => {
-      if (
-        product.prices[store.id] &&
-        product.prices[store.id] < bestPrice
-      ) {
-        bestPrice = product.prices[store.id];
+      const price = product.prices[store.id];
+      if (typeof price === "number" && price < bestPrice) {
+        bestPrice = price;
         bestStoreId = store.id;
       }
     });
 
+    // Se bestStoreId continuar null, é porque o produto não possui nenhum preço válido!
     return bestStoreId;
   };
 
-  // Calcular o quanto economizaria comprando cada produto onde está mais barato, usando quantidade
+  // Economia máxima comprando cada produto onde está mais barato (ignorar produtos sem preço em todos os mercados)
   const calculateOptimalSavings = () => {
     let optimalTotal = 0;
     let highestTotal = 0;
 
-    products.forEach((product, index) => {
-      const bestStoreId = findBestPriceStore(index);
+    // Só considera produtos que têm pelo menos um preço válido
+    const productsWithPrice = products.filter((prod, idx) => findBestPriceStore(idx));
+
+    productsWithPrice.forEach((product, index) => {
+      // Aqui está correto pois filtered
+      const bestStoreId = findBestPriceStore(products.indexOf(product));
       if (bestStoreId) {
-        optimalTotal += product.prices[bestStoreId] * product.quantity;
+        optimalTotal += product.prices[bestStoreId]! * product.quantity;
       }
     });
 
@@ -66,137 +68,32 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   };
 
   const totals = calculateTotalByStore();
-  const cheapestStoreId = Object.entries(totals).reduce(
-    (acc, [storeId, total]) => (total < totals[acc] ? storeId : acc),
-    stores[0]?.id
-  );
+
+  // Filtra somente mercados existentes
+  const validStoreIds = stores.map((s) => s.id);
+  const cheapestStoreId = validStoreIds.reduce((acc: string | undefined, storeId) => {
+    // Desconsidera se não há produtos para o mercado
+    if (acc === undefined) return storeId;
+    return totals[storeId] < totals[acc] ? storeId : acc;
+  }, undefined);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h2 className="text-xl font-semibold mb-4">Resultados da Comparação</h2>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Mercado Mais Barato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {cheapestStoreId ? (
-              <div>
-                <p className="text-2xl font-bold text-app-green">
-                  {stores.find((s) => s.id === cheapestStoreId)?.name}
-                </p>
-                <p className="text-gray-500">
-                  Total: R$ {totals[cheapestStoreId].toFixed(2)}
-                </p>
-              </div>
-            ) : (
-              <p className="text-gray-500">Nenhum dado disponível</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Economia Comprando no Melhor Preço</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-app-green">
-              R$ {calculateOptimalSavings().toFixed(2)}
-            </p>
-            <p className="text-gray-500">
-              Comprando cada produto no mercado mais barato
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Total de Produtos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-app-blue">{products.length}</p>
-            <p className="text-gray-500">Itens comparados</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="py-2 px-4 border text-left">Produto</th>
-              <th className="py-2 px-4 border text-left">Quantidade</th>
-              {stores.map((store) => (
-                <th key={store.id} className="py-2 px-4 border text-left">
-                  {store.name}
-                </th>
-              ))}
-              <th className="py-2 px-4 border text-left">Melhor Preço</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product, index) => {
-              const bestStoreId = findBestPriceStore(index);
-              const bestStore = stores.find((s) => s.id === bestStoreId);
-
-              return (
-                <tr key={product.id}>
-                  <td className="py-2 px-4 border">{product.name}</td>
-                  <td className="py-2 px-4 border">
-                    {product.quantity} {product.unit}
-                  </td>
-                  {stores.map((store) => {
-                    const isLowestPrice = store.id === bestStoreId;
-                    return (
-                      <td
-                        key={store.id}
-                        className={`py-2 px-4 border ${
-                          isLowestPrice ? "bg-green-50" : ""
-                        }`}
-                      >
-                        {product.prices[store.id] ? (
-                          <span className={isLowestPrice ? "font-semibold text-app-green" : ""}>
-                            R$ {(product.prices[store.id] * product.quantity).toFixed(2)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">N/A</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td className="py-2 px-4 border bg-green-50 font-medium text-app-green">
-                    {bestStore ? bestStore.name : "N/A"}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot>
-            <tr className="bg-gray-100">
-              <td
-                colSpan={2}
-                className="py-2 px-4 border font-semibold text-right"
-              >
-                Total:
-              </td>
-              {stores.map((store) => (
-                <td
-                  key={store.id}
-                  className={`py-2 px-4 border font-semibold ${
-                    store.id === cheapestStoreId
-                      ? "bg-green-100 text-app-green"
-                      : ""
-                  }`}
-                >
-                  R$ {totals[store.id].toFixed(2)}
-                </td>
-              ))}
-              <td className="py-2 px-4 border"></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+      <PriceTableResultCards
+        products={products}
+        stores={stores}
+        totals={totals}
+        cheapestStoreId={cheapestStoreId}
+        calculateOptimalSavings={calculateOptimalSavings}
+      />
+      <ProductPriceTable
+        products={products}
+        stores={stores}
+        totals={totals}
+        cheapestStoreId={cheapestStoreId}
+        findBestPriceStore={findBestPriceStore}
+      />
     </div>
   );
 };
