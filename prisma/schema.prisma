@@ -1,0 +1,117 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  comparisons Comparison[]
+  
+  @@map("users")
+}
+
+model Store {
+  id   String @id @default(cuid())
+  name String
+
+  // Relacionamentos
+  comparisonStores ComparisonStore[]
+  productPrices    ProductPrice[]
+
+  @@map("stores")
+}
+
+model Product {
+  id       String @id @default(cuid())
+  name     String
+  quantity Int
+  unit     String
+
+  // Relacionamentos
+  comparisonProducts ComparisonProduct[]
+  productPrices      ProductPrice[]
+
+  @@map("products")
+}
+
+model Comparison {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comparisonStores   ComparisonStore[]
+  comparisonProducts ComparisonProduct[]
+
+  @@map("comparisons")
+}
+
+model ComparisonStore {
+  id           String @id @default(cuid())
+  comparisonId String
+  storeId      String
+
+  // Relacionamentos
+  comparison Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  store      Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([comparisonId, storeId])
+  @@map("comparison_stores")
+}
+
+model ComparisonProduct {
+  id           String @id @default(cuid())
+  comparisonId String
+  productId    String
+
+  // Relacionamentos
+  comparison Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([comparisonId, productId])
+  @@map("comparison_products")
+}
+
+model ProductPrice {
+  id        String  @id @default(cuid())
+  productId String
+  storeId   String
+  price     Decimal @db.Decimal(10, 2)
+
+  // Relacionamentos
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, storeId])
+  @@map("product_prices")
+}
+
+model MonthlyReport {
+  id         String   @id @default(cuid())
+  userId     String
+  month      String
+  year       Int
+  totalSpent Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, month, year])
+  @@map("monthly_reports")
+}

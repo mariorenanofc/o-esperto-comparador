@@ -5,6 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import PriceTableResultCards from "./PriceTableResultCards";
 import ProductPriceTable from "./ProductPriceTable";
 
+interface PriceTableProps {
+  comparisonData: ComparisonData;
+}
+
 const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   const { products, stores } = comparisonData;
 
