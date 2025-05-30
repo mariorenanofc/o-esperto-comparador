@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,7 @@ import { useUser } from "@clerk/clerk-react";
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
 const ComparisonForm: React.FC = () => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
   const [comparisonData, setComparisonData] = useState<ComparisonData>({
     products: [],
     stores: [],
@@ -173,13 +172,28 @@ const ComparisonForm: React.FC = () => {
   };
 
   const saveComparisonData = () => {
+    if (!isSignedIn) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para salvar comparações.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const currentDate = new Date();
     const updatedComparisonData = {
       ...comparisonData,
       date: currentDate,
+      userId: user?.id, // Adiciona o ID do usuário
     };
+    
     console.log("Saving comparison data:", updatedComparisonData);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedComparisonData));
+    
+    // TODO: Implementar salvamento no banco de dados
+    // await saveComparisonToDatabase(updatedComparisonData);
+    
     toast({
       title: "Comparação salva",
       description: `Sua comparação de preços foi salva com sucesso.`,
@@ -317,6 +331,11 @@ const ComparisonForm: React.FC = () => {
             >
               Salvar Comparação
             </Button>
+            {!isSignedIn && (
+              <p className="text-sm text-gray-500 mt-2">
+                * Faça login para salvar suas comparações
+              </p>
+            )}
           </div>
         )}
 
