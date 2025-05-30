@@ -2,8 +2,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useContributionActions } from "@/hooks/useContributionActions";
 
 const ContributionSection: React.FC = () => {
+  const {
+    handleSharePrices,
+    handleSuggestImprovement,
+    handleShareApp,
+    handleStartContributing,
+  } = useContributionActions();
+
   return (
     <div className="space-y-10">
       <div className="text-center max-w-3xl mx-auto">
@@ -29,7 +37,10 @@ const ContributionSection: React.FC = () => {
               Ao compartilhar os preços que você encontra durante suas compras,
               você ajuda outros usuários a economizarem dinheiro e tempo.
             </p>
-            <Button className="w-full bg-app-blue hover:bg-blue-700">
+            <Button 
+              className="w-full bg-app-blue hover:bg-blue-700"
+              onClick={handleSharePrices}
+            >
               Enviar Preços
             </Button>
           </CardContent>
@@ -47,7 +58,10 @@ const ContributionSection: React.FC = () => {
               Tem alguma ideia para melhorar nossa plataforma? Compartilhe conosco
               e ajude a criar uma ferramenta ainda mais útil.
             </p>
-            <Button className="w-full bg-app-blue hover:bg-blue-700">
+            <Button 
+              className="w-full bg-app-blue hover:bg-blue-700"
+              onClick={handleSuggestImprovement}
+            >
               Enviar Sugestão
             </Button>
           </CardContent>
@@ -65,7 +79,10 @@ const ContributionSection: React.FC = () => {
               Quanto mais pessoas usarem o O Esperto Comparador, mais dados
               teremos para oferecer comparações precisas e atualizadas.
             </p>
-            <Button className="w-full bg-app-blue hover:bg-blue-700">
+            <Button 
+              className="w-full bg-app-blue hover:bg-blue-700"
+              onClick={handleShareApp}
+            >
               Compartilhar
             </Button>
           </CardContent>
@@ -108,7 +125,11 @@ const ContributionSection: React.FC = () => {
           Junte-se a nossa comunidade de usuários engajados e ajude a transformar
           a forma como fazemos compras!
         </p>
-        <Button size="lg" className="bg-app-green hover:bg-green-700">
+        <Button 
+          size="lg" 
+          className="bg-app-green hover:bg-green-700"
+          onClick={handleStartContributing}
+        >
           Comece a Contribuir Agora
         </Button>
       </div>
