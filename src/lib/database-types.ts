@@ -45,6 +45,28 @@ export interface DatabaseMonthlyReport {
   updatedAt: Date;
 }
 
+export interface DatabasePriceContribution {
+  id: string;
+  userId: string;
+  productId: string;
+  storeId: string;
+  price: number;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface DatabaseSuggestion {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  category: 'improvement' | 'feature' | 'bug' | 'other';
+  status: 'open' | 'in-review' | 'implemented' | 'closed';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Tipos para dados completos com relacionamentos
 export interface ComparisonWithDetails {
   id: string;
@@ -54,4 +76,25 @@ export interface ComparisonWithDetails {
   products: (DatabaseProduct & {
     prices: { [storeId: string]: number };
   })[];
+}
+
+export interface PriceContributionWithDetails {
+  id: string;
+  userId: string;
+  price: number;
+  status: string;
+  createdAt: Date;
+  user: DatabaseUser;
+  product: DatabaseProduct;
+  store: DatabaseStore;
+}
+
+export interface SuggestionWithUser {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  createdAt: Date;
+  user: DatabaseUser;
 }

@@ -1,9 +1,12 @@
 
 import { useUser } from "@clerk/clerk-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export const useContributionActions = () => {
   const { user } = useUser();
+  const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
 
   const handleSharePrices = () => {
     if (!user) {
@@ -11,9 +14,8 @@ export const useContributionActions = () => {
       return;
     }
     
-    // TODO: Implementar modal/formulário para compartilhar preços
-    toast.success("Funcionalidade de compartilhamento de preços em desenvolvimento!");
-    console.log("Share prices action triggered by user:", user.id);
+    setIsPriceModalOpen(true);
+    console.log("Share prices modal opened by user:", user.id);
   };
 
   const handleSuggestImprovement = () => {
@@ -22,9 +24,8 @@ export const useContributionActions = () => {
       return;
     }
     
-    // TODO: Implementar modal/formulário para sugestões
-    toast.success("Funcionalidade de sugestões em desenvolvimento!");
-    console.log("Suggest improvement action triggered by user:", user.id);
+    setIsSuggestionModalOpen(true);
+    console.log("Suggest improvement modal opened by user:", user.id);
   };
 
   const handleShareApp = () => {
@@ -50,20 +51,24 @@ export const useContributionActions = () => {
   };
 
   const handleStartContributing = () => {
-    if (!user) {
-      toast.error("Você precisa estar logado para começar a contribuir.");
-      return;
-    }
-    
-    // TODO: Implementar modal com opções de contribuição
-    toast.success("Obrigado por querer contribuir! Funcionalidade em desenvolvimento.");
-    console.log("Start contributing action triggered by user:", user.id);
+    // Redireciona para o grupo do WhatsApp
+    const whatsappUrl = "https://chat.whatsapp.com/J3MNd2rtXey2ULOTifkbf";
+    window.open(whatsappUrl, '_blank');
+    toast.success("Redirecionando para o grupo do WhatsApp...");
+    console.log("WhatsApp group opened");
   };
+
+  const closePriceModal = () => setIsPriceModalOpen(false);
+  const closeSuggestionModal = () => setIsSuggestionModalOpen(false);
 
   return {
     handleSharePrices,
     handleSuggestImprovement,
     handleShareApp,
     handleStartContributing,
+    isPriceModalOpen,
+    isSuggestionModalOpen,
+    closePriceModal,
+    closeSuggestionModal,
   };
 };

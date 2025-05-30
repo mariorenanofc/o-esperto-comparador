@@ -3,6 +3,9 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useContributionActions } from "@/hooks/useContributionActions";
+import ContributionModal from "@/components/ContributionModal";
+import PriceContributionForm from "@/components/PriceContributionForm";
+import SuggestionForm from "@/components/SuggestionForm";
 
 const ContributionSection: React.FC = () => {
   const {
@@ -10,6 +13,10 @@ const ContributionSection: React.FC = () => {
     handleSuggestImprovement,
     handleShareApp,
     handleStartContributing,
+    isPriceModalOpen,
+    isSuggestionModalOpen,
+    closePriceModal,
+    closeSuggestionModal,
   } = useContributionActions();
 
   return (
@@ -122,17 +129,26 @@ const ContributionSection: React.FC = () => {
           Pronto para começar a contribuir?
         </h2>
         <p className="text-gray-600 mb-6 max-w-xl mx-auto">
-          Junte-se a nossa comunidade de usuários engajados e ajude a transformar
-          a forma como fazemos compras!
+          Junte-se ao nosso grupo do WhatsApp e faça parte da comunidade de usuários 
+          engajados que estão transformando a forma como fazemos compras!
         </p>
         <Button 
           size="lg" 
           className="bg-app-green hover:bg-green-700"
           onClick={handleStartContributing}
         >
-          Comece a Contribuir Agora
+          Entrar no Grupo do WhatsApp
         </Button>
       </div>
+
+      {/* Modais */}
+      <ContributionModal isOpen={isPriceModalOpen} onClose={closePriceModal}>
+        <PriceContributionForm onClose={closePriceModal} />
+      </ContributionModal>
+
+      <ContributionModal isOpen={isSuggestionModalOpen} onClose={closeSuggestionModal}>
+        <SuggestionForm onClose={closeSuggestionModal} />
+      </ContributionModal>
     </div>
   );
 };
