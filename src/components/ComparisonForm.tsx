@@ -157,6 +157,24 @@ const ComparisonForm: React.FC = () => {
     }
   };
 
+  const handleUpdateExistingProduct = (productToUpdate: Product, newData: ProductFormData) => {
+    const updatedProducts = comparisonData.products.map(product => 
+      product.id === productToUpdate.id 
+        ? { ...product, ...newData }
+        : product
+    );
+    
+    setComparisonData({
+      ...comparisonData,
+      products: updatedProducts,
+    });
+    
+    toast({
+      title: "Produto atualizado",
+      description: `${newData.name} foi atualizado com sucesso.`,
+    });
+  };
+
   const handleDeleteProduct = (index: number) => {
     const updatedProducts = [...comparisonData.products];
     const productName = updatedProducts[index].name;
@@ -343,8 +361,10 @@ const ComparisonForm: React.FC = () => {
           isOpen={isProductModalOpen}
           onClose={() => setIsProductModalOpen(false)}
           onSave={handleSaveProduct}
+          onUpdate={handleUpdateExistingProduct}
           stores={comparisonData.stores}
           editProduct={editingProduct}
+          existingProducts={comparisonData.products}
         />
       </div>
 

@@ -14,7 +14,8 @@ const BestPricesByStore: React.FC<BestPricesByStoreProps> = ({ comparisonData })
   // Estrutura para armazenar os itens mais baratos por loja
   type BestPriceItem = {
     product: Product;
-    price: number;
+    unitPrice: number;
+    totalPrice: number; // preço unitário x quantidade
   };
 
   type StoreWithBestPrices = {
@@ -55,7 +56,8 @@ const BestPricesByStore: React.FC<BestPricesByStoreProps> = ({ comparisonData })
         const storeItems = storeItemsMap.get(storeId) || [];
         storeItems.push({
           product,
-          price
+          unitPrice: price,
+          totalPrice: price * product.quantity // Multiplicar preço pela quantidade
         });
         
         storeItemsMap.set(storeId, storeItems);
@@ -68,7 +70,7 @@ const BestPricesByStore: React.FC<BestPricesByStoreProps> = ({ comparisonData })
     stores.forEach((store) => {
       const items = storeItemsMap.get(store.id) || [];
       if (items.length > 0) {
-        const total = items.reduce((sum, item) => sum + item.price, 0);
+        const total = items.reduce((sum, item) => sum + item.totalPrice, 0); // Usar totalPrice
         
         result.push({
           store,
@@ -108,24 +110,28 @@ const BestPricesByStore: React.FC<BestPricesByStoreProps> = ({ comparisonData })
                     <TableRow>
                       <TableHead>Produto</TableHead>
                       <TableHead>Quantidade</TableHead>
-                      <TableHead>Preço</TableHead>
+                      <TableHead>Preço Unitário</TableHead>
+                      <TableHead>Total</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {items.map(({ product, price }) => (
+                    {items.map(({ product, unitPrice, totalPrice }) => (
                       <TableRow key={product.id}>
                         <TableCell>{product.name}</TableCell>
                         <TableCell>
                           {product.quantity} {product.unit}
                         </TableCell>
                         <TableCell className="text-app-green font-medium">
-                          R$ {price.toFixed(2)}
+                          R$ {unitPrice.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-app-green font-medium">
+                          R$ {totalPrice.toFixed(2)}
                         </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-gray-50">
-                      <TableCell colSpan={2} className="font-bold text-right">
-                        Total:
+                      <TableCell colSpan={3} className="font-bold text-right">
+                        Total Geral:
                       </TableCell>
                       <TableCell className="font-bold text-app-green">
                         R$ {total.toFixed(2)}
