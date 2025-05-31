@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { DailyOffer } from "@/lib/types";
+import { dailyOffersService } from "@/services/dailyOffersService";
 
 interface DailyOffersSectionProps {
   offers?: DailyOffer[];
@@ -14,10 +14,31 @@ interface DailyOffersSectionProps {
 
 const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) => {
   const { isSignedIn } = useAuth();
+  const { city } = useGeolocation();
   const [showAll, setShowAll] = useState(false);
   const [visibleOffers, setVisibleOffers] = useState<DailyOffer[]>([]);
+  const [actualOffers, setActualOffers] = useState<DailyOffer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data para demonstração
+  // Buscar ofertas reais do serviço
+  useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        setLoading(true);
+        const realOffers = await dailyOffersService.getTodaysOffers();
+        console.log('Fetched real offers:', realOffers);
+        setActualOffers(realOffers);
+      } catch (error) {
+        console.error('Error fetching offers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOffers();
+  }, []);
+
+  // Mock data para demonstração (usado quando não há ofertas reais)
   const mockOffers: DailyOffer[] = [
     {
       id: "1",
@@ -76,7 +97,8 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
     }
   ];
 
-  const displayOffers = offers.length > 0 ? offers : mockOffers;
+  // Usar ofertas reais se existirem, senão usar mock data
+  const displayOffers = actualOffers.length > 0 ? actualOffers : (offers.length > 0 ? offers : mockOffers);
 
   useEffect(() => {
     if (isSignedIn || showAll) {
@@ -100,6 +122,21 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
     });
   };
 
+  if (loading) {
+    return (
+      <section className="py-16 bg-gradient-to-br from-green-50 to-blue-50">
+        <div className="container mx-auto px-6">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-app-dark mb-4">
+              🔥 Ofertas do Dia
+            </h2>
+            <p className="text-lg text-gray-600">Carregando ofertas...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 bg-gradient-to-br from-green-50 to-blue-50">
       <div className="container mx-auto px-6">
@@ -111,7 +148,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
             </h2>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Preços compartilhados pela nossa comunidade hoje em <strong>Trindade, PE</strong>
+            Preços compartilhados pela nossa comunidade hoje em <strong>{city || "Trindade"}, PE</strong>
           </p>
           <div className="flex items-center justify-center mt-3 text-sm text-orange-600">
             <AlertTriangle size={16} className="mr-2" />
@@ -119,6 +156,11 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
               Sempre confirme os preços no estabelecimento antes da compra
             </span>
           </div>
+          {actualOffers.length > 0 && (
+            <div className="mt-3 text-sm text-green-600 font-medium">
+              ✨ {actualOffers.length} contribuição(ões) real(is) de usuários hoje!
+            </div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 relative">

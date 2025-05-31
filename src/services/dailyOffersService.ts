@@ -1,6 +1,10 @@
 
 import { DailyOffer, PriceContribution, PriceValidationResult } from "@/lib/types";
 
+// Armazenamento temporário em memória (será perdido ao recarregar a página)
+// Em produção, isso seria substituído por um banco de dados
+let todaysOffers: DailyOffer[] = [];
+
 export const dailyOffersService = {
   // Validar se o preço é muito diferente de contribuições existentes
   validatePriceContribution(
@@ -9,8 +13,9 @@ export const dailyOffersService = {
   ): PriceValidationResult {
     const similarOffer = existingOffers.find(
       offer => 
-        offer.productName.toLowerCase().includes(newContribution.productName.toLowerCase()) ||
-        newContribution.productName.toLowerCase().includes(offer.productName.toLowerCase())
+        offer.storeName.toLowerCase() === newContribution.storeName.toLowerCase() &&
+        (offer.productName.toLowerCase().includes(newContribution.productName.toLowerCase()) ||
+        newContribution.productName.toLowerCase().includes(offer.productName.toLowerCase()))
     );
 
     if (!similarOffer) {
@@ -35,11 +40,18 @@ export const dailyOffersService = {
 
   // Obter ofertas do dia atual
   async getTodaysOffers(): Promise<DailyOffer[]> {
-    // TODO: Implementar chamada para API/banco de dados
     console.log('Getting today\'s offers...');
     
-    // Mock data por enquanto
-    return [];
+    // Filtrar apenas ofertas do dia atual
+    const today = new Date();
+    const todayString = today.toDateString();
+    
+    const filteredOffers = todaysOffers.filter(offer => 
+      offer.timestamp.toDateString() === todayString
+    );
+    
+    console.log('Filtered offers for today:', filteredOffers);
+    return filteredOffers;
   },
 
   // Submeter nova contribuição de preço
@@ -49,30 +61,44 @@ export const dailyOffersService = {
   ): Promise<DailyOffer> {
     console.log('Submitting price contribution:', { contribution, userId });
     
-    // TODO: Implementar chamada para API/banco de dados
-    // const response = await fetch('/api/daily-offers', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ ...contribution, userId })
-    // });
-    
-    // Mock response por enquanto
-    return {
-      id: `offer_${Date.now()}`,
+    // Criar nova oferta
+    const newOffer: DailyOffer = {
+      id: `offer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       productName: contribution.productName,
       price: contribution.price,
       storeName: contribution.storeName,
       city: contribution.city,
       state: contribution.state,
-      contributorName: "Usuário Anônimo",
+      contributorName: "Usuário Anônimo", // TODO: Pegar nome real do usuário
       timestamp: new Date(),
       verified: false,
     };
+
+    // Adicionar à lista temporária
+    todaysOffers.push(newOffer);
+    
+    console.log('New offer added:', newOffer);
+    console.log('Total offers now:', todaysOffers.length);
+    
+    return newOffer;
   },
 
   // Limpar ofertas antigas (executar diariamente)
   async clearOldOffers(): Promise<void> {
     console.log('Clearing old offers...');
-    // TODO: Implementar limpeza automática de ofertas do dia anterior
+    const today = new Date();
+    const todayString = today.toDateString();
+    
+    // Manter apenas ofertas de hoje
+    todaysOffers = todaysOffers.filter(offer => 
+      offer.timestamp.toDateString() === todayString
+    );
+    
+    console.log('Offers after cleanup:', todaysOffers.length);
   }
 };
+
+// Executar limpeza automática a cada hora
+setInterval(() => {
+  dailyOffersService.clearOldOffers();
+}, 60 * 60 * 1000); // 1 hora

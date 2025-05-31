@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/clerk-react";
-import { contributionService, PriceContributionData } from "@/services/contributionService";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { dailyOffersService } from "@/services/dailyOffersService";
+import { PriceContribution } from "@/lib/types";
 
 interface PriceContributionFormProps {
   onClose: () => void;
@@ -16,14 +18,28 @@ interface PriceContributionFormProps {
 
 const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }) => {
   const { user } = useUser();
+  const { city, state, loading: locationLoading } = useGeolocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<PriceContributionData>({
+  const [formData, setFormData] = useState<PriceContribution>({
     productName: "",
     storeName: "",
     price: 0,
     quantity: 1,
     unit: "unidade",
+    city: "",
+    state: "",
   });
+
+  // Atualizar localização automaticamente quando carregada
+  React.useEffect(() => {
+    if (city && state && !formData.city && !formData.state) {
+      setFormData(prev => ({
+        ...prev,
+        city: city,
+        state: state
+      }));
+    }
+  }, [city, state, formData.city, formData.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +54,37 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
       return;
     }
 
+    if (!formData.city || !formData.state) {
+      toast.error("Por favor, preencha a cidade e estado.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await contributionService.submitPriceContribution(user.id, formData);
+      // Primeiro validar se o preço não está muito diferente de ofertas existentes
+      const existingOffers = await dailyOffersService.getTodaysOffers();
+      const validation = dailyOffersService.validatePriceContribution(formData, existingOffers);
+      
+      if (!validation.isValid) {
+        const confirmSubmit = window.confirm(
+          `Atenção: O preço informado (R$ ${formData.price.toFixed(2)}) está ${validation.priceDifference?.toFixed(1)}% diferente do preço já informado por ${validation.conflictingContributor} (R$ ${validation.conflictingPrice?.toFixed(2)}) para um produto similar no mesmo estabelecimento. Deseja continuar mesmo assim?`
+        );
+        
+        if (!confirmSubmit) {
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Submeter a contribuição
+      await dailyOffersService.submitPriceContribution(formData, user.id);
+      
       toast.success("Preço compartilhado com sucesso! Obrigado pela contribuição.");
       onClose();
+      
+      // Recarregar a página para atualizar a seção de ofertas do dia
+      window.location.reload();
     } catch (error) {
       console.error("Erro ao compartilhar preço:", error);
       toast.error("Erro ao compartilhar preço. Tente novamente.");
@@ -143,6 +184,36 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
               required
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="city">Cidade *</Label>
+              <Input
+                id="city"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                placeholder={locationLoading ? "Detectando..." : "Ex: Trindade"}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="state">Estado *</Label>
+              <Input
+                id="state"
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                placeholder={locationLoading ? "..." : "Ex: PE"}
+                required
+                maxLength={2}
+              />
+            </div>
+          </div>
+
+          {locationLoading && (
+            <div className="text-sm text-blue-600">
+              📍 Detectando sua localização automaticamente...
+            </div>
+          )}
 
           <div className="flex space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">
