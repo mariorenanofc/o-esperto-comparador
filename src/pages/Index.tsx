@@ -1,13 +1,14 @@
-
 import React from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import DailyOffersSection from "@/components/DailyOffersSection";
 
 const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-gray">
       <Navbar />
       <HeroSection />
+      <DailyOffersSection />
       
       <div className="container mx-auto py-16 px-6">
         <div className="text-center mb-12">
