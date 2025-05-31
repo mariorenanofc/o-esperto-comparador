@@ -64,16 +64,27 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
     try {
       console.log('Starting form submission process...');
       
-      // Primeiro validar se o preço não está muito diferente de ofertas existentes
+      // Obter ofertas existentes
       const existingOffers = await dailyOffersService.getTodaysOffers();
       console.log('Existing offers retrieved for validation:', existingOffers);
       
-      const validation = dailyOffersService.validatePriceContribution(formData, existingOffers);
-      console.log('Validation result:', validation);
+      // Primeiro validar se o usuário já contribuiu com este produto
+      const userValidation = dailyOffersService.validateUserContribution(formData, user.id, existingOffers);
+      console.log('User validation result:', userValidation);
       
-      if (!validation.isValid) {
+      if (!userValidation.isValid) {
+        toast.error(userValidation.message || "Erro na validação do usuário.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Depois validar se o preço não está muito diferente de ofertas existentes
+      const priceValidation = dailyOffersService.validatePriceContribution(formData, existingOffers);
+      console.log('Price validation result:', priceValidation);
+      
+      if (!priceValidation.isValid && priceValidation.conflictingPrice) {
         const confirmSubmit = window.confirm(
-          `Atenção: O preço informado (R$ ${formData.price.toFixed(2)}) está ${validation.priceDifference?.toFixed(1)}% diferente do preço já informado por ${validation.conflictingContributor} (R$ ${validation.conflictingPrice?.toFixed(2)}) para um produto similar no mesmo estabelecimento. Deseja continuar mesmo assim?`
+          `Atenção: O preço informado (R$ ${formData.price.toFixed(2)}) está ${priceValidation.priceDifference?.toFixed(1)}% diferente do preço já informado por ${priceValidation.conflictingContributor} (R$ ${priceValidation.conflictingPrice?.toFixed(2)}) para um produto similar no mesmo estabelecimento. Deseja continuar mesmo assim?`
         );
         
         if (!confirmSubmit) {
@@ -82,9 +93,12 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
         }
       }
 
+      // Obter nome do usuário do Clerk
+      const userName = user.fullName || user.firstName || user.username || "Usuário Anônimo";
+
       // Submeter a contribuição
       console.log('Submitting contribution to service...');
-      const newOffer = await dailyOffersService.submitPriceContribution(formData, user.id);
+      const newOffer = await dailyOffersService.submitPriceContribution(formData, user.id, userName);
       console.log('Contribution submitted successfully:', newOffer);
       
       toast.success("Preço compartilhado com sucesso! Obrigado pela contribuição.");

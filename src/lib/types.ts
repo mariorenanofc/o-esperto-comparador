@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -39,6 +40,7 @@ export interface DailyOffer {
   city: string;
   state: string;
   contributorName: string;
+  userId: string;
   timestamp: Date;
   verified: boolean;
 }
@@ -58,4 +60,5 @@ export interface PriceValidationResult {
   conflictingPrice?: number;
   conflictingContributor?: string;
   priceDifference?: number;
+  message?: string;
 }

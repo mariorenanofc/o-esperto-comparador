@@ -5,7 +5,57 @@ import { DailyOffer, PriceContribution, PriceValidationResult } from "@/lib/type
 // Em produção, isso seria substituído por um banco de dados
 let todaysOffers: DailyOffer[] = [];
 
+// Função para normalizar strings (remover espaços, converter para minúsculo, remover acentos)
+const normalizeString = (str: string): string => {
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, '') // Remove todos os espaços
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+};
+
+// Função para verificar se duas strings são similares (mesmo produto/loja)
+const areStringsSimilar = (str1: string, str2: string): boolean => {
+  const normalized1 = normalizeString(str1);
+  const normalized2 = normalizeString(str2);
+  
+  // Verifica correspondência exata após normalização
+  if (normalized1 === normalized2) {
+    return true;
+  }
+  
+  // Verifica se uma string contém a outra (para variações como "Arroz Tipo 1" vs "Arroz")
+  return normalized1.includes(normalized2) || normalized2.includes(normalized1);
+};
+
 export const dailyOffersService = {
+  // Validar se o usuário já contribuiu com o mesmo produto
+  validateUserContribution(
+    newContribution: PriceContribution,
+    userId: string,
+    existingOffers: DailyOffer[]
+  ): PriceValidationResult {
+    console.log('Validating user contribution:', { newContribution, userId });
+    
+    // Verificar se o usuário já adicionou o mesmo produto no mesmo estabelecimento
+    const userExistingOffer = existingOffers.find(offer => 
+      offer.userId === userId &&
+      areStringsSimilar(offer.productName, newContribution.productName) &&
+      areStringsSimilar(offer.storeName, newContribution.storeName) &&
+      normalizeString(offer.city) === normalizeString(newContribution.city)
+    );
+
+    if (userExistingOffer) {
+      console.log('User already contributed this product:', userExistingOffer);
+      return {
+        isValid: false,
+        message: `Você já contribuiu com este produto (${userExistingOffer.productName}) no estabelecimento ${userExistingOffer.storeName}. Cada usuário pode contribuir apenas uma vez por produto em cada estabelecimento.`
+      };
+    }
+
+    return { isValid: true };
+  },
+
   // Validar se o preço é muito diferente de contribuições existentes
   validatePriceContribution(
     newContribution: PriceContribution,
@@ -16,9 +66,9 @@ export const dailyOffersService = {
     
     const similarOffer = existingOffers.find(
       offer => 
-        offer.storeName.toLowerCase() === newContribution.storeName.toLowerCase() &&
-        (offer.productName.toLowerCase().includes(newContribution.productName.toLowerCase()) ||
-        newContribution.productName.toLowerCase().includes(offer.productName.toLowerCase()))
+        areStringsSimilar(offer.storeName, newContribution.storeName) &&
+        areStringsSimilar(offer.productName, newContribution.productName) &&
+        normalizeString(offer.city) === normalizeString(newContribution.city)
     );
 
     if (!similarOffer) {
@@ -64,12 +114,52 @@ export const dailyOffersService = {
     return filteredOffers;
   },
 
+  // Verificar se deve marcar como verificado
+  checkIfShouldBeVerified(
+    newContribution: PriceContribution,
+    userId: string,
+    existingOffers: DailyOffer[]
+  ): boolean {
+    // Procurar por ofertas similares de outros usuários
+    const similarOfferFromOtherUser = existingOffers.find(offer => 
+      offer.userId !== userId && // Deve ser de outro usuário
+      areStringsSimilar(offer.productName, newContribution.productName) &&
+      areStringsSimilar(offer.storeName, newContribution.storeName) &&
+      normalizeString(offer.city) === normalizeString(newContribution.city)
+    );
+
+    return !!similarOfferFromOtherUser;
+  },
+
+  // Marcar ofertas similares como verificadas
+  markSimilarOffersAsVerified(
+    newContribution: PriceContribution,
+    userId: string
+  ): void {
+    todaysOffers.forEach(offer => {
+      if (
+        offer.userId !== userId && // Não marcar ofertas do mesmo usuário
+        areStringsSimilar(offer.productName, newContribution.productName) &&
+        areStringsSimilar(offer.storeName, newContribution.storeName) &&
+        normalizeString(offer.city) === normalizeString(newContribution.city)
+      ) {
+        offer.verified = true;
+        console.log('Marked offer as verified:', offer.id);
+      }
+    });
+  },
+
   // Submeter nova contribuição de preço
   async submitPriceContribution(
     contribution: PriceContribution,
-    userId: string
+    userId: string,
+    userName: string
   ): Promise<DailyOffer> {
-    console.log('Submitting price contribution:', { contribution, userId });
+    console.log('Submitting price contribution:', { contribution, userId, userName });
+    
+    // Verificar se deve ser marcado como verificado
+    const existingOffers = await this.getTodaysOffers();
+    const shouldBeVerified = this.checkIfShouldBeVerified(contribution, userId, existingOffers);
     
     // Criar nova oferta
     const newOffer: DailyOffer = {
@@ -79,13 +169,19 @@ export const dailyOffersService = {
       storeName: contribution.storeName,
       city: contribution.city,
       state: contribution.state,
-      contributorName: "Usuário Anônimo", // TODO: Pegar nome real do usuário
+      contributorName: userName,
+      userId: userId,
       timestamp: new Date(),
-      verified: false,
+      verified: shouldBeVerified,
     };
 
     // Adicionar à lista temporária
     todaysOffers.push(newOffer);
+    
+    // Se a nova oferta foi verificada, marcar ofertas similares existentes como verificadas
+    if (shouldBeVerified) {
+      this.markSimilarOffersAsVerified(contribution, userId);
+    }
     
     console.log('New offer added:', newOffer);
     console.log('Total offers now:', todaysOffers.length);
