@@ -11,6 +11,9 @@ export const dailyOffersService = {
     newContribution: PriceContribution,
     existingOffers: DailyOffer[]
   ): PriceValidationResult {
+    console.log('Validating price contribution:', newContribution);
+    console.log('Against existing offers:', existingOffers);
+    
     const similarOffer = existingOffers.find(
       offer => 
         offer.storeName.toLowerCase() === newContribution.storeName.toLowerCase() &&
@@ -19,11 +22,15 @@ export const dailyOffersService = {
     );
 
     if (!similarOffer) {
+      console.log('No similar offer found, validation passed');
       return { isValid: true };
     }
 
     const priceDifference = Math.abs(newContribution.price - similarOffer.price);
     const percentageDifference = (priceDifference / similarOffer.price) * 100;
+
+    console.log('Similar offer found:', similarOffer);
+    console.log('Price difference:', priceDifference, 'Percentage:', percentageDifference);
 
     // Se a diferença for maior que 30%, considerar suspeito
     if (percentageDifference > 30) {
@@ -41,14 +48,17 @@ export const dailyOffersService = {
   // Obter ofertas do dia atual
   async getTodaysOffers(): Promise<DailyOffer[]> {
     console.log('Getting today\'s offers...');
+    console.log('Total offers in memory:', todaysOffers.length);
     
     // Filtrar apenas ofertas do dia atual
     const today = new Date();
     const todayString = today.toDateString();
     
-    const filteredOffers = todaysOffers.filter(offer => 
-      offer.timestamp.toDateString() === todayString
-    );
+    const filteredOffers = todaysOffers.filter(offer => {
+      const offerDate = offer.timestamp.toDateString();
+      console.log('Comparing offer date:', offerDate, 'with today:', todayString);
+      return offerDate === todayString;
+    });
     
     console.log('Filtered offers for today:', filteredOffers);
     return filteredOffers;
@@ -79,6 +89,7 @@ export const dailyOffersService = {
     
     console.log('New offer added:', newOffer);
     console.log('Total offers now:', todaysOffers.length);
+    console.log('All offers in memory:', todaysOffers);
     
     return newOffer;
   },
@@ -89,12 +100,21 @@ export const dailyOffersService = {
     const today = new Date();
     const todayString = today.toDateString();
     
-    // Manter apenas ofertas de hoje
-    todaysOffers = todaysOffers.filter(offer => 
-      offer.timestamp.toDateString() === todayString
-    );
+    const initialCount = todaysOffers.length;
     
-    console.log('Offers after cleanup:', todaysOffers.length);
+    // Manter apenas ofertas de hoje
+    todaysOffers = todaysOffers.filter(offer => {
+      const offerDate = offer.timestamp.toDateString();
+      return offerDate === todayString;
+    });
+    
+    console.log(`Offers cleanup: ${initialCount} -> ${todaysOffers.length}`);
+  },
+
+  // Função para debug - listar todas as ofertas
+  debugGetAllOffers(): DailyOffer[] {
+    console.log('DEBUG: All offers in memory:', todaysOffers);
+    return [...todaysOffers];
   }
 };
 

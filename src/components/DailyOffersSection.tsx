@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, TrendingDown, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { MapPin, TrendingDown, Eye, EyeOff, AlertTriangle, RefreshCw } from "lucide-react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -21,21 +22,31 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
   const [loading, setLoading] = useState(true);
 
   // Buscar ofertas reais do serviço
-  useEffect(() => {
-    const fetchOffers = async () => {
-      try {
-        setLoading(true);
-        const realOffers = await dailyOffersService.getTodaysOffers();
-        console.log('Fetched real offers:', realOffers);
-        setActualOffers(realOffers);
-      } catch (error) {
-        console.error('Error fetching offers:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchOffers = async () => {
+    try {
+      setLoading(true);
+      console.log('Fetching offers from service...');
+      const realOffers = await dailyOffersService.getTodaysOffers();
+      console.log('Fetched real offers:', realOffers);
+      setActualOffers(realOffers);
+      
+      // Debug: verificar todas as ofertas na memória
+      const allOffers = dailyOffersService.debugGetAllOffers();
+      console.log('All offers in memory (debug):', allOffers);
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOffers();
+    
+    // Refetch a cada 30 segundos para capturar novas contribuições
+    const interval = setInterval(fetchOffers, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Mock data para demonstração (usado quando não há ofertas reais)
@@ -122,6 +133,11 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
     });
   };
 
+  const handleRefresh = () => {
+    console.log('Manual refresh triggered');
+    fetchOffers();
+  };
+
   if (loading) {
     return (
       <section className="py-16 bg-gradient-to-br from-green-50 to-blue-50">
@@ -146,6 +162,15 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
             <h2 className="text-3xl font-bold text-app-dark">
               🔥 Ofertas do Dia
             </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              className="ml-4"
+              title="Atualizar ofertas"
+            >
+              <RefreshCw size={16} />
+            </Button>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Preços compartilhados pela nossa comunidade hoje em <strong>{city || "Trindade"}, PE</strong>
@@ -159,6 +184,11 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
           {actualOffers.length > 0 && (
             <div className="mt-3 text-sm text-green-600 font-medium">
               ✨ {actualOffers.length} contribuição(ões) real(is) de usuários hoje!
+            </div>
+          )}
+          {actualOffers.length === 0 && (
+            <div className="mt-3 text-sm text-blue-600">
+              📝 Seja o primeiro a contribuir com preços hoje!
             </div>
           )}
         </div>

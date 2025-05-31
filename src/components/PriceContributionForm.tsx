@@ -62,9 +62,14 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
     setIsSubmitting(true);
 
     try {
+      console.log('Starting form submission process...');
+      
       // Primeiro validar se o preço não está muito diferente de ofertas existentes
       const existingOffers = await dailyOffersService.getTodaysOffers();
+      console.log('Existing offers retrieved for validation:', existingOffers);
+      
       const validation = dailyOffersService.validatePriceContribution(formData, existingOffers);
+      console.log('Validation result:', validation);
       
       if (!validation.isValid) {
         const confirmSubmit = window.confirm(
@@ -78,13 +83,31 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
       }
 
       // Submeter a contribuição
-      await dailyOffersService.submitPriceContribution(formData, user.id);
+      console.log('Submitting contribution to service...');
+      const newOffer = await dailyOffersService.submitPriceContribution(formData, user.id);
+      console.log('Contribution submitted successfully:', newOffer);
       
       toast.success("Preço compartilhado com sucesso! Obrigado pela contribuição.");
+      
+      // Reset form
+      setFormData({
+        productName: "",
+        storeName: "",
+        price: 0,
+        quantity: 1,
+        unit: "unidade",
+        city: city || "",
+        state: state || "",
+      });
+      
       onClose();
       
-      // Recarregar a página para atualizar a seção de ofertas do dia
-      window.location.reload();
+      // Verificar se a contribuição foi salva
+      setTimeout(async () => {
+        const updatedOffers = await dailyOffersService.getTodaysOffers();
+        console.log('Updated offers after submission:', updatedOffers);
+      }, 1000);
+      
     } catch (error) {
       console.error("Erro ao compartilhar preço:", error);
       toast.error("Erro ao compartilhar preço. Tente novamente.");
