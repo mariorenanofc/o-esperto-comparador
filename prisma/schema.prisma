@@ -127,6 +127,8 @@ model PriceContribution {
   storeId   String
   price     Decimal  @db.Decimal(10, 2)
   status    String   @default("pending") // pending, approved, rejected
+  city      String?  // Adicionar campos de localização
+  state     String?  // Adicionar campos de localização
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

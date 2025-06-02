@@ -6,28 +6,42 @@ export const comparisonService = {
   // GET - Buscar comparações do usuário
   async getUserComparisons(userId: string): Promise<ComparisonWithDetails[]> {
     try {
-      // TODO: Implementar chamada para API
-      // const response = await fetch(`/api/comparisons?userId=${userId}`);
-      // return await response.json();
+      // Tentar usar API se disponível
+      if (typeof window !== 'undefined' && window.location.origin.includes('localhost')) {
+        // Em desenvolvimento local, usar mock
+        console.log('getUserComparisons called with userId:', userId);
+        return [];
+      }
+      
+      // Em produção, usar API real
+      const response = await fetch(`/api/comparisons?userId=${userId}`);
+      if (response.ok) {
+        return await response.json();
+      }
       
       console.log('getUserComparisons called with userId:', userId);
       return [];
     } catch (error) {
       console.error('Error fetching user comparisons:', error);
-      throw error;
+      return [];
     }
   },
 
   // POST - Salvar nova comparação
   async saveComparison(comparisonData: ComparisonData & { userId: string }): Promise<DatabaseComparison> {
     try {
-      // TODO: Implementar chamada para API
-      // const response = await fetch('/api/comparisons', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(comparisonData)
-      // });
-      // return await response.json();
+      // Tentar usar API se disponível
+      if (typeof window !== 'undefined' && !window.location.origin.includes('localhost')) {
+        const response = await fetch('/api/comparisons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(comparisonData)
+        });
+        
+        if (response.ok) {
+          return await response.json();
+        }
+      }
       
       console.log('saveComparison called with data:', comparisonData);
       return {} as DatabaseComparison;
@@ -40,13 +54,18 @@ export const comparisonService = {
   // PUT - Atualizar comparação existente
   async updateComparison(comparisonId: string, comparisonData: Partial<ComparisonData>): Promise<DatabaseComparison> {
     try {
-      // TODO: Implementar chamada para API
-      // const response = await fetch(`/api/comparisons/${comparisonId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(comparisonData)
-      // });
-      // return await response.json();
+      // Tentar usar API se disponível
+      if (typeof window !== 'undefined' && !window.location.origin.includes('localhost')) {
+        const response = await fetch(`/api/comparisons/${comparisonId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(comparisonData)
+        });
+        
+        if (response.ok) {
+          return await response.json();
+        }
+      }
       
       console.log('updateComparison called with id:', comparisonId, 'data:', comparisonData);
       return {} as DatabaseComparison;
@@ -59,10 +78,16 @@ export const comparisonService = {
   // DELETE - Deletar comparação
   async deleteComparison(comparisonId: string): Promise<void> {
     try {
-      // TODO: Implementar chamada para API
-      // await fetch(`/api/comparisons/${comparisonId}`, {
-      //   method: 'DELETE'
-      // });
+      // Tentar usar API se disponível
+      if (typeof window !== 'undefined' && !window.location.origin.includes('localhost')) {
+        const response = await fetch(`/api/comparisons/${comparisonId}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          return;
+        }
+      }
       
       console.log('deleteComparison called with id:', comparisonId);
     } catch (error) {

@@ -2,7 +2,7 @@
 import { DailyOffer, PriceContribution, PriceValidationResult } from "@/lib/types";
 
 // Armazenamento temporário em memória (será perdido ao recarregar a página)
-// Em produção, isso seria substituído por um banco de dados
+// Em produção, isso será substituído pela API do banco de dados
 let todaysOffers: DailyOffer[] = [];
 
 // Função para normalizar strings (remover espaços, converter para minúsculo, remover acentos)
@@ -98,6 +98,22 @@ export const dailyOffersService = {
   // Obter ofertas do dia atual
   async getTodaysOffers(): Promise<DailyOffer[]> {
     console.log('Getting today\'s offers...');
+    
+    // Tentar usar API se disponível
+    try {
+      if (typeof window !== 'undefined' && !window.location.origin.includes('localhost')) {
+        const response = await fetch('/api/contributions/daily-offers');
+        if (response.ok) {
+          const apiOffers = await response.json();
+          console.log('Offers fetched from API:', apiOffers);
+          return apiOffers;
+        }
+      }
+    } catch (error) {
+      console.log('API not available, using local storage:', error);
+    }
+    
+    // Fallback para armazenamento local
     console.log('Total offers in memory:', todaysOffers.length);
     
     // Filtrar apenas ofertas do dia atual
@@ -157,6 +173,30 @@ export const dailyOffersService = {
   ): Promise<DailyOffer> {
     console.log('Submitting price contribution:', { contribution, userId, userName });
     
+    // Tentar usar API se disponível
+    try {
+      if (typeof window !== 'undefined' && !window.location.origin.includes('localhost')) {
+        const response = await fetch('/api/contributions/daily-offers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...contribution,
+            userId,
+            userName
+          })
+        });
+        
+        if (response.ok) {
+          const apiOffer = await response.json();
+          console.log('Offer submitted via API:', apiOffer);
+          return apiOffer;
+        }
+      }
+    } catch (error) {
+      console.log('API not available, using local storage:', error);
+    }
+    
+    // Fallback para armazenamento local
     // Verificar se deve ser marcado como verificado
     const existingOffers = await this.getTodaysOffers();
     const shouldBeVerified = this.checkIfShouldBeVerified(contribution, userId, existingOffers);
