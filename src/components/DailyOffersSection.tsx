@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +58,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       city: "Trindade",
       state: "PE",
       contributorName: "João S.",
+      userId: "mock_user_1",
       timestamp: new Date(),
       verified: true
     },
@@ -70,6 +70,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       city: "Trindade",
       state: "PE",
       contributorName: "Maria L.",
+      userId: "mock_user_2",
       timestamp: new Date(),
       verified: false
     },
@@ -81,6 +82,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       city: "Trindade", 
       state: "PE",
       contributorName: "Pedro M.",
+      userId: "mock_user_3",
       timestamp: new Date(),
       verified: true
     },
@@ -92,6 +94,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       city: "Trindade",
       state: "PE", 
       contributorName: "Ana C.",
+      userId: "mock_user_4",
       timestamp: new Date(),
       verified: false
     },
@@ -103,6 +106,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       city: "Trindade",
       state: "PE",
       contributorName: "Carlos R.",
+      userId: "mock_user_5",
       timestamp: new Date(),
       verified: true
     }
