@@ -1,10 +1,14 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { isAdmin } from '@/lib/admin';
 
-// GET - Buscar todas as contribuições (admin)
-export async function GET() {
+// POST - Rejeitar contribuição (admin)
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const { userId } = auth();
     if (!userId) {
@@ -16,18 +20,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const contributions = await prisma.priceContribution.findMany({
+    const contribution = await prisma.priceContribution.update({
+      where: { id: params.id },
+      data: { status: 'rejected' },
       include: {
         product: true,
-        store: true,
-        user: true
-      },
-      orderBy: { createdAt: 'desc' }
+        store: true
+      }
     });
 
-    return NextResponse.json(contributions);
+    return NextResponse.json(contribution);
   } catch (error) {
-    console.error('Error fetching contributions:', error);
+    console.error('Error rejecting contribution:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

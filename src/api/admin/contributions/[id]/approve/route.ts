@@ -1,7 +1,7 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
+import { isAdmin } from '@/lib/admin';
 
 // POST - Aprovar contribuição (admin)
 export async function POST(
@@ -15,10 +15,9 @@ export async function POST(
     }
 
     // Verificar se o usuário é admin
-    // const user = await clerkClient.users.getUser(userId);
-    // if (!user.publicMetadata.isAdmin) {
-    //   return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    // }
+    if (!isAdmin(userId)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const contribution = await prisma.priceContribution.update({
       where: { id: params.id },

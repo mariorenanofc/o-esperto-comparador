@@ -1,52 +1,56 @@
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-} from "@clerk/clerk-react";
+import { Link } from "react-router-dom";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { Shield } from "lucide-react";
 
 const Navbar: React.FC = () => {
-  const navigate = useNavigate();
+  const { isAdmin } = useAdminAuth();
 
   return (
-    <nav className="bg-white shadow-md py-4 px-6">
-      <div className="container mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
-          <span className="text-app-green font-bold text-2xl">
-            Comparador Online
-          </span>
-        </Link>
-        <div className="hidden md:flex space-x-6">
-          <Link to="/" className="text-app-dark hover:text-app-green transition-colors">
-            Início
+    <nav className="bg-white shadow-sm border-b">
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="text-2xl font-bold text-green-600">
+            CompraInteligente
           </Link>
-          <Link to="/comparison" className="text-app-dark hover:text-app-green transition-colors">
-            Comparar Preços
-          </Link>
-          <SignedIn>
-            <Link to="/reports" className="text-app-dark hover:text-app-green transition-colors">
+          
+          <div className="flex items-center space-x-6">
+            <Link to="/" className="text-gray-700 hover:text-green-600 transition-colors">
+              Início
+            </Link>
+            <Link to="/comparison" className="text-gray-700 hover:text-green-600 transition-colors">
+              Comparar Preços
+            </Link>
+            <Link to="/contribute" className="text-gray-700 hover:text-green-600 transition-colors">
+              Contribuir
+            </Link>
+            <Link to="/reports" className="text-gray-700 hover:text-green-600 transition-colors">
               Relatórios
             </Link>
-          </SignedIn>
-          <Link to="/contribute" className="text-app-dark hover:text-app-green transition-colors">
-            Contribuir
-          </Link>
-        </div>
-        <div className="flex items-center space-x-4">
-          <SignedIn>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button className="bg-app-green hover:bg-green-600 text-white">
-                Login / Cadastro
-              </Button>
-            </SignInButton>
-          </SignedOut>
+            
+            <SignedIn>
+              {isAdmin && (
+                <Link 
+                  to="/admin" 
+                  className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium"
+                >
+                  <Shield className="w-4 h-4 mr-1" />
+                  Admin
+                </Link>
+              )}
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                  Entrar
+                </button>
+              </SignInButton>
+            </SignedOut>
+          </div>
         </div>
       </div>
     </nav>
