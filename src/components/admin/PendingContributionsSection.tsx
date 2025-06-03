@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { mockApiService } from '@/services/mockApiService';
+import { contributionStatusService } from '@/services/contributionStatusService';
 import { useToast } from '@/hooks/use-toast';
 
 interface Contribution {
@@ -50,6 +51,11 @@ export const PendingContributionsSection = () => {
 
   useEffect(() => {
     fetchContributions();
+    
+    // Atualizar lista a cada 30 segundos
+    const interval = setInterval(fetchContributions, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleApprove = async (id: string) => {
@@ -105,7 +111,17 @@ export const PendingContributionsSection = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Contribuições Pendentes</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Contribuições Pendentes</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchContributions}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <p>Carregando contribuições...</p>
@@ -117,7 +133,17 @@ export const PendingContributionsSection = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Contribuições Pendentes</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Contribuições Pendentes</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchContributions}
+            disabled={loading}
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {contributions.length === 0 ? (
