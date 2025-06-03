@@ -1,33 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/admin';
 
-// GET - Buscar todas as contribuições (admin)
+// Simulação da API para o ambiente Lovable
+// No ambiente real, use Next.js com Clerk e Prisma
 export async function GET() {
-  try {
-    const { userId } = auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verificar se o usuário é admin
-    if (!isAdmin(userId)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const contributions = await prisma.priceContribution.findMany({
-      include: {
-        product: true,
-        store: true,
-        user: true
+  // Retorna dados mockados para funcionar no Lovable
+  const mockContributions = [
+    {
+      id: '1',
+      price: 5.99,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      user: {
+        name: 'João Silva',
+        email: 'joao@example.com'
       },
-      orderBy: { createdAt: 'desc' }
-    });
+      product: {
+        name: 'Sabão em Pó Ala',
+        quantity: 1,
+        unit: 'kg'
+      },
+      store: {
+        name: 'Supermercado ABC'
+      }
+    }
+  ];
 
-    return NextResponse.json(contributions);
-  } catch (error) {
-    console.error('Error fetching contributions:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
+  return new Response(JSON.stringify(mockContributions), {
+    headers: { 'Content-Type': 'application/json' }
+  });
 }

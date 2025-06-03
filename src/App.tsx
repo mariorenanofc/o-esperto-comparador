@@ -1,9 +1,10 @@
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { ClerkProvider, useClerk } from "@clerk/clerk-react";
-import { QueryClient } from "@tanstack/react-query";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import Home from "./pages/Home";
+import Home from "./pages/Index";
 import Comparison from "./pages/Comparison";
 import Contribute from "./pages/Contribute";
 import Reports from "./pages/Reports";
@@ -13,10 +14,12 @@ import Admin from "./pages/Admin";
 const PUBLISHABLE_KEY =
   "pk_test_Y2xlay1kZWxpY2lvdXMtZ29hdC00Ny5jbGVyay5hY2NvdW50cy5kZXYk";
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
-      <QueryClient>
+      <QueryClientProvider client={queryClient}>
         <Router>
           <Toaster />
           <div className="min-h-screen bg-gray-50">
@@ -30,7 +33,7 @@ function App() {
             </Routes>
           </div>
         </Router>
-      </QueryClient>
+      </QueryClientProvider>
     </ClerkProvider>
   );
 }
