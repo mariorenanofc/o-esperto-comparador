@@ -6,7 +6,7 @@ export const mockApiService = {
     console.log(`Mock: Aprovando contribuição ${id}`);
     return {
       id,
-      status: 'approved',
+      status: 'approved' as const,
       message: 'Contribuição aprovada com sucesso'
     };
   },
@@ -16,7 +16,7 @@ export const mockApiService = {
     console.log(`Mock: Rejeitando contribuição ${id}`);
     return {
       id,
-      status: 'rejected',
+      status: 'rejected' as const,
       message: 'Contribuição rejeitada'
     };
   },
@@ -28,7 +28,7 @@ export const mockApiService = {
       {
         id: '1',
         price: 5.99,
-        status: 'pending',
+        status: 'pending' as const,
         createdAt: new Date().toISOString(),
         user: {
           name: 'João Silva',

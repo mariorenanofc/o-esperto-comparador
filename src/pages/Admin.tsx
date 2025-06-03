@@ -2,7 +2,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import AdminRoute from "@/components/AdminRoute";
-import PendingContributionsSection from "@/components/admin/PendingContributionsSection";
+import { PendingContributionsSection } from "@/components/admin/PendingContributionsSection";
 
 const Admin: React.FC = () => {
   return (
