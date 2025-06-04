@@ -3,10 +3,13 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { Shield, Menu, X } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Shield, Menu, X, Crown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const Navbar: React.FC = () => {
   const { isAdmin } = useAdminAuth();
+  const { currentPlan } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -34,6 +37,18 @@ const Navbar: React.FC = () => {
             </Link>
             <Link to="/reports" className="text-gray-700 hover:text-green-600 transition-colors">
               Relatórios
+            </Link>
+            <Link 
+              to="/plans" 
+              className="flex items-center text-yellow-600 hover:text-yellow-700 transition-colors font-medium"
+            >
+              <Crown className="w-4 h-4 mr-1" />
+              Planos
+              {currentPlan !== 'free' && (
+                <Badge className="ml-2 bg-yellow-500 text-xs">
+                  {currentPlan}
+                </Badge>
+              )}
             </Link>
             
             <SignedIn>
@@ -103,6 +118,19 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Relatórios
+              </Link>
+              <Link 
+                to="/plans" 
+                className="flex items-center text-yellow-600 hover:text-yellow-700 transition-colors font-medium py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Crown className="w-4 h-4 mr-1" />
+                Planos
+                {currentPlan !== 'free' && (
+                  <Badge className="ml-2 bg-yellow-500 text-xs">
+                    {currentPlan}
+                  </Badge>
+                )}
               </Link>
               
               <SignedIn>
