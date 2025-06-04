@@ -7,7 +7,7 @@ export const env = {
   CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlay1kZWxpY2lvdXMtZ29hdC00Ny5jbGVyay5hY2NvdW50cy5kZXYk",
   
   // Database (para uso futuro com Prisma/Neon)
-  DATABASE_URL: process.env.DATABASE_URL || "",
+  DATABASE_URL: import.meta.env.VITE_DATABASE_URL || "",
   
   // URLs de redirecionamento
   AFTER_SIGN_IN_URL: "/",
