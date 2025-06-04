@@ -3,6 +3,7 @@ import React from "react";
 import Navbar from "@/components/Navbar";
 import AdminRoute from "@/components/AdminRoute";
 import { PendingContributionsSection } from "@/components/admin/PendingContributionsSection";
+import { FeedbackSection } from "@/components/admin/FeedbackSection";
 
 const Admin: React.FC = () => {
   return (
@@ -13,7 +14,11 @@ const Admin: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-8">
             Painel Administrativo
           </h1>
-          <PendingContributionsSection />
+          
+          <div className="space-y-8">
+            <PendingContributionsSection />
+            <FeedbackSection />
+          </div>
         </div>
       </div>
     </AdminRoute>

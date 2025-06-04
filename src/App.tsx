@@ -9,6 +9,8 @@ import Contribute from "./pages/Contribute";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ function App() {
             <Route path="/contribute" element={<Contribute />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

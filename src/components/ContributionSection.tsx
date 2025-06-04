@@ -23,11 +23,11 @@ const ContributionSection: React.FC = () => {
     <div className="space-y-10">
       <div className="text-center max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-app-dark mb-4">
-          Contribua com O Esperto Comparador
+          Contribua com o Comparador Online
         </h1>
         <p className="text-lg text-gray-600 mb-6">
           Ajude a nossa comunidade a economizar mais! Compartilhe seus conhecimentos
-          e experiências para tornar o O Esperto Comparador ainda melhor.
+          e experiências para tornar o Comparador Online ainda melhor.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ const ContributionSection: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-gray-600">
-              Quanto mais pessoas usarem o O Esperto Comparador, mais dados
+              Quanto mais pessoas usarem o Comparador Online, mais dados
               teremos para oferecer comparações precisas e atualizadas.
             </p>
             <Button 

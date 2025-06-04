@@ -15,7 +15,7 @@ const Index: React.FC = () => {
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Como Funciona</h2>
           <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-            O Esperto Comparador ajuda você a encontrar os melhores preços em diferentes 
+            O Comparador Online ajuda você a encontrar os melhores preços em diferentes 
             supermercados de forma simples e eficiente.
           </p>
         </div>
@@ -55,7 +55,7 @@ const Index: React.FC = () => {
         <div className="mt-12 sm:mt-20 bg-white p-4 sm:p-8 rounded-lg shadow-md">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="lg:w-1/2 mb-6 lg:mb-0 lg:pr-8">
-              <h2 className="text-xl sm:text-2xl font-bold mb-4">Por que usar o Esperto Comparador?</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-4">Por que usar o Comparador Online?</h2>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <span className="text-app-green font-bold mr-2 mt-1">✓</span>
@@ -90,7 +90,7 @@ const Index: React.FC = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex flex-col lg:flex-row justify-between">
             <div className="mb-6 lg:mb-0">
-              <h3 className="text-lg font-semibold mb-2">O Esperto Comparador</h3>
+              <h3 className="text-lg font-semibold mb-2">Comparador Online</h3>
               <p className="text-gray-300 text-sm sm:text-base">
                 Economize tempo e dinheiro nas suas compras de supermercado.
               </p>
@@ -108,14 +108,14 @@ const Index: React.FC = () => {
               <div>
                 <h3 className="text-sm font-semibold mb-2">Legal</h3>
                 <ul className="space-y-1">
-                  <li><a href="#" className="text-gray-300 hover:text-white text-sm">Termos</a></li>
-                  <li><a href="#" className="text-gray-300 hover:text-white text-sm">Privacidade</a></li>
+                  <li><a href="/terms" className="text-gray-300 hover:text-white text-sm">Termos</a></li>
+                  <li><a href="/privacy" className="text-gray-300 hover:text-white text-sm">Privacidade</a></li>
                 </ul>
               </div>
             </div>
           </div>
           <div className="border-t border-gray-700 mt-6 sm:mt-8 pt-4 sm:pt-6 text-center">
-            <p className="text-gray-300 text-xs sm:text-sm">© 2025 O Esperto Comparador. Todos os direitos reservados.</p>
+            <p className="text-gray-300 text-xs sm:text-sm">© 2025 Comparador Online. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>

@@ -10,6 +10,9 @@ export const offerStorageService = {
   async getTodaysOffers(): Promise<DailyOffer[]> {
     console.log('Getting today\'s offers...');
     
+    // Limpar ofertas antigas automaticamente a cada consulta
+    await this.clearOldOffers();
+    
     // Tentar usar API se disponível
     try {
       if (typeof window !== 'undefined' && !window.location.origin.includes('localhost')) {
@@ -27,17 +30,18 @@ export const offerStorageService = {
     // Fallback para armazenamento local
     console.log('Total offers in memory:', todaysOffers.length);
     
-    // Filtrar apenas ofertas do dia atual
-    const today = new Date();
-    const todayString = today.toDateString();
+    // Filtrar apenas ofertas do dia atual (últimas 24 horas)
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     
     const filteredOffers = todaysOffers.filter(offer => {
-      const offerDate = offer.timestamp.toDateString();
-      console.log('Comparing offer date:', offerDate, 'with today:', todayString);
-      return offerDate === todayString;
+      const offerTime = offer.timestamp.getTime();
+      const isWithin24Hours = offerTime > twentyFourHoursAgo.getTime();
+      console.log('Checking offer:', offer.id, 'timestamp:', offer.timestamp, 'within 24h:', isWithin24Hours);
+      return isWithin24Hours;
     });
     
-    console.log('Filtered offers for today:', filteredOffers);
+    console.log('Filtered offers for last 24 hours:', filteredOffers);
     return filteredOffers;
   },
 
@@ -54,18 +58,18 @@ export const offerStorageService = {
     updateFn(todaysOffers);
   },
 
-  // Limpar ofertas antigas (executar diariamente)
+  // Limpar ofertas antigas (executar automaticamente - agora remove após 24h)
   async clearOldOffers(): Promise<void> {
-    console.log('Clearing old offers...');
-    const today = new Date();
-    const todayString = today.toDateString();
+    console.log('Clearing old offers (older than 24 hours)...');
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     
     const initialCount = todaysOffers.length;
     
-    // Manter apenas ofertas de hoje
+    // Manter apenas ofertas das últimas 24 horas
     todaysOffers = todaysOffers.filter(offer => {
-      const offerDate = offer.timestamp.toDateString();
-      return offerDate === todayString;
+      const offerTime = offer.timestamp.getTime();
+      return offerTime > twentyFourHoursAgo.getTime();
     });
     
     console.log(`Offers cleanup: ${initialCount} -> ${todaysOffers.length}`);
@@ -78,7 +82,7 @@ export const offerStorageService = {
   }
 };
 
-// Executar limpeza automática a cada hora
+// Executar limpeza automática a cada 30 minutos para manter o sistema limpo
 setInterval(() => {
   offerStorageService.clearOldOffers();
-}, 60 * 60 * 1000); // 1 hora
+}, 30 * 60 * 1000); // 30 minutos

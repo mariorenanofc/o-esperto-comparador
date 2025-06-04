@@ -21,6 +21,9 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
     title: "",
     description: "",
     category: "improvement",
+    userName: "",
+    userEmail: "",
+    userPhone: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +34,7 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
       return;
     }
 
-    if (!formData.title || !formData.description) {
+    if (!formData.title || !formData.description || !formData.userName || !formData.userEmail) {
       toast.error("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
@@ -61,6 +64,40 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="userName">Nome Completo *</Label>
+            <Input
+              id="userName"
+              value={formData.userName}
+              onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
+              placeholder="Seu nome completo"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="userEmail">Email *</Label>
+            <Input
+              id="userEmail"
+              type="email"
+              value={formData.userEmail}
+              onChange={(e) => setFormData({ ...formData, userEmail: e.target.value })}
+              placeholder="seu@email.com"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="userPhone">Telefone</Label>
+            <Input
+              id="userPhone"
+              type="tel"
+              value={formData.userPhone}
+              onChange={(e) => setFormData({ ...formData, userPhone: e.target.value })}
+              placeholder="(11) 99999-9999"
+            />
+          </div>
+
           <div>
             <Label htmlFor="category">Categoria</Label>
             <Select value={formData.category} onValueChange={(value: any) => setFormData({ ...formData, category: value })}>
