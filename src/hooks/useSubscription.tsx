@@ -1,153 +1,80 @@
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useUser } from '@clerk/clerk-react';
-import { PlanTier, getPlanById } from '@/lib/plans';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { PlanTier } from '@/lib/plans';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface SubscriptionContextType {
   currentPlan: PlanTier;
   isLoading: boolean;
-  checkSubscription: () => Promise<void>;
   createCheckout: (planId: PlanTier) => Promise<void>;
   manageSubscription: () => Promise<void>;
-  canUseFeature: (feature: string, currentUsage: number) => boolean;
-  getRemainingUsage: (feature: string, currentUsage: number) => number;
+  updateUserPlan: (planId: PlanTier) => Promise<void>;
 }
 
-const SubscriptionContext = createContext<SubscriptionContextType | null>(null);
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
-export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
-  const { user, isLoaded } = useUser();
+export function SubscriptionProvider({ children }: { children: ReactNode }) {
+  const { profile, updateProfile } = useAuth();
   const { toast } = useToast();
-  const [currentPlan, setCurrentPlan] = useState<PlanTier>('free');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const checkSubscription = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      // Aqui vamos integrar com a API do Stripe via Supabase Edge Functions
-      // Por enquanto, vamos usar localStorage para simulação
-      const savedPlan = localStorage.getItem(`user_plan_${user.id}`) as PlanTier;
-      if (savedPlan && ['free', 'premium', 'pro', 'empresarial'].includes(savedPlan)) {
-        setCurrentPlan(savedPlan);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar assinatura:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível verificar sua assinatura.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const currentPlan: PlanTier = profile?.plan || 'free';
+  const isLoading = false; // Será usado quando implementarmos Stripe
 
   const createCheckout = async (planId: PlanTier) => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Você precisa estar logado para assinar um plano.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Aqui vamos integrar com Stripe Checkout via Supabase Edge Functions
-      // Por enquanto, vamos simular o sucesso
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      localStorage.setItem(`user_plan_${user.id}`, planId);
-      setCurrentPlan(planId);
-      
-      toast({
-        title: "Sucesso!",
-        description: `Você agora tem o plano ${getPlanById(planId).name}!`,
-      });
-    } catch (error) {
-      console.error('Erro ao criar checkout:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível processar o pagamento.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Implementar integração com Stripe
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: `Checkout para o plano ${planId} será implementado em breve`,
+    });
+    console.log('Creating checkout for plan:', planId);
   };
 
   const manageSubscription = async () => {
-    if (!user) return;
+    // TODO: Implementar portal do cliente Stripe
+    toast({
+      title: "Portal do cliente",
+      description: "Portal de gerenciamento será implementado em breve",
+    });
+    console.log('Managing subscription');
+  };
 
-    setIsLoading(true);
-    try {
-      // Aqui vamos integrar com Stripe Customer Portal
-      // Por enquanto, vamos simular
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      toast({
-        title: "Portal do cliente",
-        description: "Redirecionando para gerenciar sua assinatura...",
-      });
-    } catch (error) {
-      console.error('Erro ao acessar portal:', error);
+  const updateUserPlan = async (planId: PlanTier) => {
+    const { error } = await updateProfile({ plan: planId });
+    
+    if (error) {
       toast({
         title: "Erro",
-        description: "Não foi possível acessar o portal de gerenciamento.",
-        variant: "destructive"
+        description: "Não foi possível atualizar o plano",
+        variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast({
+        title: "Plano atualizado",
+        description: `Seu plano foi atualizado para ${planId}`,
+      });
     }
   };
 
-  const canUseFeature = (feature: string, currentUsage: number): boolean => {
-    const plan = getPlanById(currentPlan);
-    const limit = plan.limitations[feature as keyof typeof plan.limitations];
-    
-    if (limit === -1) return true;
-    return currentUsage < limit;
+  const value = {
+    currentPlan,
+    isLoading,
+    createCheckout,
+    manageSubscription,
+    updateUserPlan,
   };
-
-  const getRemainingUsage = (feature: string, currentUsage: number): number => {
-    const plan = getPlanById(currentPlan);
-    const limit = plan.limitations[feature as keyof typeof plan.limitations];
-    
-    if (limit === -1) return -1; // Ilimitado
-    return Math.max(0, limit - currentUsage);
-  };
-
-  useEffect(() => {
-    if (isLoaded && user) {
-      checkSubscription();
-    }
-  }, [isLoaded, user]);
 
   return (
-    <SubscriptionContext.Provider
-      value={{
-        currentPlan,
-        isLoading,
-        checkSubscription,
-        createCheckout,
-        manageSubscription,
-        canUseFeature,
-        getRemainingUsage,
-      }}
-    >
+    <SubscriptionContext.Provider value={value}>
       {children}
     </SubscriptionContext.Provider>
   );
-};
+}
 
-export const useSubscription = () => {
+export function useSubscription() {
   const context = useContext(SubscriptionContext);
-  if (!context) {
-    throw new Error('useSubscription deve ser usado dentro de SubscriptionProvider');
+  if (context === undefined) {
+    throw new Error('useSubscription must be used within a SubscriptionProvider');
   }
   return context;
-};
+}

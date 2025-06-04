@@ -19,10 +19,13 @@ export interface ComparisonData {
 }
 
 export interface MonthlyReport {
+  id: string;
+  user_id: string;
   month: string;
   year: number;
-  totalSpent: number;
-  comparisons: ComparisonData[];
+  total_spent: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductFormData {
@@ -61,4 +64,34 @@ export interface PriceValidationResult {
   conflictingContributor?: string;
   priceDifference?: number;
   message?: string;
+}
+
+// Tipos específicos do Supabase
+export interface Profile {
+  id: string;
+  email: string;
+  name: string | null;
+  plan: 'free' | 'premium' | 'pro' | 'empresarial';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Comparison {
+  id: string;
+  user_id: string;
+  title: string | null;
+  date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Suggestion {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: 'improvement' | 'feature' | 'bug' | 'other';
+  status: 'open' | 'in-review' | 'implemented' | 'closed';
+  created_at: string;
+  updated_at: string;
 }
