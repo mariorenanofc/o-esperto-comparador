@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Chrome, Mail } from "lucide-react";
 
 const SignUp: React.FC = () => {
-  const { signUp, loading } = useAuth();
+  const { signUp, signInWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -46,6 +47,14 @@ const SignUp: React.FC = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    const { error } = await signInWithGoogle();
+    
+    if (error) {
+      toast.error("Erro ao fazer login com Google. Tente novamente.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-app-gray flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -56,7 +65,29 @@ const SignUp: React.FC = () => {
           </CardDescription>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Google Login Button - Prominent */}
+          <Button 
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 py-3"
+            variant="outline"
+          >
+            <Chrome className="w-5 h-5 text-blue-500" />
+            {loading ? "Conectando..." : "Criar conta com Google"}
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-muted-foreground">
+                Ou crie conta com email
+              </span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name">Nome Completo</Label>
@@ -108,9 +139,10 @@ const SignUp: React.FC = () => {
             <Button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-app-green hover:bg-green-600"
+              className="w-full bg-app-green hover:bg-green-600 flex items-center justify-center gap-2"
             >
-              {loading ? "Criando conta..." : "Criar Conta"}
+              <Mail className="w-4 h-4" />
+              {loading ? "Criando conta..." : "Criar Conta com Email"}
             </Button>
           </form>
 
