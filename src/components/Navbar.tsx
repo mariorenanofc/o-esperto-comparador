@@ -85,7 +85,7 @@ const Navbar: React.FC = () => {
                 </div>
               </>
             ) : (
-              <Link to="/login">
+              <Link to="/sign-in">
                 <Button className="bg-green-600 text-white hover:bg-green-700">
                   Entrar
                 </Button>
@@ -179,7 +179,7 @@ const Navbar: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link to="/sign-in" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="bg-green-600 text-white hover:bg-green-700 w-full">
                     Entrar
                   </Button>

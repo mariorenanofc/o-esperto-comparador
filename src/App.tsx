@@ -14,6 +14,8 @@ import Admin from "./pages/Admin";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Plans from "./pages/Plans";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,8 @@ function App() {
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/sign-in" element={<SignIn />} />
+                <Route path="/sign-up" element={<SignUp />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
