@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { DailyOffer } from "@/lib/types";
 import { dailyOffersService } from "@/services/dailyOffersService";
@@ -14,7 +14,7 @@ interface DailyOffersSectionProps {
 }
 
 const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) => {
-  const { isSignedIn } = useAuth();
+  const { user } = useAuth();
   const { city } = useGeolocation();
   const [showAll, setShowAll] = useState(false);
   const [visibleOffers, setVisibleOffers] = useState<DailyOffer[]>([]);
@@ -117,12 +117,12 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
   const displayOffers = actualOffers.length > 0 ? actualOffers : (offers.length > 0 ? offers : mockOffers);
 
   useEffect(() => {
-    if (isSignedIn || showAll) {
+    if (user || showAll) {
       setVisibleOffers(displayOffers);
     } else {
       setVisibleOffers(displayOffers.slice(0, 3));
     }
-  }, [isSignedIn, showAll, displayOffers]);
+  }, [user, showAll, displayOffers]);
 
   if (loading) {
     return <LoadingState />;
@@ -140,7 +140,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
         <OffersGrid
           visibleOffers={visibleOffers}
           displayOffers={displayOffers}
-          isSignedIn={!!isSignedIn}
+          isSignedIn={!!user}
           showAll={showAll}
           onShowAll={() => setShowAll(true)}
         />

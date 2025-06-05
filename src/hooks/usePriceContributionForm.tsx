@@ -1,13 +1,25 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabaseDailyOffersService } from '@/services/supabase/dailyOffersService';
 import { PriceContribution } from '@/lib/types';
 import { toast } from 'sonner';
 
 export const usePriceContributionForm = () => {
   const { user, profile } = useAuth();
+  const { city, state, loading: locationLoading } = useGeolocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<PriceContribution>({
+    productName: '',
+    price: 0,
+    storeName: '',
+    city: city || '',
+    state: state || '',
+    userId: '',
+    timestamp: new Date(),
+    verified: false
+  });
 
   const validateContribution = async (contribution: PriceContribution) => {
     if (!user) {
@@ -61,9 +73,43 @@ export const usePriceContributionForm = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await submitContribution(formData);
+    if (success) {
+      setFormData({
+        productName: '',
+        price: 0,
+        storeName: '',
+        city: city || '',
+        state: state || '',
+        userId: '',
+        timestamp: new Date(),
+        verified: false
+      });
+    }
+  };
+
+  const updateLocationWhenLoaded = () => {
+    if (city && state && !formData.city && !formData.state) {
+      setFormData(prev => ({
+        ...prev,
+        city,
+        state
+      }));
+    }
+  };
+
   return {
     submitContribution,
     validateContribution,
     isSubmitting,
+    formData,
+    setFormData,
+    handleSubmit,
+    locationLoading,
+    city,
+    state,
+    updateLocationWhenLoaded,
   };
 };

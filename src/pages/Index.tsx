@@ -3,9 +3,11 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import DailyOffersSection from "@/components/DailyOffersSection";
 import { PlanStatus } from "@/components/PlanStatus";
-import { SignedIn } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-app-gray">
       <Navbar />
@@ -14,14 +16,14 @@ const Index: React.FC = () => {
       
       <div className="container mx-auto py-8 sm:py-16 px-4 sm:px-6">
         {/* Status do Plano - apenas para usuários logados */}
-        <SignedIn>
+        {user && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-4">Meu Plano</h2>
             <div className="max-w-md">
               <PlanStatus />
             </div>
           </div>
-        </SignedIn>
+        )}
 
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Como Funciona</h2>

@@ -4,35 +4,60 @@ export interface Product {
   name: string;
   quantity: number;
   unit: string;
-  prices: { [storeId: string]: number };
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Store {
   id: string;
   name: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface ComparisonData {
-  products: Product[];
-  stores: Store[];
-  date?: Date;
+export interface Price {
+  id: string;
+  product_id: string;
+  store_id: string;
+  price: number;
+  created_at?: string;
+  updated_at?: string;
+  product?: Product;
+  store?: Store;
+}
+
+export interface Comparison {
+  id: string;
+  user_id: string;
+  name: string;
+  total_spent: number;
+  created_at: string;
+  updated_at?: string;
+  comparison_items?: ComparisonItem[];
+}
+
+export interface ComparisonItem {
+  id: string;
+  comparison_id: string;
+  product_id: string;
+  store_id: string;
+  quantity: number;
+  price: number;
+  created_at?: string;
+  product?: Product;
+  store?: Store;
 }
 
 export interface MonthlyReport {
   id: string;
   user_id: string;
-  month: string;
+  month: number;
   year: number;
   total_spent: number;
+  total_savings: number;
+  comparison_count: number;
   created_at: string;
-  updated_at: string;
-}
-
-export interface ProductFormData {
-  name: string;
-  quantity: number;
-  unit: string;
-  prices: { [storeId: string]: number };
+  comparisons?: Comparison[];
 }
 
 export interface DailyOffer {
@@ -54,44 +79,31 @@ export interface PriceContribution {
   storeName: string;
   city: string;
   state: string;
-  quantity: number;
-  unit: string;
+  userId: string;
+  timestamp: Date;
+  verified: boolean;
 }
 
-export interface PriceValidationResult {
-  isValid: boolean;
-  conflictingPrice?: number;
-  conflictingContributor?: string;
-  priceDifference?: number;
-  message?: string;
-}
-
-// Tipos específicos do Supabase
-export interface Profile {
-  id: string;
-  email: string;
-  name: string | null;
-  plan: 'free' | 'premium' | 'pro' | 'empresarial';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Comparison {
+export interface ContributionStatus {
   id: string;
   user_id: string;
-  title: string | null;
-  date: string;
+  product_name: string;
+  store_name: string;
+  price: number;
+  city: string;
+  state: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+  reviewer_id?: string;
+  reviewed_at?: string;
+  notes?: string;
 }
 
-export interface Suggestion {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  category: 'improvement' | 'feature' | 'bug' | 'other';
-  status: 'open' | 'in-review' | 'implemented' | 'closed';
-  created_at: string;
-  updated_at: string;
+export interface PlanLimits {
+  comparisons: number;
+  reports: number;
+  features: string[];
 }
+
+export type PlanTier = 'free' | 'premium' | 'pro';

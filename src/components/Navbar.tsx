@@ -1,19 +1,26 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Shield, Menu, X, Crown } from "lucide-react";
+import { Shield, Menu, X, Crown, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const Navbar: React.FC = () => {
-  const { isAdmin } = useAdminAuth();
+  const { user, signOut } = useAuth();
   const { currentPlan } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Simple admin check - you can enhance this later
+  const isAdmin = user?.email === 'admin@example.com'; // Replace with your admin logic
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -51,33 +58,53 @@ const Navbar: React.FC = () => {
               )}
             </Link>
             
-            <SignedIn>
-              {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium"
-                >
-                  <Shield className="w-4 h-4 mr-1" />
-                  Admin
-                </Link>
-              )}
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-            
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link 
+                    to="/admin" 
+                    className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium"
+                  >
+                    <Shield className="w-4 h-4 mr-1" />
+                    Admin
+                  </Link>
+                )}
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">
+                    {user.email}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-1"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sair</span>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button className="bg-green-600 text-white hover:bg-green-700">
                   Entrar
-                </button>
-              </SignInButton>
-            </SignedOut>
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
+            {user && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="flex items-center space-x-1"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            )}
             <button
               onClick={toggleMobileMenu}
               className="text-gray-700 hover:text-green-600 transition-colors"
@@ -133,26 +160,31 @@ const Navbar: React.FC = () => {
                 )}
               </Link>
               
-              <SignedIn>
-                {isAdmin && (
-                  <Link 
-                    to="/admin" 
-                    className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium py-2"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Shield className="w-4 h-4 mr-1" />
-                    Admin
-                  </Link>
-                )}
-              </SignedIn>
-              
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors w-full text-left">
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link 
+                      to="/admin" 
+                      className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium py-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Shield className="w-4 h-4 mr-1" />
+                      Admin
+                    </Link>
+                  )}
+                  <div className="py-2">
+                    <span className="text-sm text-gray-600">
+                      {user.email}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="bg-green-600 text-white hover:bg-green-700 w-full">
                     Entrar
-                  </button>
-                </SignInButton>
-              </SignedOut>
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         )}

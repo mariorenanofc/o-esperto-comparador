@@ -11,7 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.31.4",
     "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^6.8.2",
     "@radix-ui/react-accordion": "^1.2.0",

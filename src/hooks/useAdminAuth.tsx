@@ -1,15 +1,15 @@
 
-import { useUser } from "@clerk/clerk-react";
-import { isAdmin } from "@/lib/admin";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useAdminAuth = () => {
-  const { user, isLoaded } = useUser();
+  const { user, loading } = useAuth();
   
-  const isUserAdmin = user ? isAdmin(user.id) : false;
+  // Simple admin check - you can enhance this with a proper admin table
+  const isUserAdmin = user?.email === 'admin@example.com'; // Replace with your admin logic
   
   return {
     isAdmin: isUserAdmin,
-    isLoaded,
+    isLoaded: !loading,
     user
   };
 };

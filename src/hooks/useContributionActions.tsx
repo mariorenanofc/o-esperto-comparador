@@ -1,10 +1,10 @@
 
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState } from "react";
 
 export const useContributionActions = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
   const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
 
