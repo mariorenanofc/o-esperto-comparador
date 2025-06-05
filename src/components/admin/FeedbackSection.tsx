@@ -147,7 +147,7 @@ export const FeedbackSection = () => {
                 <div className="text-right">
                   {getStatusBadge(feedback.status)}
                   <p className="text-sm text-gray-500 mt-1">
-                    {new Date(feedback.createdAt).toLocaleDateString('pt-BR', {
+                    {new Date(feedback.created_at || feedback.createdAt || '').toLocaleDateString('pt-BR', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
@@ -164,15 +164,15 @@ export const FeedbackSection = () => {
                   Dados do Usuário
                 </h4>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><strong>Nome:</strong> {feedback.userName}</p>
+                  <p><strong>Nome:</strong> {feedback.user_name || feedback.userName}</p>
                   <p className="flex items-center">
                     <Mail className="w-4 h-4 mr-1" />
-                    <strong>Email:</strong> {feedback.userEmail}
+                    <strong>Email:</strong> {feedback.user_email || feedback.userEmail}
                   </p>
-                  {feedback.userPhone && (
+                  {(feedback.user_phone || feedback.userPhone) && (
                     <p className="flex items-center">
                       <Phone className="w-4 h-4 mr-1" />
-                      <strong>Telefone:</strong> {feedback.userPhone}
+                      <strong>Telefone:</strong> {feedback.user_phone || feedback.userPhone}
                     </p>
                   )}
                 </div>

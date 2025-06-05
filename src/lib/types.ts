@@ -35,6 +35,9 @@ export interface Comparison {
   created_at: string;
   updated_at?: string;
   comparison_items?: ComparisonItem[];
+  products?: Product[];
+  stores?: Store[];
+  date?: Date;
 }
 
 export interface ComparisonItem {
@@ -140,4 +143,20 @@ export interface UserProfile {
   email: string;
   plan?: PlanTier;
   created_at?: string;
+}
+
+export interface UserFeedback {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: 'new' | 'reviewed' | 'resolved';
+  created_at: string;
+  user_name?: string;
+  user_email?: string;
+  user_phone?: string;
+  userName?: string;
+  userEmail?: string;
+  userPhone?: string;
+  createdAt?: string;
 }

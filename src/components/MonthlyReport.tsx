@@ -8,11 +8,21 @@ import PriceTable from "./PriceTable";
 // Mock data for demonstration purposes
 const mockMonthlyReports: MonthlyReportType[] = [
   {
-    month: "Janeiro",
+    id: "1",
+    user_id: "1",
+    month: 1,
     year: 2025,
-    totalSpent: 542.87,
+    total_spent: 542.87,
+    total_savings: 45.20,
+    comparison_count: 1,
+    created_at: "2025-01-15T00:00:00Z",
     comparisons: [
       {
+        id: "comp-1",
+        user_id: "1",
+        name: "Compras Janeiro",
+        total_spent: 542.87,
+        created_at: "2025-01-15T00:00:00Z",
         products: [
           {
             id: "product-1",
@@ -45,11 +55,21 @@ const mockMonthlyReports: MonthlyReportType[] = [
     ]
   },
   {
-    month: "Fevereiro",
+    id: "2",
+    user_id: "1",
+    month: 2,
     year: 2025,
-    totalSpent: 498.32,
+    total_spent: 498.32,
+    total_savings: 32.15,
+    comparison_count: 1,
+    created_at: "2025-02-10T00:00:00Z",
     comparisons: [
       {
+        id: "comp-2",
+        user_id: "1",
+        name: "Compras Fevereiro",
+        total_spent: 498.32,
+        created_at: "2025-02-10T00:00:00Z",
         products: [
           {
             id: "product-4",
@@ -83,6 +103,14 @@ const MonthlyReport: React.FC = () => {
   // In a real application, you would fetch this data from an API or localStorage
   const reports = mockMonthlyReports;
 
+  const getMonthName = (month: number) => {
+    const months = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+    return months[month - 1] || "Mês";
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
@@ -92,7 +120,7 @@ const MonthlyReport: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium">
-                {selectedReport.month} {selectedReport.year}
+                {getMonthName(selectedReport.month)} {selectedReport.year}
               </h3>
               <Button
                 variant="outline"
@@ -112,7 +140,7 @@ const MonthlyReport: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-app-green">
-                    R$ {selectedReport.totalSpent.toFixed(2)}
+                    R$ {selectedReport.total_spent.toFixed(2)}
                   </p>
                 </CardContent>
               </Card>
@@ -123,7 +151,7 @@ const MonthlyReport: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-app-blue">
-                    {selectedReport.comparisons.length}
+                    {selectedReport.comparisons?.length || 0}
                   </p>
                 </CardContent>
               </Card>
@@ -131,19 +159,19 @@ const MonthlyReport: React.FC = () => {
 
             <h3 className="text-lg font-medium mt-8 mb-4">Comparações do Mês</h3>
 
-            {selectedReport.comparisons.map((comparison, index) => (
+            {selectedReport.comparisons?.map((comparison, index) => (
               <div
-                key={index}
+                key={comparison.id}
                 className="border rounded-md p-4 mb-4 cursor-pointer hover:bg-gray-50"
                 onClick={() => setSelectedComparison(selectedComparison === index ? null : index)}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">
-                      Data: {comparison.date?.toLocaleDateString()}
+                      Data: {comparison.date?.toLocaleDateString() || new Date(comparison.created_at).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {comparison.products.length} produtos em {comparison.stores.length} mercados
+                      {comparison.products?.length || 0} produtos em {comparison.stores?.length || 0} mercados
                     </p>
                   </div>
                   <Button variant="ghost" size="sm">
@@ -151,9 +179,13 @@ const MonthlyReport: React.FC = () => {
                   </Button>
                 </div>
 
-                {selectedComparison === index && (
+                {selectedComparison === index && comparison.products && comparison.stores && (
                   <div className="mt-4">
-                    <PriceTable comparisonData={comparison} />
+                    <PriceTable comparisonData={{
+                      products: comparison.products,
+                      stores: comparison.stores,
+                      date: comparison.date
+                    }} />
                   </div>
                 )}
               </div>
@@ -169,15 +201,15 @@ const MonthlyReport: React.FC = () => {
               >
                 <CardHeader>
                   <CardTitle>
-                    {report.month} {report.year}
+                    {getMonthName(report.month)} {report.year}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="font-medium text-app-green">
-                    Total: R$ {report.totalSpent.toFixed(2)}
+                    Total: R$ {report.total_spent.toFixed(2)}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {report.comparisons.length} comparação(ões)
+                    {report.comparisons?.length || 0} comparação(ões)
                   </p>
                 </CardContent>
               </Card>
