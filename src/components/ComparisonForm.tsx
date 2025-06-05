@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +9,13 @@ import PriceTable from "./PriceTable";
 import BestPricesByStore from "./BestPricesByStore";
 import { ComparisonData, Product, ProductFormData, Store } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
 const ComparisonForm: React.FC = () => {
-  const { isSignedIn, user } = useUser();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
   const [comparisonData, setComparisonData] = useState<ComparisonData>({
     products: [],
     stores: [],
