@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/useAuth";
 import { contributionService, SuggestionData } from "@/services/contributionService";
 
 interface SuggestionFormProps {
@@ -15,7 +15,7 @@ interface SuggestionFormProps {
 }
 
 const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<SuggestionData>({
     title: "",
