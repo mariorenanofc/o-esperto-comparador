@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,12 +38,12 @@ export const FeedbackSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleStatusUpdate = async (feedbackId: string, status: 'reviewed' | 'resolved') => {
+  const handleStatusUpdate = async (feedbackId: string, status: 'in-review' | 'implemented') => {
     try {
       await contributionService.updateFeedbackStatus(feedbackId, status);
       toast({
         title: "Sucesso",
-        description: `Feedback marcado como ${status === 'reviewed' ? 'revisado' : 'resolvido'}`,
+        description: `Feedback marcado como ${status === 'in-review' ? 'em revisão' : 'implementado'}`,
       });
       fetchFeedbacks(); // Recarrega a lista
     } catch (error) {
@@ -59,12 +58,14 @@ export const FeedbackSection = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'new':
+      case 'open':
         return <Badge variant="destructive"><MessageSquare className="w-4 h-4 mr-1" />Novo</Badge>;
-      case 'reviewed':
-        return <Badge variant="secondary"><Clock className="w-4 h-4 mr-1" />Revisado</Badge>;
-      case 'resolved':
-        return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Resolvido</Badge>;
+      case 'in-review':
+        return <Badge variant="secondary"><Clock className="w-4 h-4 mr-1" />Em Revisão</Badge>;
+      case 'implemented':
+        return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Implementado</Badge>;
+      case 'closed':
+        return <Badge variant="outline"><CheckCircle className="w-4 h-4 mr-1" />Fechado</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -147,7 +148,7 @@ export const FeedbackSection = () => {
                 <div className="text-right">
                   {getStatusBadge(feedback.status)}
                   <p className="text-sm text-gray-500 mt-1">
-                    {new Date(feedback.created_at || feedback.createdAt || '').toLocaleDateString('pt-BR', {
+                    {new Date(feedback.created_at).toLocaleDateString('pt-BR', {
                       day: '2-digit',
                       month: '2-digit',
                       year: 'numeric',
@@ -164,50 +165,50 @@ export const FeedbackSection = () => {
                   Dados do Usuário
                 </h4>
                 <div className="text-sm text-gray-600 space-y-1">
-                  <p><strong>Nome:</strong> {feedback.user_name || feedback.userName}</p>
+                  <p><strong>Nome:</strong> {feedback.user_name}</p>
                   <p className="flex items-center">
                     <Mail className="w-4 h-4 mr-1" />
-                    <strong>Email:</strong> {feedback.user_email || feedback.userEmail}
+                    <strong>Email:</strong> {feedback.user_email}
                   </p>
-                  {(feedback.user_phone || feedback.userPhone) && (
+                  {feedback.user_phone && (
                     <p className="flex items-center">
                       <Phone className="w-4 h-4 mr-1" />
-                      <strong>Telefone:</strong> {feedback.user_phone || feedback.userPhone}
+                      <strong>Telefone:</strong> {feedback.user_phone}
                     </p>
                   )}
                 </div>
               </div>
 
-              {feedback.status === 'new' && (
+              {feedback.status === 'open' && (
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleStatusUpdate(feedback.id, 'reviewed')}
+                    onClick={() => handleStatusUpdate(feedback.id, 'in-review')}
                     className="bg-blue-600 hover:bg-blue-700"
                     size="sm"
                   >
                     <Clock className="w-4 h-4 mr-1" />
-                    Marcar como Revisado
+                    Marcar como Em Revisão
                   </Button>
                   <Button
-                    onClick={() => handleStatusUpdate(feedback.id, 'resolved')}
+                    onClick={() => handleStatusUpdate(feedback.id, 'implemented')}
                     className="bg-green-600 hover:bg-green-700"
                     size="sm"
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Marcar como Resolvido
+                    Marcar como Implementado
                   </Button>
                 </div>
               )}
 
-              {feedback.status === 'reviewed' && (
+              {feedback.status === 'in-review' && (
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleStatusUpdate(feedback.id, 'resolved')}
+                    onClick={() => handleStatusUpdate(feedback.id, 'implemented')}
                     className="bg-green-600 hover:bg-green-700"
                     size="sm"
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Marcar como Resolvido
+                    Marcar como Implementado
                   </Button>
                 </div>
               )}

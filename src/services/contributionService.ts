@@ -15,7 +15,7 @@ export interface UserFeedback {
   title: string;
   description: string;
   category: string;
-  status: 'open' | 'in_progress' | 'closed';
+  status: 'open' | 'in-review' | 'implemented' | 'closed';
   created_at: string;
   user_name?: string;
   user_email?: string;
