@@ -42,13 +42,13 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, setForm
             id="quantity"
             type="number"
             min="1"
-            value={formData.quantity}
+            value={formData.quantity || 1}
             onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
           />
         </div>
         <div>
           <Label htmlFor="unit">Unidade</Label>
-          <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+          <Select value={formData.unit || 'unidade'} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

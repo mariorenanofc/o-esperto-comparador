@@ -6,7 +6,11 @@ import { supabaseDailyOffersService } from '@/services/supabase/dailyOffersServi
 import { PriceContribution } from '@/lib/types';
 import { toast } from 'sonner';
 
-export const usePriceContributionForm = () => {
+interface UsePriceContributionFormProps {
+  onClose?: () => void;
+}
+
+export const usePriceContributionForm = (props?: UsePriceContributionFormProps) => {
   const { user, profile } = useAuth();
   const { city, state, loading: locationLoading } = useGeolocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,7 +22,9 @@ export const usePriceContributionForm = () => {
     state: state || '',
     userId: '',
     timestamp: new Date(),
-    verified: false
+    verified: false,
+    quantity: 1,
+    unit: 'unidade'
   });
 
   const validateContribution = async (contribution: PriceContribution) => {
@@ -85,17 +91,22 @@ export const usePriceContributionForm = () => {
         state: state || '',
         userId: '',
         timestamp: new Date(),
-        verified: false
+        verified: false,
+        quantity: 1,
+        unit: 'unidade'
       });
+      if (props?.onClose) {
+        props.onClose();
+      }
     }
   };
 
-  const updateLocationWhenLoaded = () => {
-    if (city && state && !formData.city && !formData.state) {
+  const updateLocationWhenLoaded = (newCity: string, newState: string) => {
+    if (newCity && newState && !formData.city && !formData.state) {
       setFormData(prev => ({
         ...prev,
-        city,
-        state
+        city: newCity,
+        state: newState
       }));
     }
   };

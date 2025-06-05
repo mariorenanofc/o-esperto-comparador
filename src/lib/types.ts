@@ -4,6 +4,7 @@ export interface Product {
   name: string;
   quantity: number;
   unit: string;
+  prices: { [storeId: string]: number };
   created_at?: string;
   updated_at?: string;
 }
@@ -82,6 +83,8 @@ export interface PriceContribution {
   userId: string;
   timestamp: Date;
   verified: boolean;
+  quantity?: number;
+  unit?: string;
 }
 
 export interface ContributionStatus {
@@ -107,3 +110,34 @@ export interface PlanLimits {
 }
 
 export type PlanTier = 'free' | 'premium' | 'pro';
+
+// Additional types needed for the application
+export interface ComparisonData {
+  products: Product[];
+  stores: Store[];
+  date?: Date;
+  userId?: string;
+}
+
+export interface ProductFormData {
+  name: string;
+  quantity: number;
+  unit: string;
+  prices: { [storeId: string]: number };
+}
+
+export interface PriceValidationResult {
+  isValid: boolean;
+  message?: string;
+  conflictingPrice?: number;
+  conflictingContributor?: string;
+  priceDifference?: number;
+}
+
+export interface UserProfile {
+  id: string;
+  name?: string;
+  email: string;
+  plan?: PlanTier;
+  created_at?: string;
+}
