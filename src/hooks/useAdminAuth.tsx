@@ -1,10 +1,10 @@
 
 import { useAuth } from "@/hooks/useAuth";
 
-// Lista de User IDs que são administradores - substitua pelos IDs reais
+// Lista de User IDs que são administradores
 const ADMIN_USER_IDS = [
-  'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Substitua pelo ID real do primeiro admin
-  '6ba7b810-9dad-11d1-80b4-00c04fd430c8'  // Substitua pelo ID real do segundo admin
+  '2e83f998-48e4-4b71-ae39-3118b42a3e51',
+  'bded2150-509c-4d02-a8fc-2c45977a3b13'
 ];
 
 export const useAdminAuth = () => {
