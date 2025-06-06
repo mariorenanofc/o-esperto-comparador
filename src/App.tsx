@@ -17,9 +17,34 @@ import Plans from "./pages/Plans";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 
-const queryClient = new QueryClient();
+// Create QueryClient with proper configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
+  // Add defensive check for React
+  if (!React || !React.useEffect) {
+    console.error("React hooks not properly available");
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">
+            Erro de carregamento
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Recarregue a página para tentar novamente.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
