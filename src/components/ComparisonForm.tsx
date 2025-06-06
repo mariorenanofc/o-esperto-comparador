@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import BestPricesByStore from "./BestPricesByStore";
 import { ComparisonData, Product, ProductFormData, Store } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { comparisonService } from "@/services/comparisonService";
 
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
@@ -24,6 +24,7 @@ const ComparisonForm: React.FC = () => {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductFormData | undefined>(undefined);
   const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Carregar do localStorage ao montar
   useEffect(() => {
@@ -35,7 +36,7 @@ const ComparisonForm: React.FC = () => {
         if (parsed.date) parsed.date = new Date(parsed.date);
         setComparisonData(parsed);
       } catch (e) {
-        // Se erro, ignora.
+        console.error('Error loading from localStorage:', e);
       }
     }
   }, []);
@@ -191,8 +192,8 @@ const ComparisonForm: React.FC = () => {
     });
   };
 
-  const saveComparisonData = () => {
-    if (!isSignedIn) {
+  const saveComparisonData = async () => {
+    if (!isSignedIn || !user) {
       toast({
         title: "Login necessário",
         description: "Você precisa estar logado para salvar comparações.",
@@ -201,23 +202,54 @@ const ComparisonForm: React.FC = () => {
       return;
     }
 
-    const currentDate = new Date();
-    const updatedComparisonData = {
-      ...comparisonData,
-      date: currentDate,
-      userId: user?.id, // Adiciona o ID do usuário
-    };
-    
-    console.log("Saving comparison data:", updatedComparisonData);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedComparisonData));
-    
-    // TODO: Implementar salvamento no banco de dados
-    // await saveComparisonToDatabase(updatedComparisonData);
-    
-    toast({
-      title: "Comparação salva",
-      description: `Sua comparação de preços foi salva com sucesso.`,
-    });
+    if (comparisonData.products.length === 0) {
+      toast({
+        title: "Erro",
+        description: "Adicione pelo menos um produto para salvar a comparação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const currentDate = new Date();
+      const updatedComparisonData = {
+        ...comparisonData,
+        date: currentDate,
+        userId: user.id,
+      };
+      
+      console.log("Saving comparison data:", updatedComparisonData);
+      
+      // Salvar no Supabase
+      const savedComparison = await comparisonService.saveComparison(updatedComparisonData);
+      
+      console.log("Comparison saved:", savedComparison);
+      
+      // Limpar localStorage após salvar com sucesso
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      
+      // Resetar formulário
+      setComparisonData({
+        products: [],
+        stores: [],
+      });
+      
+      toast({
+        title: "Comparação salva",
+        description: `Sua comparação de preços foi salva com sucesso no banco de dados.`,
+      });
+    } catch (error) {
+      console.error('Error saving comparison:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar a comparação. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -348,8 +380,9 @@ const ComparisonForm: React.FC = () => {
             <Button 
               onClick={saveComparisonData} 
               className="bg-app-green hover:bg-green-700"
+              disabled={isSaving}
             >
-              Salvar Comparação
+              {isSaving ? "Salvando..." : "Salvar Comparação"}
             </Button>
             {!isSignedIn && (
               <p className="text-sm text-gray-500 mt-2">

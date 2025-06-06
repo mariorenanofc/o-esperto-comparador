@@ -1,9 +1,10 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { PriceContribution, DailyOffer } from '@/lib/types';
 
 export const supabaseDailyOffersService = {
   async getTodaysOffers() {
+    console.log('Fetching today\'s offers');
     const today = new Date();
     const twentyFourHoursAgo = new Date(today.getTime() - (24 * 60 * 60 * 1000));
 
@@ -18,6 +19,7 @@ export const supabaseDailyOffersService = {
       throw error;
     }
 
+    console.log('Fetched offers:', data?.length || 0);
     return data?.map(offer => ({
       id: offer.id,
       productName: offer.product_name,
@@ -37,6 +39,8 @@ export const supabaseDailyOffersService = {
     userId: string,
     userName: string
   ): Promise<DailyOffer> {
+    console.log('Submitting price contribution:', contribution);
+    
     const { data, error } = await supabase
       .from('daily_offers')
       .insert({
@@ -47,7 +51,7 @@ export const supabaseDailyOffersService = {
         city: contribution.city,
         state: contribution.state,
         contributor_name: userName,
-        verified: false, // Será implementada lógica de verificação
+        verified: false, // Será implementada lógica de verificação futuramente
       })
       .select()
       .single();
@@ -57,6 +61,7 @@ export const supabaseDailyOffersService = {
       throw error;
     }
 
+    console.log('Price contribution submitted:', data);
     return {
       id: data.id,
       productName: data.product_name,
@@ -75,6 +80,7 @@ export const supabaseDailyOffersService = {
     newContribution: PriceContribution,
     userId: string
   ) {
+    console.log('Validating user contribution');
     const { data, error } = await supabase
       .from('daily_offers')
       .select('*')

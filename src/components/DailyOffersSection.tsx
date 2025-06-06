@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { DailyOffer } from "@/lib/types";
-import { dailyOffersService } from "@/services/dailyOffersService";
+import { supabaseDailyOffersService } from "@/services/supabase/dailyOffersService";
 import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
 import OffersGrid from "./daily-offers/OffersGrid";
 import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
@@ -89,14 +89,10 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
   const fetchOffers = async () => {
     try {
       setLoading(true);
-      console.log('Fetching offers from service...');
-      const realOffers = await dailyOffersService.getTodaysOffers();
+      console.log('Fetching offers from Supabase...');
+      const realOffers = await supabaseDailyOffersService.getTodaysOffers();
       console.log('Fetched real offers:', realOffers);
       setActualOffers(realOffers);
-      
-      // Debug: verificar todas as ofertas na memória
-      const allOffers = dailyOffersService.debugGetAllOffers();
-      console.log('All offers in memory (debug):', allOffers);
     } catch (error) {
       console.error('Error fetching offers:', error);
     } finally {

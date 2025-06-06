@@ -1,9 +1,10 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { ComparisonData } from '@/lib/types';
 
 export const supabaseComparisonService = {
   async getUserComparisons(userId: string) {
+    console.log('Fetching comparisons for user:', userId);
     const { data, error } = await supabase
       .from('comparisons')
       .select(`
@@ -20,10 +21,13 @@ export const supabaseComparisonService = {
       throw error;
     }
 
+    console.log('Fetched comparisons:', data);
     return data || [];
   },
 
   async saveComparison(userId: string, comparisonData: ComparisonData) {
+    console.log('Saving comparison for user:', userId, comparisonData);
+    
     // Primeiro, salvar a comparação
     const { data: comparison, error: comparisonError } = await supabase
       .from('comparisons')
@@ -40,6 +44,8 @@ export const supabaseComparisonService = {
       throw comparisonError;
     }
 
+    console.log('Comparison saved:', comparison);
+
     // Salvar produtos e lojas se necessário
     for (const product of comparisonData.products) {
       // Verificar se o produto já existe
@@ -49,7 +55,7 @@ export const supabaseComparisonService = {
         .eq('name', product.name)
         .eq('quantity', product.quantity)
         .eq('unit', product.unit)
-        .single();
+        .maybeSingle();
 
       let productId = existingProduct?.id;
 
@@ -65,8 +71,12 @@ export const supabaseComparisonService = {
           .select()
           .single();
 
-        if (productError) throw productError;
+        if (productError) {
+          console.error('Error creating product:', productError);
+          throw productError;
+        }
         productId = newProduct.id;
+        console.log('Created new product:', newProduct);
       }
 
       // Associar produto à comparação
@@ -86,7 +96,7 @@ export const supabaseComparisonService = {
             .from('stores')
             .select('id')
             .eq('name', store.name)
-            .single();
+            .maybeSingle();
 
           let storeId = existingStore?.id;
 
@@ -98,12 +108,16 @@ export const supabaseComparisonService = {
               .select()
               .single();
 
-            if (storeError) throw storeError;
+            if (storeError) {
+              console.error('Error creating store:', storeError);
+              throw storeError;
+            }
             storeId = newStore.id;
+            console.log('Created new store:', newStore);
           }
 
           // Salvar preço
-          await supabase
+          const { error: priceError } = await supabase
             .from('product_prices')
             .insert({
               product_id: productId,
@@ -111,14 +125,21 @@ export const supabaseComparisonService = {
               price: price,
               comparison_id: comparison.id,
             });
+
+          if (priceError) {
+            console.error('Error saving price:', priceError);
+            throw priceError;
+          }
         }
       }
     }
 
+    console.log('All comparison data saved successfully');
     return comparison;
   },
 
   async deleteComparison(comparisonId: string) {
+    console.log('Deleting comparison:', comparisonId);
     const { error } = await supabase
       .from('comparisons')
       .delete()
@@ -128,5 +149,7 @@ export const supabaseComparisonService = {
       console.error('Error deleting comparison:', error);
       throw error;
     }
+
+    console.log('Comparison deleted successfully');
   },
 };

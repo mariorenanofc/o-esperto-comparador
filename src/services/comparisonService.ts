@@ -8,6 +8,7 @@ export const comparisonService = {
   
   async saveComparison(comparisonData: ComparisonData & { userId: string }) {
     const { userId, ...data } = comparisonData;
+    console.log('Saving comparison via service:', userId, data);
     return await supabaseComparisonService.saveComparison(userId, data);
   },
 
