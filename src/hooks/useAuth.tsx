@@ -82,7 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (data) {
         console.log('Profile fetched:', data);
-        setProfile(data);
+        // Cast plan to PlanTier safely
+        const profileData: Profile = {
+          ...data,
+          plan: (data.plan as PlanTier) || 'free'
+        };
+        setProfile(profileData);
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
