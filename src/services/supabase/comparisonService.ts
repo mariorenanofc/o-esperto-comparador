@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ComparisonData } from '@/lib/types';
 
@@ -10,7 +9,13 @@ export const supabaseComparisonService = {
       .select(`
         *,
         comparison_products (
-          product:products (*)
+          id,
+          product:products (
+            id,
+            name,
+            quantity,
+            unit
+          )
         )
       `)
       .eq('user_id', userId)
@@ -22,7 +27,31 @@ export const supabaseComparisonService = {
     }
 
     console.log('Fetched comparisons:', data);
-    return data || [];
+    
+    // Buscar preços para cada comparação
+    const comparisonsWithPrices = await Promise.all(
+      (data || []).map(async (comparison) => {
+        const { data: prices, error: pricesError } = await supabase
+          .from('product_prices')
+          .select(`
+            price,
+            product:products(id, name),
+            store:stores(id, name)
+          `)
+          .eq('comparison_id', comparison.id);
+
+        if (pricesError) {
+          console.error('Error fetching prices for comparison:', comparison.id, pricesError);
+        }
+
+        return {
+          ...comparison,
+          prices: prices || []
+        };
+      })
+    );
+
+    return comparisonsWithPrices;
   },
 
   async saveComparison(userId: string, comparisonData: ComparisonData) {

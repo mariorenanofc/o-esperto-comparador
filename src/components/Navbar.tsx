@@ -6,14 +6,20 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Shield, Menu, X, Crown, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Navbar: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const { currentPlan } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Simple admin check - you can enhance this later
-  const isAdmin = user?.email === 'admin@example.com'; // Replace with your admin logic
+  // Lista de User IDs que são administradores
+  const ADMIN_USER_IDS = [
+    'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Substitua pelos IDs reais dos usuários admin
+    '6ba7b810-9dad-11d1-80b4-00c04fd430c8', // Substitua pelos IDs reais dos usuários admin
+  ];
+
+  const isAdmin = user ? ADMIN_USER_IDS.includes(user.id) : false;
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -21,6 +27,31 @@ const Navbar: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const getUserInitials = (user: any) => {
+    if (profile?.name) {
+      return profile.name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  const getUserDisplayName = (user: any) => {
+    if (profile?.name) {
+      return profile.name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'Usuário';
   };
 
   return (
@@ -69,10 +100,21 @@ const Navbar: React.FC = () => {
                     Admin
                   </Link>
                 )}
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">
-                    {user.email}
-                  </span>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage 
+                        src={user.user_metadata?.avatar_url || user.user_metadata?.picture} 
+                        alt={getUserDisplayName(user)}
+                      />
+                      <AvatarFallback className="text-sm">
+                        {getUserInitials(user)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-gray-600 hidden lg:block">
+                      {getUserDisplayName(user)}
+                    </span>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -96,14 +138,25 @@ const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-4">
             {user && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="flex items-center space-x-1"
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage 
+                    src={user.user_metadata?.avatar_url || user.user_metadata?.picture} 
+                    alt={getUserDisplayName(user)}
+                  />
+                  <AvatarFallback className="text-sm">
+                    {getUserInitials(user)}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             )}
             <button
               onClick={toggleMobileMenu}
@@ -160,25 +213,18 @@ const Navbar: React.FC = () => {
                 )}
               </Link>
               
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <Link 
-                      to="/admin" 
-                      className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium py-2"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Shield className="w-4 h-4 mr-1" />
-                      Admin
-                    </Link>
-                  )}
-                  <div className="py-2">
-                    <span className="text-sm text-gray-600">
-                      {user.email}
-                    </span>
-                  </div>
-                </>
-              ) : (
+              {user && isAdmin && (
+                <Link 
+                  to="/admin" 
+                  className="flex items-center text-purple-600 hover:text-purple-700 transition-colors font-medium py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Shield className="w-4 h-4 mr-1" />
+                  Admin
+                </Link>
+              )}
+              
+              {!user && (
                 <Link to="/sign-in" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="bg-green-600 text-white hover:bg-green-700 w-full">
                     Entrar

@@ -1,8 +1,8 @@
 
-// Lista de User IDs que são administradores
+// Lista de User IDs que são administradores - substitua pelos IDs reais dos usuários
 const ADMIN_USER_IDS = [
-  'user_2xEwnZzYUslFxGOwIZL7gCL4Qp5', // Primeiro administrador
-  'user_2xc4GZtqQRSIf9ak16TsqOWsOfP'  // Segundo administrador
+  'f47ac10b-58cc-4372-a567-0e02b2c3d479', // Substitua pelo ID real do primeiro administrador
+  '6ba7b810-9dad-11d1-80b4-00c04fd430c8'  // Substitua pelo ID real do segundo administrador
 ];
 
 export const isAdmin = (userId: string): boolean => {

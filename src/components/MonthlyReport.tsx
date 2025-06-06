@@ -1,107 +1,81 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MonthlyReport as MonthlyReportType } from "@/lib/types";
+import { useAuth } from "@/hooks/useAuth";
+import { reportsService } from "@/services/reportsService";
+import { comparisonService } from "@/services/comparisonService";
 import PriceTable from "./PriceTable";
+import { ComparisonData } from "@/lib/types";
 
-// Mock data for demonstration purposes
-const mockMonthlyReports: MonthlyReportType[] = [
-  {
-    id: "1",
-    user_id: "1",
-    month: 1,
-    year: 2025,
-    total_spent: 542.87,
-    total_savings: 45.20,
-    comparison_count: 1,
-    created_at: "2025-01-15T00:00:00Z",
-    comparisons: [
-      {
-        id: "comp-1",
-        user_id: "1",
-        name: "Compras Janeiro",
-        total_spent: 542.87,
-        created_at: "2025-01-15T00:00:00Z",
-        products: [
-          {
-            id: "product-1",
-            name: "Arroz",
-            quantity: 5,
-            unit: "kg",
-            prices: { "store-1": 23.90, "store-2": 24.99 }
-          },
-          {
-            id: "product-2",
-            name: "Feijão",
-            quantity: 1,
-            unit: "kg",
-            prices: { "store-1": 8.50, "store-2": 7.99 }
-          },
-          {
-            id: "product-3",
-            name: "Óleo",
-            quantity: 1,
-            unit: "L",
-            prices: { "store-1": 5.49, "store-2": 5.99 }
-          }
-        ],
-        stores: [
-          { id: "store-1", name: "Mercado Bom Preço" },
-          { id: "store-2", name: "Mercado Economia" }
-        ],
-        date: new Date("2025-01-15")
-      }
-    ]
-  },
-  {
-    id: "2",
-    user_id: "1",
-    month: 2,
-    year: 2025,
-    total_spent: 498.32,
-    total_savings: 32.15,
-    comparison_count: 1,
-    created_at: "2025-02-10T00:00:00Z",
-    comparisons: [
-      {
-        id: "comp-2",
-        user_id: "1",
-        name: "Compras Fevereiro",
-        total_spent: 498.32,
-        created_at: "2025-02-10T00:00:00Z",
-        products: [
-          {
-            id: "product-4",
-            name: "Café",
-            quantity: 2,
-            unit: "pct",
-            prices: { "store-1": 17.90, "store-3": 16.99 }
-          },
-          {
-            id: "product-5",
-            name: "Leite",
-            quantity: 12,
-            unit: "L",
-            prices: { "store-1": 53.88, "store-3": 59.88 }
-          }
-        ],
-        stores: [
-          { id: "store-1", name: "Mercado Bom Preço" },
-          { id: "store-3", name: "Super Mercado" }
-        ],
-        date: new Date("2025-02-10")
-      }
-    ]
-  }
-];
+interface MonthlyReportData {
+  id: string;
+  month: number;
+  year: number;
+  total_spent: number;
+  comparison_count: number;
+  comparisons: any[];
+}
 
 const MonthlyReport: React.FC = () => {
-  const [selectedReport, setSelectedReport] = useState<MonthlyReportType | null>(null);
+  const { user } = useAuth();
+  const [reports, setReports] = useState<MonthlyReportData[]>([]);
+  const [userComparisons, setUserComparisons] = useState<any[]>([]);
+  const [selectedReport, setSelectedReport] = useState<MonthlyReportData | null>(null);
   const [selectedComparison, setSelectedComparison] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // In a real application, you would fetch this data from an API or localStorage
-  const reports = mockMonthlyReports;
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
+
+  const loadUserData = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      console.log('Loading user comparisons and reports...');
+      
+      // Carregar comparações do usuário
+      const comparisons = await comparisonService.getUserComparisons(user.id);
+      console.log('User comparisons:', comparisons);
+      setUserComparisons(comparisons);
+
+      // Agrupar comparações por mês/ano
+      const groupedByMonth = comparisons.reduce((acc: any, comparison: any) => {
+        const date = new Date(comparison.created_at);
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        const key = `${year}-${month}`;
+        
+        if (!acc[key]) {
+          acc[key] = {
+            id: key,
+            month,
+            year,
+            total_spent: 0,
+            comparison_count: 0,
+            comparisons: []
+          };
+        }
+        
+        acc[key].comparisons.push(comparison);
+        acc[key].comparison_count++;
+        
+        return acc;
+      }, {});
+
+      const monthlyReports = Object.values(groupedByMonth) as MonthlyReportData[];
+      setReports(monthlyReports);
+      
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getMonthName = (month: number) => {
     const months = [
@@ -110,6 +84,48 @@ const MonthlyReport: React.FC = () => {
     ];
     return months[month - 1] || "Mês";
   };
+
+  const convertComparisonToDisplayFormat = (comparison: any): ComparisonData => {
+    // Converter dados do Supabase para formato esperado pelo PriceTable
+    const products = comparison.comparison_products?.map((cp: any) => ({
+      id: cp.product.id,
+      name: cp.product.name,
+      quantity: cp.product.quantity,
+      unit: cp.product.unit,
+      prices: {} // Será preenchido pelos preços
+    })) || [];
+
+    // Agrupar lojas únicas
+    const storesMap = new Map();
+    
+    // Processar preços e lojas
+    comparison.comparison_products?.forEach((cp: any) => {
+      // Buscar preços deste produto
+      // Nota: seria melhor ter uma estrutura mais normalizada, mas vamos trabalhar com o que temos
+    });
+
+    return {
+      products,
+      stores: Array.from(storesMap.values()),
+      date: new Date(comparison.created_at)
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg">Carregando relatórios...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center p-8">
+        <p>Faça login para ver seus relatórios.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -136,22 +152,11 @@ const MonthlyReport: React.FC = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Total Gasto</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-app-green">
-                    R$ {selectedReport.total_spent.toFixed(2)}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
                   <CardTitle className="text-lg">Comparações Realizadas</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-app-blue">
-                    {selectedReport.comparisons?.length || 0}
+                    {selectedReport.comparison_count}
                   </p>
                 </CardContent>
               </Card>
@@ -168,10 +173,13 @@ const MonthlyReport: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">
-                      Data: {comparison.date?.toLocaleDateString() || new Date(comparison.created_at).toLocaleDateString()}
+                      {comparison.title || `Comparação ${new Date(comparison.created_at).toLocaleDateString()}`}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {comparison.products?.length || 0} produtos em {comparison.stores?.length || 0} mercados
+                      Data: {new Date(comparison.created_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {comparison.comparison_products?.length || 0} produtos
                     </p>
                   </div>
                   <Button variant="ghost" size="sm">
@@ -179,13 +187,16 @@ const MonthlyReport: React.FC = () => {
                   </Button>
                 </div>
 
-                {selectedComparison === index && comparison.products && comparison.stores && (
+                {selectedComparison === index && (
                   <div className="mt-4">
-                    <PriceTable comparisonData={{
-                      products: comparison.products,
-                      stores: comparison.stores,
-                      date: comparison.date
-                    }} />
+                    <div className="text-sm text-gray-600 mb-2">
+                      Detalhes da comparação:
+                    </div>
+                    {comparison.comparison_products?.map((cp: any) => (
+                      <div key={cp.id} className="text-sm mb-1">
+                        • {cp.product?.name} - {cp.product?.quantity} {cp.product?.unit}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -193,27 +204,33 @@ const MonthlyReport: React.FC = () => {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {reports.map((report) => (
-              <Card
-                key={`${report.month}-${report.year}`}
-                className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => setSelectedReport(report)}
-              >
-                <CardHeader>
-                  <CardTitle>
-                    {getMonthName(report.month)} {report.year}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="font-medium text-app-green">
-                    Total: R$ {report.total_spent.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {report.comparisons?.length || 0} comparação(ões)
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+            {reports.length === 0 ? (
+              <div className="col-span-full text-center p-8">
+                <p className="text-gray-500">Nenhuma comparação encontrada ainda.</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Faça sua primeira comparação na página "Comparar Preços" para ver os relatórios aqui.
+                </p>
+              </div>
+            ) : (
+              reports.map((report) => (
+                <Card
+                  key={`${report.month}-${report.year}`}
+                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => setSelectedReport(report)}
+                >
+                  <CardHeader>
+                    <CardTitle>
+                      {getMonthName(report.month)} {report.year}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-500">
+                      {report.comparison_count} comparação(ões)
+                    </p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         )}
       </div>
