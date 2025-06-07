@@ -4,8 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Menu, X, Settings } from "lucide-react";
-import { PlanStatus } from "./PlanStatus";
+import { ShoppingCart, Menu, X, Settings, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -20,6 +20,10 @@ const Navbar = () => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const getUserInitials = (email: string) => {
+    return email.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -72,11 +76,13 @@ const Navbar = () => {
             )}
 
             {user ? (
-              <div className="flex items-center space-x-4">
-                <PlanStatus />
-                <span className="text-sm text-gray-600">
-                  Olá, {user.email}
-                </span>
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                  <AvatarFallback className="bg-app-green text-white text-sm">
+                    {getUserInitials(user.email || "")}
+                  </AvatarFallback>
+                </Avatar>
                 <Button
                   onClick={handleSignOut}
                   variant="outline"
@@ -86,18 +92,11 @@ const Navbar = () => {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Link to="/sign-in">
-                  <Button variant="outline" size="sm">
-                    Entrar
-                  </Button>
-                </Link>
-                <Link to="/sign-up">
-                  <Button size="sm" className="bg-app-green hover:bg-green-600">
-                    Cadastrar
-                  </Button>
-                </Link>
-              </div>
+              <Link to="/sign-in">
+                <Button size="sm" className="bg-app-green hover:bg-green-600">
+                  Entrar com Google
+                </Button>
+              </Link>
             )}
           </div>
 
@@ -158,11 +157,14 @@ const Navbar = () => {
               )}
 
               {user ? (
-                <div className="flex flex-col space-y-4">
-                  <PlanStatus />
-                  <span className="text-sm text-gray-600">
-                    Olá, {user.email}
-                  </span>
+                <div className="flex items-center space-x-3 pt-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                    <AvatarFallback className="bg-app-green text-white text-sm">
+                      {getUserInitials(user.email || "")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-gray-600">{user.email}</span>
                   <Button
                     onClick={() => {
                       handleSignOut();
@@ -170,24 +172,16 @@ const Navbar = () => {
                     }}
                     variant="outline"
                     size="sm"
-                    className="w-fit"
                   >
                     Sair
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-col space-y-2">
-                  <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Entrar
-                    </Button>
-                  </Link>
-                  <Link to="/sign-up" onClick={() => setIsMenuOpen(false)}>
-                    <Button size="sm" className="bg-app-green hover:bg-green-600 w-full">
-                      Cadastrar
-                    </Button>
-                  </Link>
-                </div>
+                <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
+                  <Button size="sm" className="bg-app-green hover:bg-green-600 w-full">
+                    Entrar com Google
+                  </Button>
+                </Link>
               )}
             </div>
           </div>

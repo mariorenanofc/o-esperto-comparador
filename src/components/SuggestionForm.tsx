@@ -43,7 +43,7 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
 
     try {
       await contributionService.submitSuggestion(user.id, formData);
-      toast.success("Sugestão enviada com sucesso! Obrigado pelo feedback.");
+      toast.success("Sugestão enviada com sucesso! Obrigado pelo seu feedback! 🚀");
       onClose();
     } catch (error) {
       console.error("Erro ao enviar sugestão:", error);

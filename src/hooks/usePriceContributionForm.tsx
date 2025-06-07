@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabaseDailyOffersService } from '@/services/supabase/dailyOffersService';
@@ -18,8 +18,8 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     productName: '',
     price: 0,
     storeName: '',
-    city: city || '',
-    state: state || '',
+    city: '',
+    state: '',
     userId: '',
     timestamp: new Date(),
     verified: false,
@@ -27,9 +27,24 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     unit: 'unidade'
   });
 
+  // Atualizar dados de localização automaticamente
+  useEffect(() => {
+    if (city && state) {
+      setFormData(prev => ({
+        ...prev,
+        city,
+        state
+      }));
+    }
+  }, [city, state]);
+
   const validateContribution = async (contribution: PriceContribution) => {
     if (!user) {
       return { isValid: false, message: 'Você precisa estar logado para contribuir' };
+    }
+
+    if (!contribution.city || !contribution.state) {
+      return { isValid: false, message: 'Não foi possível detectar sua localização' };
     }
 
     try {
@@ -68,7 +83,7 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
         profile.name || profile.email
       );
 
-      toast.success('Contribuição enviada com sucesso!');
+      toast.success('Contribuição enviada com sucesso! Obrigado por ajudar nossa comunidade! 🎉');
       return true;
     } catch (error) {
       console.error('Error submitting contribution:', error);
@@ -101,16 +116,6 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     }
   };
 
-  const updateLocationWhenLoaded = (newCity: string, newState: string) => {
-    if (newCity && newState && !formData.city && !formData.state) {
-      setFormData(prev => ({
-        ...prev,
-        city: newCity,
-        state: newState
-      }));
-    }
-  };
-
   return {
     submitContribution,
     validateContribution,
@@ -119,8 +124,5 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     setFormData,
     handleSubmit,
     locationLoading,
-    city,
-    state,
-    updateLocationWhenLoaded,
   };
 };

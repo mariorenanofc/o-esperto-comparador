@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { usePriceContributionForm } from "@/hooks/usePriceContributionForm";
 import PriceContributionWarning from "./price-contribution/PriceContributionWarning";
 import ProductInfoFields from "./price-contribution/ProductInfoFields";
-import LocationFields from "./price-contribution/LocationFields";
 
 interface PriceContributionFormProps {
   onClose: () => void;
@@ -17,16 +16,8 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
     setFormData,
     isSubmitting,
     locationLoading,
-    city,
-    state,
     handleSubmit,
-    updateLocationWhenLoaded,
   } = usePriceContributionForm({ onClose });
-
-  // Atualizar localização automaticamente quando carregada
-  React.useEffect(() => {
-    updateLocationWhenLoaded(city || "", state || "");
-  }, [city, state, updateLocationWhenLoaded]);
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -43,15 +34,15 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
         <form onSubmit={handleSubmit} className="space-y-4">
           <ProductInfoFields formData={formData} setFormData={setFormData} />
 
-          <LocationFields 
-            formData={formData} 
-            setFormData={setFormData} 
-            locationLoading={locationLoading} 
-          />
-
           {locationLoading && (
-            <div className="text-sm text-blue-600">
+            <div className="text-sm text-blue-600 p-3 bg-blue-50 rounded-lg">
               📍 Detectando sua localização automaticamente...
+            </div>
+          )}
+
+          {formData.city && formData.state && (
+            <div className="text-sm text-green-600 p-3 bg-green-50 rounded-lg">
+              📍 Localização: {formData.city}, {formData.state}
             </div>
           )}
 
@@ -61,7 +52,7 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || locationLoading || !formData.city}
               className="flex-1 bg-app-blue hover:bg-blue-700"
             >
               {isSubmitting ? "Enviando..." : "Compartilhar"}
