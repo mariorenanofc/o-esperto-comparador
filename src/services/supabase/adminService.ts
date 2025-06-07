@@ -7,8 +7,6 @@ interface UserProfile {
   name: string | null;
   plan: string;
   created_at: string;
-  is_blocked: boolean;
-  last_sign_in_at: string | null;
 }
 
 interface Analytics {
@@ -31,8 +29,7 @@ export const supabaseAdminService = {
         email,
         name,
         plan,
-        created_at,
-        is_blocked
+        created_at
       `)
       .order('created_at', { ascending: false });
 
@@ -43,22 +40,6 @@ export const supabaseAdminService = {
 
     console.log('Fetched users:', data);
     return data || [];
-  },
-
-  async blockUser(userId: string, block: boolean): Promise<void> {
-    console.log(`${block ? 'Blocking' : 'Unblocking'} user:`, userId);
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_blocked: block })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating user block status:', error);
-      throw error;
-    }
-
-    console.log(`User ${block ? 'blocked' : 'unblocked'} successfully`);
   },
 
   async updateUserPlan(userId: string, newPlan: string): Promise<void> {

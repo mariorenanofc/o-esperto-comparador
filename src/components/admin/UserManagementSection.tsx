@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Ban, CheckCircle, Crown, Search, RefreshCw } from 'lucide-react';
+import { Users, Search, RefreshCw } from 'lucide-react';
 import { supabaseAdminService } from '@/services/supabase/adminService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,8 +14,6 @@ interface UserProfile {
   name: string | null;
   plan: string;
   created_at: string;
-  is_blocked: boolean;
-  last_sign_in_at: string | null;
 }
 
 export const UserManagementSection = () => {
@@ -65,24 +62,6 @@ export const UserManagementSection = () => {
 
     setFilteredUsers(filtered);
   }, [users, searchTerm, planFilter]);
-
-  const handleBlockUser = async (userId: string, block: boolean) => {
-    try {
-      await supabaseAdminService.blockUser(userId, block);
-      toast({
-        title: "Sucesso",
-        description: `Usuário ${block ? 'bloqueado' : 'desbloqueado'} com sucesso`,
-      });
-      fetchUsers();
-    } catch (error) {
-      console.error('Erro ao alterar status do usuário:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao alterar status do usuário",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleChangePlan = async (userId: string, newPlan: string) => {
     try {
@@ -141,14 +120,13 @@ export const UserManagementSection = () => {
             <Users className="w-5 h-5" />
             Gerenciamento de Usuários ({filteredUsers.length})
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={fetchUsers}
             disabled={loading}
+            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+          </button>
         </div>
         
         <div className="flex gap-4 mt-4">
@@ -186,19 +164,11 @@ export const UserManagementSection = () => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold">{user.name || 'Nome não informado'}</h3>
-                      {user.is_blocked && (
-                        <Badge variant="destructive">Bloqueado</Badge>
-                      )}
                     </div>
                     <p className="text-sm text-gray-600">{user.email}</p>
                     <p className="text-xs text-gray-500">
                       Registrado em: {new Date(user.created_at).toLocaleDateString('pt-BR')}
                     </p>
-                    {user.last_sign_in_at && (
-                      <p className="text-xs text-gray-500">
-                        Último acesso: {new Date(user.last_sign_in_at).toLocaleDateString('pt-BR')}
-                      </p>
-                    )}
                   </div>
                   <div className="text-right space-y-2">
                     {getPlanBadge(user.plan)}
@@ -220,26 +190,6 @@ export const UserManagementSection = () => {
                       <SelectItem value="empresarial">Empresarial</SelectItem>
                     </SelectContent>
                   </Select>
-                  
-                  {user.is_blocked ? (
-                    <Button
-                      onClick={() => handleBlockUser(user.id, false)}
-                      className="bg-green-600 hover:bg-green-700"
-                      size="sm"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Desbloquear
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleBlockUser(user.id, true)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Ban className="w-4 h-4 mr-1" />
-                      Bloquear
-                    </Button>
-                  )}
                 </div>
               </div>
             ))}
