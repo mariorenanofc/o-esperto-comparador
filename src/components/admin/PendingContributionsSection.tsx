@@ -4,27 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
-import { mockApiService } from '@/services/mockApiService';
-import { contributionStatusService } from '@/services/contributionStatusService';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface Contribution {
   id: string;
   price: number;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: string;
-  user: {
-    name: string;
-    email: string;
-  };
-  product: {
-    name: string;
-    quantity: number;
-    unit: string;
-  };
-  store: {
-    name: string;
-  };
+  created_at: string;
+  verified: boolean;
+  user_id: string;
+  contributor_name: string;
+  product_name: string;
+  store_name: string;
+  city: string;
+  state: string;
 }
 
 export const PendingContributionsSection = () => {
@@ -35,13 +28,25 @@ export const PendingContributionsSection = () => {
   const fetchContributions = async () => {
     try {
       setLoading(true);
-      const data = await mockApiService.getPendingContributions();
-      setContributions(data);
+      console.log('Fetching contributions from daily_offers...');
+      
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching contributions:', error);
+        throw error;
+      }
+
+      console.log('Fetched contributions:', data);
+      setContributions(data || []);
     } catch (error) {
       console.error('Erro ao buscar contribuições:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar contribuições pendentes",
+        description: "Erro ao carregar contribuições",
         variant: "destructive",
       });
     } finally {
@@ -51,21 +56,22 @@ export const PendingContributionsSection = () => {
 
   useEffect(() => {
     fetchContributions();
-    
-    // Atualizar lista a cada 30 segundos
-    const interval = setInterval(fetchContributions, 30000);
-    
-    return () => clearInterval(interval);
   }, []);
 
   const handleApprove = async (id: string) => {
     try {
-      await mockApiService.approveContribution(id);
+      const { error } = await supabase
+        .from('daily_offers')
+        .update({ verified: true })
+        .eq('id', id);
+
+      if (error) throw error;
+
       toast({
         title: "Sucesso",
         description: "Contribuição aprovada com sucesso",
       });
-      fetchContributions(); // Recarrega a lista
+      fetchContributions();
     } catch (error) {
       console.error('Erro ao aprovar contribuição:', error);
       toast({
@@ -78,12 +84,18 @@ export const PendingContributionsSection = () => {
 
   const handleReject = async (id: string) => {
     try {
-      await mockApiService.rejectContribution(id);
+      const { error } = await supabase
+        .from('daily_offers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       toast({
         title: "Sucesso",
-        description: "Contribuição rejeitada",
+        description: "Contribuição rejeitada e removida",
       });
-      fetchContributions(); // Recarrega a lista
+      fetchContributions();
     } catch (error) {
       console.error('Erro ao rejeitar contribuição:', error);
       toast({
@@ -94,16 +106,11 @@ export const PendingContributionsSection = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="secondary"><Clock className="w-4 h-4 mr-1" />Pendente</Badge>;
-      case 'approved':
-        return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Aprovada</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive"><XCircle className="w-4 h-4 mr-1" />Rejeitada</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const getStatusBadge = (verified: boolean) => {
+    if (verified) {
+      return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Aprovada</Badge>;
+    } else {
+      return <Badge variant="secondary"><Clock className="w-4 h-4 mr-1" />Pendente</Badge>;
     }
   };
 
@@ -112,7 +119,7 @@ export const PendingContributionsSection = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Contribuições Pendentes</CardTitle>
+            <CardTitle>Contribuições de Preços</CardTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -134,7 +141,7 @@ export const PendingContributionsSection = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Contribuições Pendentes</CardTitle>
+          <CardTitle>Contribuições de Preços ({contributions.length})</CardTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -147,37 +154,37 @@ export const PendingContributionsSection = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {contributions.length === 0 ? (
-          <p className="text-gray-500">Nenhuma contribuição pendente encontrada.</p>
+          <p className="text-gray-500">Nenhuma contribuição encontrada.</p>
         ) : (
           contributions.map((contribution) => (
             <div key={contribution.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold">{contribution.product.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {contribution.product.quantity} {contribution.product.unit}
-                  </p>
+                  <h3 className="font-semibold">{contribution.product_name}</h3>
                   <p className="text-lg font-bold text-green-600">
                     R$ {contribution.price.toFixed(2)}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {contribution.store.name}
+                    {contribution.store_name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {contribution.city}, {contribution.state}
                   </p>
                 </div>
                 <div className="text-right">
-                  {getStatusBadge(contribution.status)}
+                  {getStatusBadge(contribution.verified)}
                   <p className="text-sm text-gray-500 mt-1">
-                    {new Date(contribution.createdAt).toLocaleDateString('pt-BR')}
+                    {new Date(contribution.created_at).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
               </div>
               
               <div className="text-sm text-gray-600">
-                <p><strong>Usuário:</strong> {contribution.user.name}</p>
-                <p><strong>Email:</strong> {contribution.user.email}</p>
+                <p><strong>Contribuidor:</strong> {contribution.contributor_name}</p>
+                <p><strong>ID do Usuário:</strong> {contribution.user_id}</p>
               </div>
 
-              {contribution.status === 'pending' && (
+              {!contribution.verified && (
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleApprove(contribution.id)}

@@ -63,25 +63,41 @@ export const supabaseAdminService = {
     
     try {
       // Total de usuários
-      const { count: totalUsers } = await supabase
+      const { count: totalUsers, error: usersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
+      if (usersError) {
+        console.error('Error counting users:', usersError);
+      }
+
       // Total de comparações
-      const { count: totalComparisons } = await supabase
+      const { count: totalComparisons, error: comparisonsError } = await supabase
         .from('comparisons')
         .select('*', { count: 'exact', head: true });
 
+      if (comparisonsError) {
+        console.error('Error counting comparisons:', comparisonsError);
+      }
+
       // Total de ofertas
-      const { count: totalOffers } = await supabase
+      const { count: totalOffers, error: offersError } = await supabase
         .from('daily_offers')
         .select('*', { count: 'exact', head: true });
 
+      if (offersError) {
+        console.error('Error counting offers:', offersError);
+      }
+
       // Distribuição de planos
-      const { data: planData } = await supabase
+      const { data: planData, error: planError } = await supabase
         .from('profiles')
         .select('plan')
         .not('plan', 'is', null);
+
+      if (planError) {
+        console.error('Error fetching plan data:', planError);
+      }
 
       const planCounts = planData?.reduce((acc: any, user) => {
         acc[user.plan] = (acc[user.plan] || 0) + 1;
