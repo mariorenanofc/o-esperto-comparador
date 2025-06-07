@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseAdminService } from '@/services/supabase/adminService';
 import { useToast } from '@/hooks/use-toast';
 
 interface Contribution {
@@ -23,6 +24,7 @@ interface Contribution {
 export const PendingContributionsSection = () => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchContributions = async () => {
@@ -60,17 +62,14 @@ export const PendingContributionsSection = () => {
 
   const handleApprove = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('daily_offers')
-        .update({ verified: true })
-        .eq('id', id);
-
-      if (error) throw error;
-
+      setActionLoading(id);
+      await supabaseAdminService.approveContribution(id);
+      
       toast({
         title: "Sucesso",
         description: "Contribuição aprovada com sucesso",
       });
+      
       fetchContributions();
     } catch (error) {
       console.error('Erro ao aprovar contribuição:', error);
@@ -79,22 +78,21 @@ export const PendingContributionsSection = () => {
         description: "Erro ao aprovar contribuição",
         variant: "destructive",
       });
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleReject = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('daily_offers')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      setActionLoading(id);
+      await supabaseAdminService.rejectContribution(id);
+      
       toast({
         title: "Sucesso",
         description: "Contribuição rejeitada e removida",
       });
+      
       fetchContributions();
     } catch (error) {
       console.error('Erro ao rejeitar contribuição:', error);
@@ -103,6 +101,8 @@ export const PendingContributionsSection = () => {
         description: "Erro ao rejeitar contribuição",
         variant: "destructive",
       });
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -190,17 +190,19 @@ export const PendingContributionsSection = () => {
                     onClick={() => handleApprove(contribution.id)}
                     className="bg-green-600 hover:bg-green-700"
                     size="sm"
+                    disabled={actionLoading === contribution.id}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Aprovar
+                    {actionLoading === contribution.id ? 'Aprovando...' : 'Aprovar'}
                   </Button>
                   <Button
                     onClick={() => handleReject(contribution.id)}
                     variant="destructive"
                     size="sm"
+                    disabled={actionLoading === contribution.id}
                   >
                     <XCircle className="w-4 h-4 mr-1" />
-                    Rejeitar
+                    {actionLoading === contribution.id ? 'Rejeitando...' : 'Rejeitar'}
                   </Button>
                 </div>
               )}

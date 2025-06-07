@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
@@ -56,6 +55,38 @@ export const supabaseAdminService = {
     }
 
     console.log('User plan updated successfully');
+  },
+
+  async approveContribution(contributionId: string): Promise<void> {
+    console.log('Approving contribution:', contributionId);
+    
+    const { error } = await supabase
+      .from('daily_offers')
+      .update({ verified: true })
+      .eq('id', contributionId);
+
+    if (error) {
+      console.error('Error approving contribution:', error);
+      throw error;
+    }
+
+    console.log('Contribution approved successfully');
+  },
+
+  async rejectContribution(contributionId: string): Promise<void> {
+    console.log('Rejecting contribution:', contributionId);
+    
+    const { error } = await supabase
+      .from('daily_offers')
+      .delete()
+      .eq('id', contributionId);
+
+    if (error) {
+      console.error('Error rejecting contribution:', error);
+      throw error;
+    }
+
+    console.log('Contribution rejected and deleted successfully');
   },
 
   async getAnalytics(): Promise<Analytics> {

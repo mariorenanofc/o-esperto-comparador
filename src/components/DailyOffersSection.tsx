@@ -103,7 +103,7 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
   useEffect(() => {
     fetchOffers();
     
-    // Refetch a cada 30 segundos para capturar novas contribuições
+    // Refetch a cada 30 segundos para capturar mudanças em tempo real
     const interval = setInterval(fetchOffers, 30000);
     
     return () => clearInterval(interval);
