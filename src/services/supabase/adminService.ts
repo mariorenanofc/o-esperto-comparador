@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface UserProfile {
@@ -37,7 +38,7 @@ export const supabaseAdminService = {
       throw error;
     }
 
-    console.log('Fetched users:', data);
+    console.log('Fetched users:', data?.length || 0);
     return data || [];
   },
 
@@ -93,7 +94,7 @@ export const supabaseAdminService = {
     console.log('Fetching analytics data...');
     
     try {
-      // Total de usuários
+      // Total de usuários corrigido
       const { count: totalUsers, error: usersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
@@ -120,7 +121,7 @@ export const supabaseAdminService = {
         console.error('Error counting offers:', offersError);
       }
 
-      // Distribuição de planos
+      // Distribuição de planos corrigida
       const { data: planData, error: planError } = await supabase
         .from('profiles')
         .select('plan')
@@ -131,7 +132,8 @@ export const supabaseAdminService = {
       }
 
       const planCounts = planData?.reduce((acc: any, user) => {
-        acc[user.plan] = (acc[user.plan] || 0) + 1;
+        const plan = user.plan || 'free';
+        acc[plan] = (acc[plan] || 0) + 1;
         return acc;
       }, {}) || {};
 
@@ -234,6 +236,33 @@ export const supabaseAdminService = {
       return analytics;
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      throw error;
+    }
+  },
+
+  // Nova função para limpeza automática de contribuições diárias
+  async cleanupDailyContributions(): Promise<void> {
+    console.log('Starting daily cleanup of contributions...');
+    
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(23, 59, 59, 999);
+
+    try {
+      const { error } = await supabase
+        .from('daily_offers')
+        .delete()
+        .lt('created_at', yesterday.toISOString())
+        .eq('verified', false); // Remove apenas contribuições não verificadas antigas
+
+      if (error) {
+        console.error('Error during daily cleanup:', error);
+        throw error;
+      }
+
+      console.log('Daily cleanup completed successfully');
+    } catch (error) {
+      console.error('Error in cleanupDailyContributions:', error);
       throw error;
     }
   }

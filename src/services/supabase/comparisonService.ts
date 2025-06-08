@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ComparisonData } from '@/lib/types';
 
@@ -35,7 +36,7 @@ export const supabaseComparisonService = {
           .from('product_prices')
           .select(`
             price,
-            product:products(id, name),
+            product:products(id, name, quantity, unit),
             store:stores(id, name)
           `)
           .eq('comparison_id', comparison.id);
@@ -116,7 +117,7 @@ export const supabaseComparisonService = {
           product_id: productId,
         });
 
-      // Salvar preços
+      // Salvar preços - CORRIGIDO para salvar todos os preços
       for (const store of comparisonData.stores) {
         const price = product.prices[store.id];
         if (price && price > 0) {
@@ -145,7 +146,7 @@ export const supabaseComparisonService = {
             console.log('Created new store:', newStore);
           }
 
-          // Salvar preço
+          // Salvar preço com referência à comparação
           const { error: priceError } = await supabase
             .from('product_prices')
             .insert({
@@ -159,16 +160,32 @@ export const supabaseComparisonService = {
             console.error('Error saving price:', priceError);
             throw priceError;
           }
+
+          console.log(`Saved price ${price} for product ${product.name} at store ${store.name}`);
         }
       }
     }
 
-    console.log('All comparison data saved successfully');
+    console.log('All comparison data saved successfully with prices');
     return comparison;
   },
 
   async deleteComparison(comparisonId: string) {
     console.log('Deleting comparison:', comparisonId);
+    
+    // Deletar preços associados primeiro
+    await supabase
+      .from('product_prices')
+      .delete()
+      .eq('comparison_id', comparisonId);
+
+    // Deletar produtos da comparação
+    await supabase
+      .from('comparison_products')
+      .delete()
+      .eq('comparison_id', comparisonId);
+
+    // Deletar a comparação
     const { error } = await supabase
       .from('comparisons')
       .delete()

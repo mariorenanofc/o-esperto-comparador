@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 export const FeedbackSection = () => {
   const [feedbacks, setFeedbacks] = useState<UserFeedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchFeedbacks = async () => {
@@ -40,6 +42,7 @@ export const FeedbackSection = () => {
 
   const handleStatusUpdate = async (feedbackId: string, status: 'in-review' | 'implemented') => {
     try {
+      setActionLoading(feedbackId);
       await contributionService.updateFeedbackStatus(feedbackId, status);
       toast({
         title: "Sucesso",
@@ -53,6 +56,8 @@ export const FeedbackSection = () => {
         description: "Erro ao atualizar status do feedback",
         variant: "destructive",
       });
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -98,7 +103,7 @@ export const FeedbackSection = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Feedbacks dos Usuários</CardTitle>
+            <CardTitle>Feedbacks dos Usuários ({feedbacks.length})</CardTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -120,7 +125,7 @@ export const FeedbackSection = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Feedbacks dos Usuários</CardTitle>
+          <CardTitle>Feedbacks dos Usuários ({feedbacks.length})</CardTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -185,17 +190,19 @@ export const FeedbackSection = () => {
                     onClick={() => handleStatusUpdate(feedback.id, 'in-review')}
                     className="bg-blue-600 hover:bg-blue-700"
                     size="sm"
+                    disabled={actionLoading === feedback.id}
                   >
                     <Clock className="w-4 h-4 mr-1" />
-                    Marcar como Em Revisão
+                    {actionLoading === feedback.id ? 'Processando...' : 'Marcar como Em Revisão'}
                   </Button>
                   <Button
                     onClick={() => handleStatusUpdate(feedback.id, 'implemented')}
                     className="bg-green-600 hover:bg-green-700"
                     size="sm"
+                    disabled={actionLoading === feedback.id}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Marcar como Implementado
+                    {actionLoading === feedback.id ? 'Processando...' : 'Marcar como Implementado'}
                   </Button>
                 </div>
               )}
@@ -206,9 +213,10 @@ export const FeedbackSection = () => {
                     onClick={() => handleStatusUpdate(feedback.id, 'implemented')}
                     className="bg-green-600 hover:bg-green-700"
                     size="sm"
+                    disabled={actionLoading === feedback.id}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    Marcar como Implementado
+                    {actionLoading === feedback.id ? 'Processando...' : 'Marcar como Implementado'}
                   </Button>
                 </div>
               )}
