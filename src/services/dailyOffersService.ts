@@ -11,7 +11,7 @@ export const dailyOffersService = {
     contribution: PriceContribution,
     userId: string,
     userName: string
-  ): Promise<DailyOffer> {
+  ): Promise<void> {
     return await supabaseDailyOffersService.submitPriceContribution(
       contribution,
       userId,
