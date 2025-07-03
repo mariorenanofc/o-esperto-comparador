@@ -29,6 +29,8 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Suggestion form submission started');
+    
     if (!user) {
       toast.error("Você precisa estar logado para enviar sugestões.");
       return;
@@ -42,8 +44,20 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
     setIsSubmitting(true);
 
     try {
+      console.log('Submitting suggestion...');
       await contributionService.submitSuggestion(user.id, formData);
       toast.success("Sugestão enviada com sucesso! Obrigado pelo seu feedback! 🚀");
+      
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        category: "improvement",
+        userName: "",
+        userEmail: "",
+        userPhone: "",
+      });
+      
       onClose();
     } catch (error) {
       console.error("Erro ao enviar sugestão:", error);

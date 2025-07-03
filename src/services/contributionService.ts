@@ -42,7 +42,7 @@ export const contributionService = {
 
       if (error) {
         console.error('Error submitting suggestion:', error);
-        throw error;
+        throw new Error('Erro ao enviar sugestão');
       }
 
       // Salvar dados do usuário para referência futura
@@ -93,7 +93,7 @@ export const contributionService = {
         status: item.status as 'open' | 'in-review' | 'implemented' | 'closed',
         user_name: item.profiles?.name || 'Usuário não identificado',
         user_email: item.profiles?.email || 'Email não disponível',
-        user_phone: undefined, // Campo não disponível na tabela atual
+        user_phone: undefined,
         created_at: item.created_at
       })) || [];
 
@@ -116,7 +116,7 @@ export const contributionService = {
 
       if (error) {
         console.error('Error updating feedback status:', error);
-        throw error;
+        throw new Error('Erro ao atualizar status do feedback');
       }
 
       console.log('Feedback status updated successfully');

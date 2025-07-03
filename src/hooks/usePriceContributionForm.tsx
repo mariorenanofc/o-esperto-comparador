@@ -38,66 +38,56 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     }
   }, [city, state]);
 
-  const validateContribution = async (contribution: PriceContribution) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    console.log('Form submission started');
+    
     if (!user) {
-      return { isValid: false, message: 'Você precisa estar logado para contribuir' };
-    }
-
-    if (!contribution.city || !contribution.state) {
-      return { isValid: false, message: 'Não foi possível detectar sua localização' };
-    }
-
-    try {
-      const validation = await supabaseDailyOffersService.validateUserContribution(
-        contribution,
-        user.id
-      );
-      return validation;
-    } catch (error) {
-      console.error('Error validating contribution:', error);
-      return { isValid: false, message: 'Erro ao validar contribuição' };
-    }
-  };
-
-  const submitContribution = async (contribution: PriceContribution) => {
-    if (!user || !profile) {
       toast.error('Você precisa estar logado para contribuir');
-      return false;
+      return;
+    }
+
+    if (!profile) {
+      toast.error('Profile não encontrado');
+      return;
+    }
+
+    if (!formData.productName || !formData.storeName || formData.price <= 0) {
+      toast.error('Por favor, preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (!formData.city || !formData.state) {
+      toast.error('Não foi possível detectar sua localização');
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Validar contribuição primeiro
-      const validation = await validateContribution(contribution);
+      console.log('Validating contribution...');
+      const validation = await supabaseDailyOffersService.validateUserContribution(
+        formData,
+        user.id
+      );
       
       if (!validation.isValid) {
         toast.error(validation.message || 'Contribuição inválida');
-        return false;
+        setIsSubmitting(false);
+        return;
       }
 
-      // Submeter contribuição
+      console.log('Submitting contribution...');
       await supabaseDailyOffersService.submitPriceContribution(
-        contribution,
+        formData,
         user.id,
         profile.name || profile.email
       );
 
       toast.success('Contribuição enviada com sucesso! Obrigado por ajudar nossa comunidade! 🎉');
-      return true;
-    } catch (error) {
-      console.error('Error submitting contribution:', error);
-      toast.error('Erro ao enviar contribuição');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const success = await submitContribution(formData);
-    if (success) {
+      
+      // Reset form
       setFormData({
         productName: '',
         price: 0,
@@ -110,15 +100,19 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
         quantity: 1,
         unit: 'unidade'
       });
+      
       if (props?.onClose) {
         props.onClose();
       }
+    } catch (error) {
+      console.error('Error submitting contribution:', error);
+      toast.error('Erro ao enviar contribuição. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
-    submitContribution,
-    validateContribution,
     isSubmitting,
     formData,
     setFormData,

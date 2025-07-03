@@ -58,30 +58,6 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       userId: "mock_user_3",
       timestamp: new Date(),
       verified: true
-    },
-    {
-      id: "4",
-      productName: "Feijão Carioca 1kg",
-      price: 7.20,
-      storeName: "Supermercado Econômico",
-      city: "Trindade",
-      state: "PE", 
-      contributorName: "Ana C.",
-      userId: "mock_user_4",
-      timestamp: new Date(),
-      verified: false
-    },
-    {
-      id: "5",
-      productName: "Macarrão Espaguete 500g",
-      price: 2.90,
-      storeName: "Mercadinho da Esquina",
-      city: "Trindade",
-      state: "PE",
-      contributorName: "Carlos R.",
-      userId: "mock_user_5",
-      timestamp: new Date(),
-      verified: true
     }
   ];
 

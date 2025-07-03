@@ -83,7 +83,7 @@ export const supabaseAdminService = {
 
     if (error) {
       console.error('Error updating user plan:', error);
-      throw error;
+      throw new Error('Erro ao atualizar plano do usuário');
     }
 
     console.log('User plan updated successfully');
@@ -99,7 +99,7 @@ export const supabaseAdminService = {
 
     if (error) {
       console.error('Error approving contribution:', error);
-      throw error;
+      throw new Error('Erro ao aprovar contribuição');
     }
 
     console.log('Contribution approved successfully');
@@ -115,7 +115,7 @@ export const supabaseAdminService = {
 
     if (error) {
       console.error('Error rejecting contribution:', error);
-      throw error;
+      throw new Error('Erro ao rejeitar contribuição');
     }
 
     console.log('Contribution rejected and deleted successfully');
@@ -126,51 +126,31 @@ export const supabaseAdminService = {
     
     try {
       // Total de usuários
-      const { count: totalUsers, error: usersError } = await supabase
+      const { count: totalUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      if (usersError) {
-        console.error('Error counting users:', usersError);
-      }
-
       // Usuários ativos (online)
-      const { count: activeUsers, error: activeUsersError } = await supabase
+      const { count: activeUsers } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .eq('is_online', true);
 
-      if (activeUsersError) {
-        console.error('Error counting active users:', activeUsersError);
-      }
-
       // Total de comparações
-      const { count: totalComparisons, error: comparisonsError } = await supabase
+      const { count: totalComparisons } = await supabase
         .from('comparisons')
         .select('*', { count: 'exact', head: true });
 
-      if (comparisonsError) {
-        console.error('Error counting comparisons:', comparisonsError);
-      }
-
       // Total de ofertas
-      const { count: totalOffers, error: offersError } = await supabase
+      const { count: totalOffers } = await supabase
         .from('daily_offers')
         .select('*', { count: 'exact', head: true });
 
-      if (offersError) {
-        console.error('Error counting offers:', offersError);
-      }
-
       // Distribuição de planos
-      const { data: planData, error: planError } = await supabase
+      const { data: planData } = await supabase
         .from('profiles')
         .select('plan')
         .not('plan', 'is', null);
-
-      if (planError) {
-        console.error('Error fetching plan data:', planError);
-      }
 
       const planCounts = planData?.reduce((acc: any, user) => {
         const plan = user.plan || 'free';
@@ -192,119 +172,20 @@ export const supabaseAdminService = {
         revenue: (count as number) * (planPrices[plan as keyof typeof planPrices] || 0)
       }));
 
-      // Dados dos últimos 6 meses
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-      const { data: monthlyUsers } = await supabase
-        .from('profiles')
-        .select('created_at')
-        .gte('created_at', sixMonthsAgo.toISOString());
-
-      const { data: monthlyComparisons } = await supabase
-        .from('comparisons')
-        .select('created_at')
-        .gte('created_at', sixMonthsAgo.toISOString());
-
-      // Processar dados mensais
-      const monthlyData: { [key: string]: { users: number; comparisons: number } } = {};
-      
-      monthlyUsers?.forEach(user => {
-        const month = new Date(user.created_at).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-        if (!monthlyData[month]) monthlyData[month] = { users: 0, comparisons: 0 };
-        monthlyData[month].users++;
-      });
-
-      monthlyComparisons?.forEach(comparison => {
-        const month = new Date(comparison.created_at).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-        if (!monthlyData[month]) monthlyData[month] = { users: 0, comparisons: 0 };
-        monthlyData[month].comparisons++;
-      });
-
-      const monthlyGrowth = Object.entries(monthlyData).map(([month, data]) => ({
-        month,
-        ...data
-      }));
-
-      // Atividade dos últimos 7 dias
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-      const { data: recentOffers } = await supabase
-        .from('daily_offers')
-        .select('created_at')
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-      const { data: recentComparisons } = await supabase
-        .from('comparisons')
-        .select('created_at')
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-      // Processar dados diários
-      const dailyData: { [key: string]: { offers: number; comparisons: number } } = {};
-
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        dailyData[dateStr] = { offers: 0, comparisons: 0 };
-      }
-
-      recentOffers?.forEach(offer => {
-        const date = new Date(offer.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        if (dailyData[date]) dailyData[date].offers++;
-      });
-
-      recentComparisons?.forEach(comparison => {
-        const date = new Date(comparison.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        if (dailyData[date]) dailyData[date].comparisons++;
-      });
-
-      const dailyActivity = Object.entries(dailyData).map(([date, data]) => ({
-        date,
-        ...data
-      }));
-
       const analytics: Analytics = {
         totalUsers: totalUsers || 0,
         activeUsers: activeUsers || 0,
         totalComparisons: totalComparisons || 0,
         totalOffers: totalOffers || 0,
         planDistribution,
-        monthlyGrowth,
-        dailyActivity
+        monthlyGrowth: [],
+        dailyActivity: []
       };
 
       console.log('Analytics data:', analytics);
       return analytics;
     } catch (error) {
       console.error('Error fetching analytics:', error);
-      throw error;
-    }
-  },
-
-  async cleanupDailyContributions(): Promise<void> {
-    console.log('Starting daily cleanup of contributions...');
-    
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(23, 59, 59, 999);
-
-    try {
-      const { error } = await supabase
-        .from('daily_offers')
-        .delete()
-        .lt('created_at', yesterday.toISOString())
-        .eq('verified', false);
-
-      if (error) {
-        console.error('Error during daily cleanup:', error);
-        throw error;
-      }
-
-      console.log('Daily cleanup completed successfully');
-    } catch (error) {
-      console.error('Error in cleanupDailyContributions:', error);
       throw error;
     }
   }

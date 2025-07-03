@@ -1,107 +1,133 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { PriceContribution, DailyOffer } from '@/lib/types';
+import { PriceContribution, DailyOffer, PriceValidationResult } from '@/lib/types';
 
 export const supabaseDailyOffersService = {
-  async getTodaysOffers() {
-    console.log('Fetching today\'s offers');
-    const today = new Date();
-    const twentyFourHoursAgo = new Date(today.getTime() - (24 * 60 * 60 * 1000));
-
-    const { data, error } = await supabase
-      .from('daily_offers')
-      .select('*')
-      .gte('created_at', twentyFourHoursAgo.toISOString())
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching daily offers:', error);
-      throw error;
-    }
-
-    console.log('Fetched offers:', data?.length || 0);
-    return data?.map(offer => ({
-      id: offer.id,
-      productName: offer.product_name,
-      price: offer.price,
-      storeName: offer.store_name,
-      city: offer.city,
-      state: offer.state,
-      contributorName: offer.contributor_name,
-      userId: offer.user_id,
-      timestamp: new Date(offer.created_at),
-      verified: offer.verified,
-    })) || [];
-  },
-
-  async submitPriceContribution(
-    contribution: PriceContribution,
-    userId: string,
-    userName: string
-  ): Promise<DailyOffer> {
-    console.log('Submitting price contribution:', contribution);
+  async submitPriceContribution(contribution: PriceContribution, userId: string, contributorName: string): Promise<void> {
+    console.log('Submitting price contribution:', { contribution, userId, contributorName });
     
-    const { data, error } = await supabase
-      .from('daily_offers')
-      .insert({
-        user_id: userId,
-        product_name: contribution.productName,
-        price: contribution.price,
-        store_name: contribution.storeName,
-        city: contribution.city,
-        state: contribution.state,
-        contributor_name: userName,
-        verified: false, // Será implementada lógica de verificação futuramente
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .insert({
+          user_id: userId,
+          product_name: contribution.productName,
+          price: contribution.price,
+          store_name: contribution.storeName,
+          city: contribution.city,
+          state: contribution.state,
+          contributor_name: contributorName,
+          verified: false
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error submitting price contribution:', error);
+      if (error) {
+        console.error('Error submitting price contribution:', error);
+        throw new Error('Erro ao enviar contribuição de preço');
+      }
+
+      console.log('Price contribution submitted successfully:', data);
+    } catch (error) {
+      console.error('Error in submitPriceContribution:', error);
       throw error;
     }
-
-    console.log('Price contribution submitted:', data);
-    return {
-      id: data.id,
-      productName: data.product_name,
-      price: data.price,
-      storeName: data.store_name,
-      city: data.city,
-      state: data.state,
-      contributorName: data.contributor_name,
-      userId: data.user_id,
-      timestamp: new Date(data.created_at),
-      verified: data.verified,
-    };
   },
 
-  async validateUserContribution(
-    newContribution: PriceContribution,
-    userId: string
-  ) {
-    console.log('Validating user contribution');
-    const { data, error } = await supabase
-      .from('daily_offers')
-      .select('*')
-      .eq('user_id', userId)
-      .ilike('product_name', `%${newContribution.productName}%`)
-      .ilike('store_name', `%${newContribution.storeName}%`)
-      .eq('city', newContribution.city)
-      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+  async validateUserContribution(contribution: PriceContribution, userId: string): Promise<PriceValidationResult> {
+    console.log('Validating user contribution:', { contribution, userId });
+    
+    try {
+      // Verificar se o usuário já contribuiu hoje para o mesmo produto/loja
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { data: existingContributions, error } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('product_name', contribution.productName)
+        .eq('store_name', contribution.storeName)
+        .gte('created_at', today.toISOString());
 
-    if (error) {
-      console.error('Error validating contribution:', error);
-      return { isValid: true };
+      if (error) {
+        console.error('Error validating contribution:', error);
+        return { isValid: false, message: 'Erro ao validar contribuição' };
+      }
+
+      if (existingContributions && existingContributions.length > 0) {
+        return { 
+          isValid: false, 
+          message: 'Você já contribuiu com este produto/loja hoje. Tente novamente amanhã.' 
+        };
+      }
+
+      // Verificar se há preços muito diferentes para o mesmo produto
+      const { data: similarOffers } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .eq('product_name', contribution.productName)
+        .eq('city', contribution.city)
+        .eq('state', contribution.state)
+        .gte('created_at', today.toISOString());
+
+      if (similarOffers && similarOffers.length > 0) {
+        const avgPrice = similarOffers.reduce((sum, offer) => sum + Number(offer.price), 0) / similarOffers.length;
+        const priceDifference = Math.abs(contribution.price - avgPrice) / avgPrice;
+        
+        if (priceDifference > 0.5) { // 50% de diferença
+          return {
+            isValid: true,
+            message: `Preço muito diferente da média (R$ ${avgPrice.toFixed(2)}). Tem certeza?`,
+            priceDifference: priceDifference * 100
+          };
+        }
+      }
+
+      return { isValid: true, message: 'Contribuição válida' };
+    } catch (error) {
+      console.error('Error in validateUserContribution:', error);
+      return { isValid: false, message: 'Erro ao validar contribuição' };
     }
-
-    if (data && data.length > 0) {
-      return {
-        isValid: false,
-        message: 'Você já contribuiu com este produto nas últimas 24 horas',
-      };
-    }
-
-    return { isValid: true };
   },
+
+  async getTodaysOffers(): Promise<DailyOffer[]> {
+    console.log('Fetching today\'s offers...');
+    
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .gte('created_at', today.toISOString())
+        .eq('verified', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching today\'s offers:', error);
+        throw error;
+      }
+
+      const offers = data?.map(item => ({
+        id: item.id,
+        productName: item.product_name,
+        price: Number(item.price),
+        storeName: item.store_name,
+        city: item.city,
+        state: item.state,
+        contributorName: item.contributor_name,
+        userId: item.user_id,
+        timestamp: new Date(item.created_at || ''),
+        verified: item.verified || false
+      })) || [];
+
+      console.log('Fetched today\'s offers:', offers.length);
+      return offers;
+    } catch (error) {
+      console.error('Error in getTodaysOffers:', error);
+      return [];
+    }
+  }
 };

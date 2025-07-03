@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseAdminService } from '@/services/supabase/adminService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Contribution {
   id: string;
@@ -25,7 +25,6 @@ export const PendingContributionsSection = () => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const fetchContributions = async () => {
     try {
@@ -46,11 +45,7 @@ export const PendingContributionsSection = () => {
       setContributions(data || []);
     } catch (error) {
       console.error('Erro ao buscar contribuições:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar contribuições",
-        variant: "destructive",
-      });
+      toast.error("Erro ao carregar contribuições");
     } finally {
       setLoading(false);
     }
@@ -62,22 +57,15 @@ export const PendingContributionsSection = () => {
 
   const handleApprove = async (id: string) => {
     try {
+      console.log('Approving contribution:', id);
       setActionLoading(id);
       await supabaseAdminService.approveContribution(id);
       
-      toast({
-        title: "Sucesso",
-        description: "Contribuição aprovada com sucesso",
-      });
-      
+      toast.success("Contribuição aprovada com sucesso!");
       fetchContributions();
     } catch (error) {
       console.error('Erro ao aprovar contribuição:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao aprovar contribuição",
-        variant: "destructive",
-      });
+      toast.error("Erro ao aprovar contribuição");
     } finally {
       setActionLoading(null);
     }
@@ -85,22 +73,15 @@ export const PendingContributionsSection = () => {
 
   const handleReject = async (id: string) => {
     try {
+      console.log('Rejecting contribution:', id);
       setActionLoading(id);
       await supabaseAdminService.rejectContribution(id);
       
-      toast({
-        title: "Sucesso",
-        description: "Contribuição rejeitada e removida",
-      });
-      
+      toast.success("Contribuição rejeitada e removida");
       fetchContributions();
     } catch (error) {
       console.error('Erro ao rejeitar contribuição:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao rejeitar contribuição",
-        variant: "destructive",
-      });
+      toast.error("Erro ao rejeitar contribuição");
     } finally {
       setActionLoading(null);
     }
@@ -118,17 +99,7 @@ export const PendingContributionsSection = () => {
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Contribuições de Preços</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchContributions}
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
+          <CardTitle>Contribuições de Preços</CardTitle>
         </CardHeader>
         <CardContent>
           <p>Carregando contribuições...</p>
