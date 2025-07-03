@@ -3,11 +3,26 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+type UserProfile = {
+  id: string;
+  email: string;
+  name: string | null;
+  plan: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  last_activity: string | null;
+  is_online: boolean | null;
+};
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
+  profile: UserProfile | null;
   loading: boolean;
   updateActivity: () => void;
+  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<{ error: any }>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +38,27 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+    }
+  };
 
   const updateActivity = async () => {
     if (user) {
@@ -46,6 +81,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signOut = async () => {
+    try {
+      // Mark user as offline before signing out
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ is_online: false })
+          .eq('id', user.id);
+      }
+      
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+      }
+      
+      // Clear local state
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+    } catch (error) {
+      console.error('Error in signOut:', error);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
+
+      return { error };
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+      return { error };
+    }
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!user) {
+      return { error: 'No user logged in' };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        return { error };
+      }
+
+      // Update local profile state
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
+      return { error: null };
+    } catch (error) {
+      console.error('Error in updateProfile:', error);
+      return { error };
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -56,22 +156,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
 
         if (event === 'SIGNED_IN' && session?.user) {
-          // Defer activity update to prevent potential deadlocks
+          // Defer activity update and profile fetch to prevent potential deadlocks
           setTimeout(() => {
             updateActivity();
+            fetchProfile(session.user.id);
           }, 100);
         }
 
         if (event === 'SIGNED_OUT') {
-          // Mark user as offline when signing out
-          try {
-            await supabase
-              .from('profiles')
-              .update({ is_online: false })
-              .eq('id', session?.user?.id || '');
-          } catch (error) {
-            console.error('Error marking user offline:', error);
-          }
+          setProfile(null);
         }
       }
     );
@@ -85,6 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setTimeout(() => {
           updateActivity();
+          fetchProfile(session.user.id);
         }, 100);
       }
     });
@@ -103,8 +197,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = {
     user,
     session,
+    profile,
     loading,
     updateActivity,
+    signOut,
+    signInWithGoogle,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
