@@ -45,14 +45,13 @@ export const contributionService = {
         throw error;
       }
 
-      // Salvar dados do usuário para referência futura, incluindo telefone
+      // Salvar dados do usuário para referência futura (sem telefone por enquanto)
       await supabase
         .from('profiles')
         .upsert({
           id: userId,
           name: data.userName,
-          email: data.userEmail,
-          phone: data.userPhone
+          email: data.userEmail
         }, {
           onConflict: 'id'
         });
@@ -75,8 +74,7 @@ export const contributionService = {
           *,
           profiles (
             name,
-            email,
-            phone
+            email
           )
         `)
         .order('created_at', { ascending: false });
@@ -95,7 +93,7 @@ export const contributionService = {
         status: item.status as 'open' | 'in-review' | 'implemented' | 'closed',
         user_name: item.profiles?.name || 'Usuário não identificado',
         user_email: item.profiles?.email || 'Email não disponível',
-        user_phone: item.profiles?.phone || undefined,
+        user_phone: undefined, // Campo não disponível na tabela atual
         created_at: item.created_at
       })) || [];
 
