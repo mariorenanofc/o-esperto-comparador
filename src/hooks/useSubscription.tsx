@@ -18,7 +18,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { profile, updateProfile } = useAuth();
   const { toast } = useToast();
 
-  const currentPlan: PlanTier = profile?.plan || 'free';
+  // Safely cast profile.plan to PlanTier with fallback
+  const currentPlan: PlanTier = (profile?.plan as PlanTier) || 'free';
   const isLoading = false; // Será usado quando implementarmos Stripe
 
   const createCheckout = async (planId: PlanTier) => {
