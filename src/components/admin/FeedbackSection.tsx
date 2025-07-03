@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, MessageSquare, Clock, RefreshCw, Phone, Mail, User } from 'lucide-react';
+import { MessageSquare, RefreshCw, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { contributionService, UserFeedback } from '@/services/contributionService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,14 +16,16 @@ export const FeedbackSection = () => {
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
+      console.log('Fetching feedbacks...');
+      
       const data = await contributionService.getAllFeedbacks();
+      console.log('Feedbacks fetched:', data.length);
       setFeedbacks(data);
-      console.log('Feedbacks loaded:', data);
     } catch (error) {
-      console.error('Erro ao buscar feedbacks:', error);
+      console.error('Error fetching feedbacks:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar feedbacks dos usuários",
+        description: "Erro ao carregar feedbacks",
         variant: "destructive",
       });
     } finally {
@@ -33,27 +35,24 @@ export const FeedbackSection = () => {
 
   useEffect(() => {
     fetchFeedbacks();
-    
-    // Atualizar lista a cada 30 segundos
-    const interval = setInterval(fetchFeedbacks, 30000);
-    
-    return () => clearInterval(interval);
   }, []);
 
-  const handleStatusUpdate = async (feedbackId: string, status: 'in-review' | 'implemented') => {
+  const handleUpdateStatus = async (feedbackId: string, status: 'in-review' | 'implemented') => {
     try {
       setActionLoading(feedbackId);
       await contributionService.updateFeedbackStatus(feedbackId, status);
+      
       toast({
         title: "Sucesso",
-        description: `Feedback marcado como ${status === 'in-review' ? 'em revisão' : 'implementado'}`,
+        description: `Status atualizado para ${status === 'in-review' ? 'Em Análise' : 'Implementado'}`,
       });
-      fetchFeedbacks(); // Recarrega a lista
+      
+      fetchFeedbacks();
     } catch (error) {
-      console.error('Erro ao atualizar status do feedback:', error);
+      console.error('Error updating feedback status:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar status do feedback",
+        description: "Erro ao atualizar status",
         variant: "destructive",
       });
     } finally {
@@ -64,38 +63,25 @@ export const FeedbackSection = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return <Badge variant="destructive"><MessageSquare className="w-4 h-4 mr-1" />Novo</Badge>;
+        return <Badge variant="outline"><Clock className="w-4 h-4 mr-1" />Aberto</Badge>;
       case 'in-review':
-        return <Badge variant="secondary"><Clock className="w-4 h-4 mr-1" />Em Revisão</Badge>;
+        return <Badge variant="secondary"><AlertCircle className="w-4 h-4 mr-1" />Em Análise</Badge>;
       case 'implemented':
         return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Implementado</Badge>;
       case 'closed':
-        return <Badge variant="outline"><CheckCircle className="w-4 h-4 mr-1" />Fechado</Badge>;
+        return <Badge variant="destructive">Fechado</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const getCategoryBadge = (category: string) => {
-    const colors = {
-      improvement: 'bg-blue-100 text-blue-800',
-      feature: 'bg-green-100 text-green-800',
-      bug: 'bg-red-100 text-red-800',
-      other: 'bg-gray-100 text-gray-800'
-    };
-
-    const labels = {
-      improvement: 'Melhoria',
-      feature: 'Funcionalidade',
-      bug: 'Bug',
-      other: 'Outro'
-    };
-
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[category as keyof typeof colors] || colors.other}`}>
-        {labels[category as keyof typeof labels] || category}
-      </span>
-    );
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'bug': return 'bg-red-100 text-red-800';
+      case 'feature': return 'bg-blue-100 text-blue-800';
+      case 'improvement': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (loading) {
@@ -103,7 +89,10 @@ export const FeedbackSection = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Feedbacks dos Usuários ({feedbacks.length})</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Feedback dos Usuários
+            </CardTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -125,7 +114,10 @@ export const FeedbackSection = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Feedbacks dos Usuários ({feedbacks.length})</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Feedback dos Usuários ({feedbacks.length})
+          </CardTitle>
           <Button
             variant="ghost"
             size="sm"
@@ -143,80 +135,42 @@ export const FeedbackSection = () => {
           feedbacks.map((feedback) => (
             <div key={feedback.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-start">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">{feedback.title}</h3>
-                    {getCategoryBadge(feedback.category)}
+                <div className="flex-1">
+                  <h3 className="font-semibold">{feedback.title}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{feedback.description}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge className={getCategoryColor(feedback.category)}>
+                      {feedback.category}
+                    </Badge>
+                    {getStatusBadge(feedback.status)}
                   </div>
-                  <p className="text-sm text-gray-600">{feedback.description}</p>
                 </div>
-                <div className="text-right">
-                  {getStatusBadge(feedback.status)}
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(feedback.created_at).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="font-medium text-sm mb-2 flex items-center">
-                  <User className="w-4 h-4 mr-1" />
-                  Dados do Usuário
-                </h4>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p><strong>Nome:</strong> {feedback.user_name}</p>
-                  <p className="flex items-center">
-                    <Mail className="w-4 h-4 mr-1" />
-                    <strong>Email:</strong> {feedback.user_email}
-                  </p>
-                  {feedback.user_phone && (
-                    <p className="flex items-center">
-                      <Phone className="w-4 h-4 mr-1" />
-                      <strong>Telefone:</strong> {feedback.user_phone}
-                    </p>
-                  )}
+                <div className="text-right text-sm text-gray-500">
+                  <p>{new Date(feedback.created_at).toLocaleDateString('pt-BR')}</p>
+                  <p className="mt-1">{feedback.user_name}</p>
+                  <p>{feedback.user_email}</p>
                 </div>
               </div>
 
               {feedback.status === 'open' && (
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleStatusUpdate(feedback.id, 'in-review')}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => handleUpdateStatus(feedback.id, 'in-review')}
+                    variant="outline"
                     size="sm"
                     disabled={actionLoading === feedback.id}
                   >
-                    <Clock className="w-4 h-4 mr-1" />
-                    {actionLoading === feedback.id ? 'Processando...' : 'Marcar como Em Revisão'}
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {actionLoading === feedback.id ? 'Atualizando...' : 'Marcar como Em Análise'}
                   </Button>
                   <Button
-                    onClick={() => handleStatusUpdate(feedback.id, 'implemented')}
+                    onClick={() => handleUpdateStatus(feedback.id, 'implemented')}
                     className="bg-green-600 hover:bg-green-700"
                     size="sm"
                     disabled={actionLoading === feedback.id}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    {actionLoading === feedback.id ? 'Processando...' : 'Marcar como Implementado'}
-                  </Button>
-                </div>
-              )}
-
-              {feedback.status === 'in-review' && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleStatusUpdate(feedback.id, 'implemented')}
-                    className="bg-green-600 hover:bg-green-700"
-                    size="sm"
-                    disabled={actionLoading === feedback.id}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    {actionLoading === feedback.id ? 'Processando...' : 'Marcar como Implementado'}
+                    {actionLoading === feedback.id ? 'Atualizando...' : 'Marcar como Implementado'}
                   </Button>
                 </div>
               )}

@@ -45,7 +45,7 @@ export const contributionService = {
         throw error;
       }
 
-      // Salvar dados do usuário para referência futura (sem telefone por enquanto)
+      // Salvar dados do usuário para referência futura
       await supabase
         .from('profiles')
         .upsert({
