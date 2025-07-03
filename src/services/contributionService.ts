@@ -90,7 +90,7 @@ export const contributionService = {
         title: item.title,
         description: item.description,
         category: item.category,
-        status: item.status,
+        status: item.status as 'open' | 'in-review' | 'implemented' | 'closed',
         user_name: item.profiles?.name || 'Usuário não identificado',
         user_email: item.profiles?.email || 'Email não disponível',
         created_at: item.created_at
