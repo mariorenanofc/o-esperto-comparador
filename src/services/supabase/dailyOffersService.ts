@@ -4,33 +4,57 @@ import { PriceContribution, DailyOffer, PriceValidationResult } from '@/lib/type
 
 export const supabaseDailyOffersService = {
   async submitPriceContribution(contribution: PriceContribution, userId: string, contributorName: string): Promise<void> {
+    console.log('=== SUPABASE DAILY OFFERS SERVICE ===');
     console.log('Submitting price contribution:', { contribution, userId, contributorName });
     
     try {
+      // Verificar se o usuário está autenticado
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error('Authentication error:', authError);
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log('User authenticated:', user.id);
+
+      const insertData = {
+        user_id: userId,
+        product_name: contribution.productName.trim(),
+        price: Number(contribution.price),
+        store_name: contribution.storeName.trim(),
+        city: contribution.city.trim(),
+        state: contribution.state.trim(),
+        contributor_name: contributorName.trim(),
+        verified: false
+      };
+
+      console.log('Insert data:', insertData);
+
       const { data, error } = await supabase
         .from('daily_offers')
-        .insert({
-          user_id: userId,
-          product_name: contribution.productName,
-          price: contribution.price,
-          store_name: contribution.storeName,
-          city: contribution.city,
-          state: contribution.state,
-          contributor_name: contributorName,
-          verified: false
-        })
+        .insert(insertData)
         .select()
         .single();
 
       if (error) {
-        console.error('Error submitting price contribution:', error);
-        throw new Error('Erro ao enviar contribuição de preço');
+        console.error('Database error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        throw new Error(`Erro na base de dados: ${error.message}`);
       }
 
       console.log('Price contribution submitted successfully:', data);
     } catch (error) {
-      console.error('Error in submitPriceContribution:', error);
-      throw error;
+      console.error('=== ERROR IN SUBMIT PRICE CONTRIBUTION ===');
+      console.error('Error type:', typeof error);
+      console.error('Error:', error);
+      
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('Erro desconhecido ao enviar contribuição');
+      }
     }
   },
 
@@ -46,8 +70,8 @@ export const supabaseDailyOffersService = {
         .from('daily_offers')
         .select('*')
         .eq('user_id', userId)
-        .eq('product_name', contribution.productName)
-        .eq('store_name', contribution.storeName)
+        .eq('product_name', contribution.productName.trim())
+        .eq('store_name', contribution.storeName.trim())
         .gte('created_at', today.toISOString());
 
       if (error) {
@@ -66,9 +90,9 @@ export const supabaseDailyOffersService = {
       const { data: similarOffers } = await supabase
         .from('daily_offers')
         .select('*')
-        .eq('product_name', contribution.productName)
-        .eq('city', contribution.city)
-        .eq('state', contribution.state)
+        .eq('product_name', contribution.productName.trim())
+        .eq('city', contribution.city.trim())
+        .eq('state', contribution.state.trim())
         .gte('created_at', today.toISOString());
 
       if (similarOffers && similarOffers.length > 0) {

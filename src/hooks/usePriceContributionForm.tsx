@@ -41,50 +41,89 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submission started');
+    console.log('=== PRICE CONTRIBUTION FORM SUBMISSION ===');
+    console.log('Form data:', formData);
+    console.log('User:', user?.id);
+    console.log('Profile:', profile);
     
     if (!user) {
+      console.error('No user found');
       toast.error('Você precisa estar logado para contribuir');
       return;
     }
 
     if (!profile) {
-      toast.error('Profile não encontrado');
+      console.error('No profile found');
+      toast.error('Profile não encontrado. Tente fazer login novamente.');
       return;
     }
 
-    if (!formData.productName || !formData.storeName || formData.price <= 0) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
+    // Validações básicas
+    if (!formData.productName.trim()) {
+      toast.error('Nome do produto é obrigatório');
       return;
     }
 
-    if (!formData.city || !formData.state) {
-      toast.error('Não foi possível detectar sua localização');
+    if (!formData.storeName.trim()) {
+      toast.error('Nome da loja é obrigatório');
+      return;
+    }
+
+    if (formData.price <= 0) {
+      toast.error('Preço deve ser maior que zero');
+      return;
+    }
+
+    if (!formData.city.trim() || !formData.state.trim()) {
+      toast.error('Localização é obrigatória');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      console.log('Validating contribution...');
+      console.log('Starting validation...');
+      
+      // Preparar dados para validação
+      const contributionData = {
+        ...formData,
+        userId: user.id,
+        timestamp: new Date()
+      };
+
       const validation = await supabaseDailyOffersService.validateUserContribution(
-        formData,
+        contributionData,
         user.id
       );
       
+      console.log('Validation result:', validation);
+      
       if (!validation.isValid) {
+        console.error('Validation failed:', validation.message);
         toast.error(validation.message || 'Contribuição inválida');
-        setIsSubmitting(false);
         return;
       }
 
+      if (validation.priceDifference && validation.priceDifference > 50) {
+        const confirmed = window.confirm(
+          `${validation.message} Deseja continuar mesmo assim?`
+        );
+        if (!confirmed) {
+          return;
+        }
+      }
+
       console.log('Submitting contribution...');
+      
+      const contributorName = profile.name || profile.email || 'Usuário';
+      
       await supabaseDailyOffersService.submitPriceContribution(
-        formData,
+        contributionData,
         user.id,
-        profile.name || profile.email
+        contributorName
       );
 
+      console.log('Contribution submitted successfully!');
       toast.success('Contribuição enviada com sucesso! Obrigado por ajudar nossa comunidade! 🎉');
       
       // Reset form
@@ -105,7 +144,10 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
         props.onClose();
       }
     } catch (error) {
-      console.error('Error submitting contribution:', error);
+      console.error('=== ERROR SUBMITTING CONTRIBUTION ===');
+      console.error('Error details:', error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      
       toast.error('Erro ao enviar contribuição. Tente novamente.');
     } finally {
       setIsSubmitting(false);

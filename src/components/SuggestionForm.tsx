@@ -29,15 +29,41 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Suggestion form submission started');
+    console.log('=== SUGGESTION FORM SUBMISSION ===');
+    console.log('Form data:', formData);
+    console.log('User:', user?.id);
     
     if (!user) {
+      console.error('No user found');
       toast.error("Você precisa estar logado para enviar sugestões.");
       return;
     }
 
-    if (!formData.title || !formData.description || !formData.userName || !formData.userEmail) {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
+    // Validações
+    if (!formData.title.trim()) {
+      toast.error("Título é obrigatório.");
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      toast.error("Descrição é obrigatória.");
+      return;
+    }
+
+    if (!formData.userName.trim()) {
+      toast.error("Nome é obrigatório.");
+      return;
+    }
+
+    if (!formData.userEmail.trim()) {
+      toast.error("Email é obrigatório.");
+      return;
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.userEmail)) {
+      toast.error("Email inválido.");
       return;
     }
 
@@ -45,7 +71,10 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
 
     try {
       console.log('Submitting suggestion...');
+      
       await contributionService.submitSuggestion(user.id, formData);
+      
+      console.log('Suggestion submitted successfully!');
       toast.success("Sugestão enviada com sucesso! Obrigado pelo seu feedback! 🚀");
       
       // Reset form
@@ -60,8 +89,11 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
       
       onClose();
     } catch (error) {
-      console.error("Erro ao enviar sugestão:", error);
-      toast.error("Erro ao enviar sugestão. Tente novamente.");
+      console.error("=== ERROR SUBMITTING SUGGESTION ===");
+      console.error("Error:", error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao enviar sugestão: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,130 +1,86 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useGeolocation } from "@/hooks/useGeolocation";
+import { dailyOffersService } from "@/services/dailyOffersService";
 import { DailyOffer } from "@/lib/types";
-import { supabaseDailyOffersService } from "@/services/supabase/dailyOffersService";
-import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
-import OffersGrid from "./daily-offers/OffersGrid";
-import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
-import LoadingState from "./daily-offers/LoadingState";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DailyOffersHeader } from "./daily-offers/DailyOffersHeader";
+import { LoadingState } from "./daily-offers/LoadingState";
+import { LoginOverlay } from "./daily-offers/LoginOverlay";
+import { OffersGrid } from "./daily-offers/OffersGrid";
+import { ContributeCallToAction } from "./daily-offers/ContributeCallToAction";
+import { toast } from "sonner";
 
-interface DailyOffersSectionProps {
-  offers?: DailyOffer[];
-}
-
-const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) => {
-  const { user, updateActivity } = useAuth();
-  const { city } = useGeolocation();
-  const [showAll, setShowAll] = useState(false);
-  const [visibleOffers, setVisibleOffers] = useState<DailyOffer[]>([]);
-  const [actualOffers, setActualOffers] = useState<DailyOffer[]>([]);
+const DailyOffersSection: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
+  const [offers, setOffers] = useState<DailyOffer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data para demonstração (usado quando não há ofertas reais)
-  const mockOffers: DailyOffer[] = [
-    {
-      id: "1",
-      productName: "Arroz Tipo 1 5kg",
-      price: 18.90,
-      storeName: "Supermercado Econômico",
-      city: "Trindade",
-      state: "PE",
-      contributorName: "João S.",
-      userId: "mock_user_1",
-      timestamp: new Date(),
-      verified: true
-    },
-    {
-      id: "2", 
-      productName: "Óleo de Soja 900ml",
-      price: 4.50,
-      storeName: "Mercadinho da Esquina",
-      city: "Trindade",
-      state: "PE",
-      contributorName: "Maria L.",
-      userId: "mock_user_2",
-      timestamp: new Date(),
-      verified: false
-    },
-    {
-      id: "3",
-      productName: "Açúcar Cristal 1kg",
-      price: 3.80,
-      storeName: "Atacadão Central",
-      city: "Trindade", 
-      state: "PE",
-      contributorName: "Pedro M.",
-      userId: "mock_user_3",
-      timestamp: new Date(),
-      verified: true
-    }
-  ];
-
-  // Buscar ofertas reais do serviço
-  const fetchOffers = async () => {
+  const fetchOffers = useCallback(async () => {
+    if (authLoading) return;
+    
     try {
+      console.log('Fetching daily offers...');
       setLoading(true);
-      console.log('Fetching offers from Supabase...');
-      const realOffers = await supabaseDailyOffersService.getTodaysOffers();
-      console.log('Fetched real offers:', realOffers);
-      setActualOffers(realOffers);
+      setError(null);
       
-      // Registrar atividade do usuário se estiver logado
-      if (user && updateActivity) {
-        updateActivity();
+      const fetchedOffers = await dailyOffersService.getTodaysOffers();
+      console.log('Fetched offers:', fetchedOffers);
+      
+      setOffers(fetchedOffers);
+      
+      if (fetchedOffers.length === 0) {
+        console.log('No offers found for today');
       }
     } catch (error) {
-      console.error('Error fetching offers:', error);
+      console.error('Error fetching daily offers:', error);
+      setError('Erro ao carregar ofertas do dia');
+      toast.error('Erro ao carregar ofertas do dia');
     } finally {
       setLoading(false);
     }
-  };
+  }, [authLoading]);
 
   useEffect(() => {
     fetchOffers();
-    
-    // Refetch a cada 30 segundos para capturar mudanças em tempo real
-    const interval = setInterval(fetchOffers, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  }, [fetchOffers]);
 
-  // Usar ofertas reais se existirem, senão usar mock data
-  const displayOffers = actualOffers.length > 0 ? actualOffers : (offers.length > 0 ? offers : mockOffers);
-
-  useEffect(() => {
-    if (user || showAll) {
-      setVisibleOffers(displayOffers);
-    } else {
-      setVisibleOffers(displayOffers.slice(0, 3));
-    }
-  }, [user, showAll, displayOffers]);
-
-  if (loading) {
+  if (authLoading || loading) {
     return <LoadingState />;
   }
 
+  if (error) {
+    return (
+      <Card className="w-full max-w-6xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-red-600">Erro</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>{error}</p>
+          <button 
+            onClick={fetchOffers}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Tentar novamente
+          </button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <section className="py-16 bg-gradient-to-br from-green-50 to-blue-50">
-      <div className="container mx-auto px-6">
-        <DailyOffersHeader
-          city={city}
-          actualOffersCount={actualOffers.length}
-          onRefresh={fetchOffers}
-        />
-
-        <OffersGrid
-          visibleOffers={visibleOffers}
-          displayOffers={displayOffers}
-          isSignedIn={!!user}
-          showAll={showAll}
-          onShowAll={() => setShowAll(true)}
-        />
-
+    <div className="w-full max-w-6xl mx-auto space-y-6 relative">
+      <DailyOffersHeader />
+      
+      {!user && <LoginOverlay />}
+      
+      {offers.length > 0 ? (
+        <OffersGrid offers={offers} />
+      ) : (
         <ContributeCallToAction />
-      </div>
-    </section>
+      )}
+    </div>
   );
 };
 

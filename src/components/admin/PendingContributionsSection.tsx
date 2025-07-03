@@ -57,15 +57,22 @@ export const PendingContributionsSection = () => {
 
   const handleApprove = async (id: string) => {
     try {
-      console.log('Approving contribution:', id);
+      console.log('=== ADMIN APPROVING CONTRIBUTION ===');
+      console.log('Contribution ID:', id);
+      
       setActionLoading(id);
+      
       await supabaseAdminService.approveContribution(id);
       
       toast.success("Contribuição aprovada com sucesso!");
-      fetchContributions();
+      await fetchContributions(); // Recarregar a lista
+      
     } catch (error) {
-      console.error('Erro ao aprovar contribuição:', error);
-      toast.error("Erro ao aprovar contribuição");
+      console.error('=== ERROR APPROVING CONTRIBUTION ===');
+      console.error('Error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao aprovar contribuição: ${errorMessage}`);
     } finally {
       setActionLoading(null);
     }
@@ -73,15 +80,25 @@ export const PendingContributionsSection = () => {
 
   const handleReject = async (id: string) => {
     try {
-      console.log('Rejecting contribution:', id);
+      console.log('=== ADMIN REJECTING CONTRIBUTION ===');
+      console.log('Contribution ID:', id);
+      
+      const confirmed = window.confirm('Tem certeza que deseja rejeitar e remover esta contribuição?');
+      if (!confirmed) return;
+      
       setActionLoading(id);
+      
       await supabaseAdminService.rejectContribution(id);
       
       toast.success("Contribuição rejeitada e removida");
-      fetchContributions();
+      await fetchContributions(); // Recarregar a lista
+      
     } catch (error) {
-      console.error('Erro ao rejeitar contribuição:', error);
-      toast.error("Erro ao rejeitar contribuição");
+      console.error('=== ERROR REJECTING CONTRIBUTION ===');
+      console.error('Error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao rejeitar contribuição: ${errorMessage}`);
     } finally {
       setActionLoading(null);
     }
@@ -89,7 +106,7 @@ export const PendingContributionsSection = () => {
 
   const getStatusBadge = (verified: boolean) => {
     if (verified) {
-      return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Aprovada</Badge>;
+      return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-4 h-4 mr-1" />Aprovada</Badge>;
     } else {
       return <Badge variant="secondary"><Clock className="w-4 h-4 mr-1" />Pendente</Badge>;
     }
@@ -152,7 +169,7 @@ export const PendingContributionsSection = () => {
               
               <div className="text-sm text-gray-600">
                 <p><strong>Contribuidor:</strong> {contribution.contributor_name}</p>
-                <p><strong>ID do Usuário:</strong> {contribution.user_id}</p>
+                <p><strong>ID:</strong> {contribution.id}</p>
               </div>
 
               {!contribution.verified && (

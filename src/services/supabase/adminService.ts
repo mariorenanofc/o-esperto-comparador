@@ -90,35 +90,103 @@ export const supabaseAdminService = {
   },
 
   async approveContribution(contributionId: string): Promise<void> {
-    console.log('Approving contribution:', contributionId);
+    console.log('=== APPROVING CONTRIBUTION ===');
+    console.log('Contribution ID:', contributionId);
     
-    const { error } = await supabase
-      .from('daily_offers')
-      .update({ verified: true })
-      .eq('id', contributionId);
+    try {
+      // Verificar se o usuário atual é admin
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error('Authentication error:', authError);
+        throw new Error('Usuário não autenticado');
+      }
 
-    if (error) {
-      console.error('Error approving contribution:', error);
-      throw new Error('Erro ao aprovar contribuição');
+      console.log('Current user:', user.id);
+
+      // Verificar se o usuário tem permissão de admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Error fetching user profile:', profileError);
+        throw new Error('Erro ao verificar permissões');
+      }
+
+      console.log('User profile:', profile);
+
+      if (profile.plan !== 'admin') {
+        throw new Error('Usuário não tem permissão de administrador');
+      }
+
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .update({ verified: true })
+        .eq('id', contributionId)
+        .select();
+
+      if (error) {
+        console.error('Database error approving contribution:', error);
+        throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
+      }
+
+      console.log('Contribution approved successfully:', data);
+    } catch (error) {
+      console.error('Error in approveContribution:', error);
+      throw error;
     }
-
-    console.log('Contribution approved successfully');
   },
 
   async rejectContribution(contributionId: string): Promise<void> {
-    console.log('Rejecting contribution:', contributionId);
+    console.log('=== REJECTING CONTRIBUTION ===');
+    console.log('Contribution ID:', contributionId);
     
-    const { error } = await supabase
-      .from('daily_offers')
-      .delete()
-      .eq('id', contributionId);
+    try {
+      // Verificar se o usuário atual é admin
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        console.error('Authentication error:', authError);
+        throw new Error('Usuário não autenticado');
+      }
 
-    if (error) {
-      console.error('Error rejecting contribution:', error);
-      throw new Error('Erro ao rejeitar contribuição');
+      console.log('Current user:', user.id);
+
+      // Verificar se o usuário tem permissão de admin
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Error fetching user profile:', profileError);
+        throw new Error('Erro ao verificar permissões');
+      }
+
+      console.log('User profile:', profile);
+
+      if (profile.plan !== 'admin') {
+        throw new Error('Usuário não tem permissão de administrador');
+      }
+
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .delete()
+        .eq('id', contributionId)
+        .select();
+
+      if (error) {
+        console.error('Database error rejecting contribution:', error);
+        throw new Error(`Erro ao rejeitar contribuição: ${error.message}`);
+      }
+
+      console.log('Contribution rejected and deleted successfully:', data);
+    } catch (error) {
+      console.error('Error in rejectContribution:', error);
+      throw error;
     }
-
-    console.log('Contribution rejected and deleted successfully');
   },
 
   async getAnalytics(): Promise<Analytics> {
