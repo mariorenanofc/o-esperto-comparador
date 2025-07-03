@@ -76,7 +76,7 @@ export const supabaseComparisonService = {
 
     console.log('Comparison saved:', comparison);
 
-    // Salvar produtos e lojas se necessário
+    // Salvar produtos, lojas e preços
     for (const product of comparisonData.products) {
       // Verificar se o produto já existe
       let { data: existingProduct } = await supabase
@@ -117,56 +117,57 @@ export const supabaseComparisonService = {
           product_id: productId,
         });
 
-      // Salvar preços - CORRIGIDO para salvar todos os preços
+      // Salvar preços para TODOS os estabelecimentos na comparação
       for (const store of comparisonData.stores) {
         const price = product.prices[store.id];
-        if (price && price > 0) {
-          // Verificar se a loja existe
-          let { data: existingStore } = await supabase
+        
+        // Salvar preço mesmo se for 0 ou undefined (para manter histórico completo)
+        // Verificar se a loja existe
+        let { data: existingStore } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('name', store.name)
+          .maybeSingle();
+
+        let storeId = existingStore?.id;
+
+        if (!existingStore) {
+          // Criar nova loja
+          const { data: newStore, error: storeError } = await supabase
             .from('stores')
-            .select('id')
-            .eq('name', store.name)
-            .maybeSingle();
+            .insert({ name: store.name })
+            .select()
+            .single();
 
-          let storeId = existingStore?.id;
-
-          if (!existingStore) {
-            // Criar nova loja
-            const { data: newStore, error: storeError } = await supabase
-              .from('stores')
-              .insert({ name: store.name })
-              .select()
-              .single();
-
-            if (storeError) {
-              console.error('Error creating store:', storeError);
-              throw storeError;
-            }
-            storeId = newStore.id;
-            console.log('Created new store:', newStore);
+          if (storeError) {
+            console.error('Error creating store:', storeError);
+            throw storeError;
           }
-
-          // Salvar preço com referência à comparação
-          const { error: priceError } = await supabase
-            .from('product_prices')
-            .insert({
-              product_id: productId,
-              store_id: storeId,
-              price: price,
-              comparison_id: comparison.id,
-            });
-
-          if (priceError) {
-            console.error('Error saving price:', priceError);
-            throw priceError;
-          }
-
-          console.log(`Saved price ${price} for product ${product.name} at store ${store.name}`);
+          storeId = newStore.id;
+          console.log('Created new store:', newStore);
         }
+
+        // Salvar preço com referência à comparação (incluindo preços zerados)
+        const priceValue = price || 0;
+        const { error: priceError } = await supabase
+          .from('product_prices')
+          .insert({
+            product_id: productId,
+            store_id: storeId,
+            price: priceValue,
+            comparison_id: comparison.id,
+          });
+
+        if (priceError) {
+          console.error('Error saving price:', priceError);
+          throw priceError;
+        }
+
+        console.log(`Saved price ${priceValue} for product ${product.name} at store ${store.name}`);
       }
     }
 
-    console.log('All comparison data saved successfully with prices');
+    console.log('Complete comparison data saved successfully with all prices');
     return comparison;
   },
 

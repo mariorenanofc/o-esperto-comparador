@@ -14,7 +14,7 @@ interface DailyOffersSectionProps {
 }
 
 const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) => {
-  const { user } = useAuth();
+  const { user, updateActivity } = useAuth();
   const { city } = useGeolocation();
   const [showAll, setShowAll] = useState(false);
   const [visibleOffers, setVisibleOffers] = useState<DailyOffer[]>([]);
@@ -93,6 +93,11 @@ const DailyOffersSection: React.FC<DailyOffersSectionProps> = ({ offers = [] }) 
       const realOffers = await supabaseDailyOffersService.getTodaysOffers();
       console.log('Fetched real offers:', realOffers);
       setActualOffers(realOffers);
+      
+      // Registrar atividade do usuário se estiver logado
+      if (user && updateActivity) {
+        updateActivity();
+      }
     } catch (error) {
       console.error('Error fetching offers:', error);
     } finally {

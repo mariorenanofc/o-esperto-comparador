@@ -11,6 +11,8 @@ interface Profile {
   plan: PlanTier;
   created_at: string;
   updated_at: string;
+  last_activity?: string | null;
+  is_online?: boolean;
 }
 
 interface AuthContextType {
@@ -21,6 +23,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
+  updateActivity: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
+          // Marcar usuário como offline ao sair
+          if (profile?.id) {
+            updateUserOfflineStatus(profile.id);
+          }
           setProfile(null);
           setLoading(false);
         }
@@ -65,6 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Atualizar atividade periodicamente enquanto o usuário estiver ativo
+  useEffect(() => {
+    if (user && profile) {
+      const interval = setInterval(() => {
+        updateActivity();
+      }, 60000); // A cada 1 minuto
+
+      return () => clearInterval(interval);
+    }
+  }, [user, profile]);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -88,11 +106,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           plan: (data.plan as PlanTier) || 'free'
         };
         setProfile(profileData);
+        
+        // Marcar usuário como online ao carregar perfil
+        updateUserOnlineStatus(userId);
       }
     } catch (error) {
       console.error('Error in fetchProfile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateUserOnlineStatus = async (userId: string) => {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ 
+          is_online: true, 
+          last_activity: new Date().toISOString() 
+        })
+        .eq('id', userId);
+    } catch (error) {
+      console.error('Error updating online status:', error);
+    }
+  };
+
+  const updateUserOfflineStatus = async (userId: string) => {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ is_online: false })
+        .eq('id', userId);
+    } catch (error) {
+      console.error('Error updating offline status:', error);
+    }
+  };
+
+  const updateActivity = async () => {
+    if (!user) return;
+    
+    try {
+      await supabase
+        .from('profiles')
+        .update({ 
+          last_activity: new Date().toISOString(),
+          is_online: true 
+        })
+        .eq('id', user.id);
+    } catch (error) {
+      console.error('Error updating activity:', error);
     }
   };
 
@@ -124,6 +186,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     setLoading(true);
+    
+    // Marcar como offline antes de sair
+    if (user?.id) {
+      await updateUserOfflineStatus(user.id);
+    }
+    
     const { error } = await supabase.auth.signOut();
     setLoading(false);
     return { error };
@@ -152,6 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     signOut,
     updateProfile,
+    updateActivity,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

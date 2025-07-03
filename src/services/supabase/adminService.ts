@@ -7,10 +7,13 @@ interface UserProfile {
   name: string | null;
   plan: string;
   created_at: string;
+  last_activity: string | null;
+  is_online: boolean;
 }
 
 interface Analytics {
   totalUsers: number;
+  activeUsers: number;
   totalComparisons: number;
   totalOffers: number;
   planDistribution: { plan: string; count: number; revenue: number }[];
@@ -29,7 +32,9 @@ export const supabaseAdminService = {
         email,
         name,
         plan,
-        created_at
+        created_at,
+        last_activity,
+        is_online
       `)
       .order('created_at', { ascending: false });
 
@@ -39,6 +44,32 @@ export const supabaseAdminService = {
     }
 
     console.log('Fetched users:', data?.length || 0);
+    return data || [];
+  },
+
+  async getActiveUsers(): Promise<UserProfile[]> {
+    console.log('Fetching active users...');
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        email,
+        name,
+        plan,
+        created_at,
+        last_activity,
+        is_online
+      `)
+      .eq('is_online', true)
+      .order('last_activity', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching active users:', error);
+      throw error;
+    }
+
+    console.log('Fetched active users:', data?.length || 0);
     return data || [];
   },
 
@@ -94,13 +125,23 @@ export const supabaseAdminService = {
     console.log('Fetching analytics data...');
     
     try {
-      // Total de usuários corrigido
+      // Total de usuários
       const { count: totalUsers, error: usersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
       if (usersError) {
         console.error('Error counting users:', usersError);
+      }
+
+      // Usuários ativos (online)
+      const { count: activeUsers, error: activeUsersError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_online', true);
+
+      if (activeUsersError) {
+        console.error('Error counting active users:', activeUsersError);
       }
 
       // Total de comparações
@@ -121,7 +162,7 @@ export const supabaseAdminService = {
         console.error('Error counting offers:', offersError);
       }
 
-      // Distribuição de planos corrigida
+      // Distribuição de planos
       const { data: planData, error: planError } = await supabase
         .from('profiles')
         .select('plan')
@@ -141,7 +182,8 @@ export const supabaseAdminService = {
         free: 0,
         premium: 19.90,
         pro: 39.90,
-        empresarial: 99.90
+        empresarial: 99.90,
+        admin: 0
       };
 
       const planDistribution = Object.entries(planCounts).map(([plan, count]) => ({
@@ -225,6 +267,7 @@ export const supabaseAdminService = {
 
       const analytics: Analytics = {
         totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
         totalComparisons: totalComparisons || 0,
         totalOffers: totalOffers || 0,
         planDistribution,
@@ -240,7 +283,6 @@ export const supabaseAdminService = {
     }
   },
 
-  // Nova função para limpeza automática de contribuições diárias
   async cleanupDailyContributions(): Promise<void> {
     console.log('Starting daily cleanup of contributions...');
     
@@ -253,7 +295,7 @@ export const supabaseAdminService = {
         .from('daily_offers')
         .delete()
         .lt('created_at', yesterday.toISOString())
-        .eq('verified', false); // Remove apenas contribuições não verificadas antigas
+        .eq('verified', false);
 
       if (error) {
         console.error('Error during daily cleanup:', error);

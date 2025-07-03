@@ -6,8 +6,9 @@ import { PendingContributionsSection } from "@/components/admin/PendingContribut
 import { FeedbackSection } from "@/components/admin/FeedbackSection";
 import { UserManagementSection } from "@/components/admin/UserManagementSection";
 import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
+import { ActiveUsersSection } from "@/components/admin/ActiveUsersSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, BarChart3, MessageSquare, Clock } from "lucide-react";
+import { Users, BarChart3, MessageSquare, Clock, UserCheck } from "lucide-react";
 
 const Admin: React.FC = () => {
   return (
@@ -25,7 +26,7 @@ const Admin: React.FC = () => {
           </div>
           
           <Tabs defaultValue="analytics" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
                 Analytics
@@ -33,6 +34,10 @@ const Admin: React.FC = () => {
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Usuários
+              </TabsTrigger>
+              <TabsTrigger value="active-users" className="flex items-center gap-2">
+                <UserCheck className="w-4 h-4" />
+                Ativos
               </TabsTrigger>
               <TabsTrigger value="contributions" className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
@@ -50,6 +55,10 @@ const Admin: React.FC = () => {
 
             <TabsContent value="users" className="space-y-6">
               <UserManagementSection />
+            </TabsContent>
+
+            <TabsContent value="active-users" className="space-y-6">
+              <ActiveUsersSection />
             </TabsContent>
 
             <TabsContent value="contributions" className="space-y-6">

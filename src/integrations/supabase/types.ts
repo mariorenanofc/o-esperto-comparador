@@ -243,6 +243,8 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          is_online: boolean | null
+          last_activity: string | null
           name: string | null
           plan: string | null
           updated_at: string | null
@@ -251,6 +253,8 @@ export type Database = {
           created_at?: string | null
           email: string
           id: string
+          is_online?: boolean | null
+          last_activity?: string | null
           name?: string | null
           plan?: string | null
           updated_at?: string | null
@@ -259,6 +263,8 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          is_online?: boolean | null
+          last_activity?: string | null
           name?: string | null
           plan?: string | null
           updated_at?: string | null
@@ -329,7 +335,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      mark_inactive_users_offline: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
