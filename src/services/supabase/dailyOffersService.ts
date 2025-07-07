@@ -25,6 +25,8 @@ export const supabaseDailyOffersService = {
         city: contribution.city.trim(),
         state: contribution.state.trim(),
         contributor_name: contributorName.trim(),
+        quantity: contribution.quantity || 1,
+        unit: contribution.unit || 'unidade',
         verified: false
       };
 
@@ -144,7 +146,9 @@ export const supabaseDailyOffersService = {
         contributorName: item.contributor_name,
         userId: item.user_id,
         timestamp: new Date(item.created_at || ''),
-        verified: item.verified || false
+        verified: item.verified || false,
+        quantity: item.quantity || 1,
+        unit: item.unit || 'unidade'
       })) || [];
 
       console.log('Fetched today\'s offers:', offers.length);
@@ -152,6 +156,70 @@ export const supabaseDailyOffersService = {
     } catch (error) {
       console.error('Error in getTodaysOffers:', error);
       return [];
+    }
+  },
+
+  async getAllContributions(): Promise<any[]> {
+    console.log('Fetching all contributions for admin...');
+    
+    try {
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching contributions:', error);
+        throw error;
+      }
+
+      console.log('Fetched contributions:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('Error in getAllContributions:', error);
+      return [];
+    }
+  },
+
+  async approveContribution(contributionId: string): Promise<void> {
+    console.log('Approving contribution:', contributionId);
+    
+    try {
+      const { error } = await supabase
+        .from('daily_offers')
+        .update({ verified: true })
+        .eq('id', contributionId);
+
+      if (error) {
+        console.error('Error approving contribution:', error);
+        throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
+      }
+
+      console.log('Contribution approved successfully');
+    } catch (error) {
+      console.error('Error in approveContribution:', error);
+      throw error;
+    }
+  },
+
+  async rejectContribution(contributionId: string): Promise<void> {
+    console.log('Rejecting contribution:', contributionId);
+    
+    try {
+      const { error } = await supabase
+        .from('daily_offers')
+        .delete()
+        .eq('id', contributionId);
+
+      if (error) {
+        console.error('Error rejecting contribution:', error);
+        throw new Error(`Erro ao rejeitar contribuição: ${error.message}`);
+      }
+
+      console.log('Contribution rejected successfully');
+    } catch (error) {
+      console.error('Error in rejectContribution:', error);
+      throw error;
     }
   }
 };

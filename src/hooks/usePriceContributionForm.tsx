@@ -47,11 +47,9 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     e.preventDefault();
     
     console.log('=== INICIANDO SUBMISSÃO DO FORMULÁRIO ===');
-    console.log('Event:', e);
     console.log('Form data:', formData);
     console.log('User:', user?.id);
     console.log('Profile:', profile);
-    console.log('Props:', props);
     
     // Verificar se já está submetendo
     if (isSubmitting) {
@@ -199,10 +197,7 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
 
     } catch (error) {
       console.error('=== ERRO AO ENVIAR CONTRIBUIÇÃO ===');
-      console.error('Tipo do erro:', typeof error);
       console.error('Erro completo:', error);
-      console.error('Mensagem do erro:', error instanceof Error ? error.message : String(error));
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
       
       toast.error('❌ Erro ao enviar contribuição. Tente novamente.', { 
         id: 'contribution-submit',
@@ -214,13 +209,6 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
       console.log('Estado isSubmitting definido como false');
     }
   };
-
-  console.log('=== ESTADO ATUAL DO HOOK ===');
-  console.log('isSubmitting:', isSubmitting);
-  console.log('locationLoading:', locationLoading);
-  console.log('formData:', formData);
-  console.log('user:', user?.id);
-  console.log('profile:', profile?.name || profile?.email);
 
   return {
     isSubmitting,

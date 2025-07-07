@@ -2,14 +2,19 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, DollarSign, MessageSquare } from "lucide-react";
+import { Plus, DollarSign, MessageSquare, Share2, Users } from "lucide-react";
 import PriceContributionForm from "./PriceContributionForm";
 import SuggestionForm from "./SuggestionForm";
 import ContributionModal from "./ContributionModal";
+import { useContributionActions } from "@/hooks/useContributionActions";
 
 const ContributionSection: React.FC = () => {
   const [showPriceForm, setShowPriceForm] = useState(false);
   const [showSuggestionForm, setShowSuggestionForm] = useState(false);
+  const {
+    handleShareApp,
+    handleStartContributing,
+  } = useContributionActions();
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -18,7 +23,7 @@ const ContributionSection: React.FC = () => {
           Contribua com Nossa Comunidade
         </h1>
         <p className="text-lg text-gray-600">
-          Ajude outros usuários compartilhando preços ou enviando sugestões
+          Ajude outros usuários compartilhando preços, enviando sugestões ou promovendo nossa plataforma
         </p>
       </div>
 
@@ -79,6 +84,66 @@ const ContributionSection: React.FC = () => {
             >
               <Plus className="mr-2 h-4 w-4" />
               Enviar Sugestão
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Compartilhar App */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Share2 className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Compartilhar App</CardTitle>
+                <CardDescription>
+                  Indique nosso app para amigos
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              Conhece alguém que gostaria de economizar? Compartilhe nosso app 
+              e ajude mais pessoas a encontrar os melhores preços.
+            </p>
+            <Button 
+              onClick={handleShareApp}
+              className="w-full bg-purple-600 hover:bg-purple-700"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Compartilhar App
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Participar da Comunidade */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Users className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Participar da Comunidade</CardTitle>
+                <CardDescription>
+                  Entre no nosso grupo do WhatsApp
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 mb-4">
+              Faça parte da nossa comunidade no WhatsApp! Receba dicas, 
+              compartilhe ofertas e converse com outros usuários.
+            </p>
+            <Button 
+              onClick={handleStartContributing}
+              className="w-full bg-orange-600 hover:bg-orange-700"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              Entrar no Grupo
             </Button>
           </CardContent>
         </Card>
