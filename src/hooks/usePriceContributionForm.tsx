@@ -74,12 +74,16 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
       }
       console.log('✅ Usuário verificado:', user.id);
 
-      if (!profile) {
-        console.error('❌ Profile não encontrado');
-        toast.error('Profile não encontrado. Tente fazer login novamente.', { id: 'contribution-submit' });
-        return;
+      // Verificar se não há profile e criar um nome alternativo
+      let contributorName = 'Usuário';
+      if (profile) {
+        contributorName = profile.name || profile.email || 'Usuário';
+        console.log('✅ Profile encontrado:', contributorName);
+      } else {
+        // Se não tiver profile, usar o email do usuário ou um padrão
+        contributorName = user.email || user.user_metadata?.name || user.user_metadata?.full_name || 'Usuário';
+        console.log('⚠️ Profile não encontrado, usando dados do usuário:', contributorName);
       }
-      console.log('✅ Profile verificado:', profile.name || profile.email);
 
       // Validações básicas
       console.log('=== INICIANDO VALIDAÇÕES ===');
@@ -154,8 +158,6 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
       }
 
       console.log('=== ENVIANDO CONTRIBUIÇÃO PARA O SERVIDOR ===');
-      
-      const contributorName = profile.name || profile.email || 'Usuário';
       console.log('Nome do contribuidor:', contributorName);
       
       await supabaseDailyOffersService.submitPriceContribution(

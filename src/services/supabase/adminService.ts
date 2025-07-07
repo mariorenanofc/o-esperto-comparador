@@ -116,5 +116,119 @@ export const supabaseAdminService = {
       console.error('❌ Erro ao atualizar status da sugestão:', error);
       throw error;
     }
+  },
+
+  async getAllUsers(): Promise<any[]> {
+    console.log('=== ADMIN SERVICE: FETCHING ALL USERS ===');
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+
+      console.log('✅ Usuários carregados:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('❌ Erro ao carregar usuários:', error);
+      throw error;
+    }
+  },
+
+  async getActiveUsers(): Promise<any[]> {
+    console.log('=== ADMIN SERVICE: FETCHING ACTIVE USERS ===');
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('is_online', true)
+        .order('last_activity', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching active users:', error);
+        throw error;
+      }
+
+      console.log('✅ Usuários ativos carregados:', data?.length || 0);
+      return data || [];
+    } catch (error) {
+      console.error('❌ Erro ao carregar usuários ativos:', error);
+      throw error;
+    }
+  },
+
+  async updateUserPlan(userId: string, plan: string): Promise<void> {
+    console.log('=== ADMIN SERVICE: UPDATING USER PLAN ===');
+    console.log('User ID:', userId, 'Plan:', plan);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ plan })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error updating user plan:', error);
+        throw new Error(`Erro ao atualizar plano do usuário: ${error.message}`);
+      }
+
+      console.log('✅ Plano do usuário atualizado com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao atualizar plano do usuário:', error);
+      throw error;
+    }
+  },
+
+  async getAnalytics(): Promise<any> {
+    console.log('=== ADMIN SERVICE: FETCHING ANALYTICS ===');
+    
+    try {
+      const { data: contributions, error: contributionsError } = await supabase
+        .from('daily_offers')
+        .select('*');
+
+      if (contributionsError) {
+        console.error('Error fetching contributions for analytics:', contributionsError);
+        throw contributionsError;
+      }
+
+      const { data: suggestions, error: suggestionsError } = await supabase
+        .from('suggestions')
+        .select('*');
+
+      if (suggestionsError) {
+        console.error('Error fetching suggestions for analytics:', suggestionsError);
+        throw suggestionsError;
+      }
+
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (usersError) {
+        console.error('Error fetching users for analytics:', usersError);
+        throw usersError;
+      }
+
+      const analytics = {
+        totalContributions: contributions?.length || 0,
+        verifiedContributions: contributions?.filter(c => c.verified).length || 0,
+        totalSuggestions: suggestions?.length || 0,
+        totalUsers: users?.length || 0,
+        activeUsers: users?.filter(u => u.is_online).length || 0
+      };
+
+      console.log('✅ Analytics carregadas:', analytics);
+      return analytics;
+    } catch (error) {
+      console.error('❌ Erro ao carregar analytics:', error);
+      throw error;
+    }
   }
 };
