@@ -1,153 +1,133 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useContributionActions } from "@/hooks/useContributionActions";
-import ContributionModal from "@/components/ContributionModal";
-import PriceContributionForm from "@/components/PriceContributionForm";
-import SuggestionForm from "@/components/SuggestionForm";
+import { Button } from "@/components/ui/button";
+import { Plus, DollarSign, MessageSquare } from "lucide-react";
+import PriceContributionForm from "./PriceContributionForm";
+import SuggestionForm from "./SuggestionForm";
+import ContributionModal from "./ContributionModal";
 
 const ContributionSection: React.FC = () => {
-  const {
-    handleSharePrices,
-    handleSuggestImprovement,
-    handleShareApp,
-    handleStartContributing,
-    isPriceModalOpen,
-    isSuggestionModalOpen,
-    closePriceModal,
-    closeSuggestionModal,
-  } = useContributionActions();
+  const [showPriceForm, setShowPriceForm] = useState(false);
+  const [showSuggestionForm, setShowSuggestionForm] = useState(false);
 
   return (
-    <div className="space-y-10">
-      <div className="text-center max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-app-dark mb-4">
-          Contribua com o Comparador Online
+    <div className="max-w-4xl mx-auto space-y-8">
+      <div className="text-center space-y-4">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Contribua com Nossa Comunidade
         </h1>
-        <p className="text-lg text-gray-600 mb-6">
-          Ajude a nossa comunidade a economizar mais! Compartilhe seus conhecimentos
-          e experiências para tornar o Comparador Online ainda melhor.
+        <p className="text-lg text-gray-600">
+          Ajude outros usuários compartilhando preços ou enviando sugestões
         </p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Contribuir com Preços */}
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Compartilhe Preços</CardTitle>
-            <CardDescription>
-              Atualize nossa base de dados com os preços mais recentes
-            </CardDescription>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <DollarSign className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Compartilhar Preços</CardTitle>
+                <CardDescription>
+                  Ajude a comunidade com preços atualizados
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-gray-600">
-              Ao compartilhar os preços que você encontra durante suas compras,
-              você ajuda outros usuários a economizarem dinheiro e tempo.
+            <p className="text-gray-600 mb-4">
+              Compartilhe preços de produtos que você encontrou recentemente. 
+              Sua contribuição ajuda outros usuários a encontrar as melhores ofertas.
             </p>
             <Button 
-              className="w-full bg-app-blue hover:bg-blue-700"
-              onClick={handleSharePrices}
+              onClick={() => setShowPriceForm(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
-              Enviar Preços
+              <Plus className="mr-2 h-4 w-4" />
+              Compartilhar Preço
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Enviar Sugestões */}
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Sugira Melhorias</CardTitle>
-            <CardDescription>
-              Suas ideias são importantes para nós
-            </CardDescription>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <MessageSquare className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Enviar Sugestão</CardTitle>
+                <CardDescription>
+                  Sugira melhorias ou reporte problemas
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-gray-600">
-              Tem alguma ideia para melhorar nossa plataforma? Compartilhe conosco
-              e ajude a criar uma ferramenta ainda mais útil.
+            <p className="text-gray-600 mb-4">
+              Tem uma ideia para melhorar nossa plataforma? Encontrou algum problema? 
+              Envie sua sugestão e nos ajude a crescer.
             </p>
             <Button 
-              className="w-full bg-app-blue hover:bg-blue-700"
-              onClick={handleSuggestImprovement}
+              onClick={() => setShowSuggestionForm(true)}
+              className="w-full bg-green-600 hover:bg-green-700"
             >
+              <Plus className="mr-2 h-4 w-4" />
               Enviar Sugestão
             </Button>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Divulgue o App</CardTitle>
-            <CardDescription>
-              Ajude mais pessoas a economizarem
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-gray-600">
-              Quanto mais pessoas usarem o Comparador Online, mais dados
-              teremos para oferecer comparações precisas e atualizadas.
-            </p>
-            <Button 
-              className="w-full bg-app-blue hover:bg-blue-700"
-              onClick={handleShareApp}
-            >
-              Compartilhar
-            </Button>
-          </CardContent>
-        </Card>
       </div>
 
-      <div className="bg-app-gray p-8 rounded-lg">
-        <h2 className="text-2xl font-semibold text-center mb-6">
-          Como funciona nossa comunidade
-        </h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-app-green">
-              Dados colaborativos
-            </h3>
-            <p className="text-gray-600">
-              Nossa base de preços é alimentada pelos próprios usuários, criando
-              uma rede de informações sempre atualizada e precisa. Quanto mais
-              usuários contribuírem, melhores serão nossas comparações.
-            </p>
+      {/* Informações Adicionais */}
+      <Card className="bg-gradient-to-r from-blue-50 to-green-50">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">
+            Por que contribuir?
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium text-gray-700 mb-2">
+                🎯 Compartilhar Preços
+              </h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Ajuda outros usuários a economizar</li>
+                <li>• Mantém nossa base de dados atualizada</li>
+                <li>• Fortalece a comunidade</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-700 mb-2">
+                💡 Enviar Sugestões
+              </h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Nos ajuda a melhorar a plataforma</li>
+                <li>• Sua opinião é importante</li>
+                <li>• Contribui para novas funcionalidades</li>
+              </ul>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-medium mb-3 text-app-green">
-              Verificação de qualidade
-            </h3>
-            <p className="text-gray-600">
-              Nossa equipe verifica regularmente os dados enviados para garantir
-              a precisão das informações. Também utilizamos algoritmos para
-              detectar anomalias e manter a confiabilidade da plataforma.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center">
-        <h2 className="text-2xl font-semibold mb-4">
-          Pronto para começar a contribuir?
-        </h2>
-        <p className="text-gray-600 mb-6 max-w-xl mx-auto">
-          Junte-se ao nosso grupo do WhatsApp e faça parte da comunidade de usuários 
-          engajados que estão transformando a forma como fazemos compras!
-        </p>
-        <Button 
-          size="lg" 
-          className="bg-app-green hover:bg-green-700"
-          onClick={handleStartContributing}
-        >
-          Entrar no Grupo do WhatsApp
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Modais */}
-      <ContributionModal isOpen={isPriceModalOpen} onClose={closePriceModal}>
-        <PriceContributionForm onClose={closePriceModal} />
+      <ContributionModal 
+        isOpen={showPriceForm} 
+        onClose={() => setShowPriceForm(false)}
+      >
+        <PriceContributionForm onClose={() => setShowPriceForm(false)} />
       </ContributionModal>
 
-      <ContributionModal isOpen={isSuggestionModalOpen} onClose={closeSuggestionModal}>
-        <SuggestionForm onClose={closeSuggestionModal} />
+      <ContributionModal 
+        isOpen={showSuggestionForm} 
+        onClose={() => setShowSuggestionForm(false)}
+      >
+        <SuggestionForm onClose={() => setShowSuggestionForm(false)} />
       </ContributionModal>
     </div>
   );

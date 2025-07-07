@@ -12,6 +12,9 @@ interface PriceContributionFormProps {
 }
 
 const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }) => {
+  console.log('=== RENDERIZANDO PRICE CONTRIBUTION FORM ===');
+  console.log('onClose prop:', typeof onClose);
+
   const {
     formData,
     setFormData,
@@ -19,6 +22,29 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
     locationLoading,
     handleSubmit,
   } = usePriceContributionForm({ onClose });
+
+  console.log('=== ESTADO DO FORMULÁRIO ===');
+  console.log('formData:', formData);
+  console.log('isSubmitting:', isSubmitting);
+  console.log('locationLoading:', locationLoading);
+  console.log('handleSubmit:', typeof handleSubmit);
+
+  const onFormSubmit = (e: React.FormEvent) => {
+    console.log('=== EVENTO DE SUBMIT DISPARADO ===');
+    console.log('Event:', e);
+    console.log('Event type:', e.type);
+    console.log('Event target:', e.target);
+    
+    // Chamar o handleSubmit do hook
+    handleSubmit(e);
+  };
+
+  const onButtonClick = () => {
+    console.log('=== BOTÃO COMPARTILHAR CLICADO ===');
+    console.log('isSubmitting:', isSubmitting);
+    console.log('locationLoading:', locationLoading);
+    console.log('formData.city:', formData.city);
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -32,7 +58,7 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
       </CardHeader>
       
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={onFormSubmit} className="space-y-4">
           <ProductInfoFields formData={formData} setFormData={setFormData} />
 
           {locationLoading && (
@@ -52,7 +78,10 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
             <Button 
               type="button" 
               variant="outline" 
-              onClick={onClose} 
+              onClick={() => {
+                console.log('Botão Cancelar clicado');
+                onClose();
+              }} 
               className="flex-1"
               disabled={isSubmitting}
             >
@@ -60,6 +89,7 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({ onClose }
             </Button>
             <Button 
               type="submit" 
+              onClick={onButtonClick}
               disabled={isSubmitting || locationLoading || !formData.city}
               className="flex-1 bg-app-blue hover:bg-blue-700"
             >
