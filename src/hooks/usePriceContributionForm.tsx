@@ -41,48 +41,50 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('=== PRICE CONTRIBUTION FORM SUBMISSION ===');
+    console.log('=== INICIANDO SUBMISSÃO DO FORMULÁRIO ===');
     console.log('Form data:', formData);
     console.log('User:', user?.id);
     console.log('Profile:', profile);
     
-    if (!user) {
-      console.error('No user found');
-      toast.error('Você precisa estar logado para contribuir');
-      return;
-    }
-
-    if (!profile) {
-      console.error('No profile found');
-      toast.error('Profile não encontrado. Tente fazer login novamente.');
-      return;
-    }
-
-    // Validações básicas
-    if (!formData.productName.trim()) {
-      toast.error('Nome do produto é obrigatório');
-      return;
-    }
-
-    if (!formData.storeName.trim()) {
-      toast.error('Nome da loja é obrigatório');
-      return;
-    }
-
-    if (formData.price <= 0) {
-      toast.error('Preço deve ser maior que zero');
-      return;
-    }
-
-    if (!formData.city.trim() || !formData.state.trim()) {
-      toast.error('Localização é obrigatória');
-      return;
-    }
-
+    // Mostrar loading imediatamente
     setIsSubmitting(true);
+    toast.loading('Enviando contribuição...', { id: 'contribution-submit' });
 
     try {
-      console.log('Starting validation...');
+      if (!user) {
+        console.error('Usuário não encontrado');
+        toast.error('Você precisa estar logado para contribuir', { id: 'contribution-submit' });
+        return;
+      }
+
+      if (!profile) {
+        console.error('Profile não encontrado');
+        toast.error('Profile não encontrado. Tente fazer login novamente.', { id: 'contribution-submit' });
+        return;
+      }
+
+      // Validações básicas
+      if (!formData.productName.trim()) {
+        toast.error('Nome do produto é obrigatório', { id: 'contribution-submit' });
+        return;
+      }
+
+      if (!formData.storeName.trim()) {
+        toast.error('Nome da loja é obrigatório', { id: 'contribution-submit' });
+        return;
+      }
+
+      if (formData.price <= 0) {
+        toast.error('Preço deve ser maior que zero', { id: 'contribution-submit' });
+        return;
+      }
+
+      if (!formData.city.trim() || !formData.state.trim()) {
+        toast.error('Localização é obrigatória', { id: 'contribution-submit' });
+        return;
+      }
+
+      console.log('Validações passaram, iniciando validação do servidor...');
       
       // Preparar dados para validação
       const contributionData = {
@@ -91,16 +93,18 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
         timestamp: new Date()
       };
 
+      console.log('Dados preparados:', contributionData);
+
       const validation = await supabaseDailyOffersService.validateUserContribution(
         contributionData,
         user.id
       );
       
-      console.log('Validation result:', validation);
+      console.log('Resultado da validação:', validation);
       
       if (!validation.isValid) {
-        console.error('Validation failed:', validation.message);
-        toast.error(validation.message || 'Contribuição inválida');
+        console.error('Validação falhou:', validation.message);
+        toast.error(validation.message || 'Contribuição inválida', { id: 'contribution-submit' });
         return;
       }
 
@@ -109,11 +113,12 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
           `${validation.message} Deseja continuar mesmo assim?`
         );
         if (!confirmed) {
+          toast.dismiss('contribution-submit');
           return;
         }
       }
 
-      console.log('Submitting contribution...');
+      console.log('Enviando contribuição...');
       
       const contributorName = profile.name || profile.email || 'Usuário';
       
@@ -123,8 +128,11 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
         contributorName
       );
 
-      console.log('Contribution submitted successfully!');
-      toast.success('Contribuição enviada com sucesso! Obrigado por ajudar nossa comunidade! 🎉');
+      console.log('Contribuição enviada com sucesso!');
+      toast.success('🎉 Contribuição enviada com sucesso! Obrigado por ajudar nossa comunidade!', { 
+        id: 'contribution-submit',
+        duration: 5000
+      });
       
       // Reset form
       setFormData({
@@ -140,15 +148,22 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
         unit: 'unidade'
       });
       
-      if (props?.onClose) {
-        props.onClose();
-      }
+      // Fechar modal após sucesso
+      setTimeout(() => {
+        if (props?.onClose) {
+          props.onClose();
+        }
+      }, 1000);
+
     } catch (error) {
-      console.error('=== ERROR SUBMITTING CONTRIBUTION ===');
-      console.error('Error details:', error);
-      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('=== ERRO AO ENVIAR CONTRIBUIÇÃO ===');
+      console.error('Detalhes do erro:', error);
+      console.error('Mensagem do erro:', error instanceof Error ? error.message : String(error));
       
-      toast.error('Erro ao enviar contribuição. Tente novamente.');
+      toast.error('❌ Erro ao enviar contribuição. Tente novamente.', { 
+        id: 'contribution-submit',
+        duration: 5000 
+      });
     } finally {
       setIsSubmitting(false);
     }

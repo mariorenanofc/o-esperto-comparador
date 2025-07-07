@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { dailyOffersService } from "@/services/dailyOffersService";
 import { DailyOffer } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,9 +14,11 @@ import { toast } from "sonner";
 
 const DailyOffersSection: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
+  const { city } = useGeolocation();
   const [offers, setOffers] = useState<DailyOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
   const fetchOffers = useCallback(async () => {
     if (authLoading) return;
@@ -46,6 +49,15 @@ const DailyOffersSection: React.FC = () => {
     fetchOffers();
   }, [fetchOffers]);
 
+  const handleShowAll = () => {
+    setShowAll(true);
+  };
+
+  const handleRefresh = () => {
+    fetchOffers();
+    toast.success('Ofertas atualizadas!');
+  };
+
   if (authLoading || loading) {
     return <LoadingState />;
   }
@@ -69,16 +81,34 @@ const DailyOffersSection: React.FC = () => {
     );
   }
 
+  // Calcular ofertas visíveis
+  const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 relative">
-      <DailyOffersHeader />
-      
-      {!user && <LoginOverlay />}
+      <DailyOffersHeader 
+        city={city}
+        actualOffersCount={offers.length}
+        onRefresh={handleRefresh}
+      />
       
       {offers.length > 0 ? (
-        <OffersGrid offers={offers} />
+        <OffersGrid 
+          visibleOffers={visibleOffers}
+          displayOffers={offers}
+          isSignedIn={!!user}
+          showAll={showAll}
+          onShowAll={handleShowAll}
+        />
       ) : (
         <ContributeCallToAction />
+      )}
+
+      {!user && !showAll && offers.length > 3 && (
+        <LoginOverlay 
+          totalOffers={offers.length}
+          onShowAll={handleShowAll}
+        />
       )}
     </div>
   );
