@@ -4,11 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { dailyOffersService } from "@/services/dailyOffersService";
 import { DailyOffer } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DailyOffersHeader } from "./daily-offers/DailyOffersHeader";
-import { LoadingState } from "./daily-offers/LoadingState";
-import { LoginOverlay } from "./daily-offers/LoginOverlay";
-import { OffersGrid } from "./daily-offers/OffersGrid";
-import { ContributeCallToAction } from "./daily-offers/ContributeCallToAction";
+import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
+import LoadingState from "./daily-offers/LoadingState";
+import LoginOverlay from "./daily-offers/LoginOverlay";
+import OffersGrid from "./daily-offers/OffersGrid";
+import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
 import { toast } from "sonner";
 
 const DailyOffersSection: React.FC = () => {
