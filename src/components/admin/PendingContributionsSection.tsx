@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { supabaseAdminService } from '@/services/supabase/adminService';
 import { toast } from 'sonner';
 
@@ -19,6 +18,8 @@ interface Contribution {
   store_name: string;
   city: string;
   state: string;
+  quantity: number;
+  unit: string;
 }
 
 export const PendingContributionsSection = () => {
@@ -29,22 +30,13 @@ export const PendingContributionsSection = () => {
   const fetchContributions = async () => {
     try {
       setLoading(true);
-      console.log('Fetching contributions from daily_offers...');
+      console.log('Fetching all contributions for admin review...');
       
-      const { data, error } = await supabase
-        .from('daily_offers')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching contributions:', error);
-        throw error;
-      }
-
+      const data = await supabaseAdminService.getAllContributions();
       console.log('Fetched contributions:', data);
       setContributions(data || []);
     } catch (error) {
-      console.error('Erro ao buscar contribuições:', error);
+      console.error('Error fetching contributions:', error);
       toast.error("Erro ao carregar contribuições");
     } finally {
       setLoading(false);
@@ -57,20 +49,23 @@ export const PendingContributionsSection = () => {
 
   const handleApprove = async (id: string) => {
     try {
-      console.log('=== ADMIN APPROVING CONTRIBUTION ===');
-      console.log('Contribution ID:', id);
-      
+      console.log('Admin approving contribution:', id);
       setActionLoading(id);
       
       await supabaseAdminService.approveContribution(id);
-      
       toast.success("Contribuição aprovada com sucesso!");
-      await fetchContributions(); // Recarregar a lista
+      
+      // Update local state to reflect the change
+      setContributions(prev => 
+        prev.map(contrib => 
+          contrib.id === id 
+            ? { ...contrib, verified: true }
+            : contrib
+        )
+      );
       
     } catch (error) {
-      console.error('=== ERROR APPROVING CONTRIBUTION ===');
-      console.error('Error:', error);
-      
+      console.error('Error approving contribution:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error(`Erro ao aprovar contribuição: ${errorMessage}`);
     } finally {
@@ -80,8 +75,7 @@ export const PendingContributionsSection = () => {
 
   const handleReject = async (id: string) => {
     try {
-      console.log('=== ADMIN REJECTING CONTRIBUTION ===');
-      console.log('Contribution ID:', id);
+      console.log('Admin rejecting contribution:', id);
       
       const confirmed = window.confirm('Tem certeza que deseja rejeitar e remover esta contribuição?');
       if (!confirmed) return;
@@ -89,14 +83,13 @@ export const PendingContributionsSection = () => {
       setActionLoading(id);
       
       await supabaseAdminService.rejectContribution(id);
-      
       toast.success("Contribuição rejeitada e removida");
-      await fetchContributions(); // Recarregar a lista
+      
+      // Remove from local state
+      setContributions(prev => prev.filter(contrib => contrib.id !== id));
       
     } catch (error) {
-      console.error('=== ERROR REJECTING CONTRIBUTION ===');
-      console.error('Error:', error);
-      
+      console.error('Error rejecting contribution:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
       toast.error(`Erro ao rejeitar contribuição: ${errorMessage}`);
     } finally {
@@ -112,6 +105,9 @@ export const PendingContributionsSection = () => {
     }
   };
 
+  const pendingContributions = contributions.filter(c => !c.verified);
+  const approvedContributions = contributions.filter(c => c.verified);
+
   if (loading) {
     return (
       <Card>
@@ -126,53 +122,53 @@ export const PendingContributionsSection = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Contribuições de Preços ({contributions.length})</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={fetchContributions}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {contributions.length === 0 ? (
-          <p className="text-gray-500">Nenhuma contribuição encontrada.</p>
-        ) : (
-          contributions.map((contribution) => (
-            <div key={contribution.id} className="border rounded-lg p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold">{contribution.product_name}</h3>
-                  <p className="text-lg font-bold text-green-600">
-                    R$ {contribution.price.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {contribution.store_name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {contribution.city}, {contribution.state}
-                  </p>
+    <div className="space-y-6">
+      {/* Pending Contributions */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Contribuições Pendentes ({pendingContributions.length})</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchContributions}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {pendingContributions.length === 0 ? (
+            <p className="text-gray-500">Nenhuma contribuição pendente encontrada.</p>
+          ) : (
+            pendingContributions.map((contribution) => (
+              <div key={contribution.id} className="border rounded-lg p-4 space-y-3 bg-yellow-50">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">{contribution.product_name}</h3>
+                    <p className="text-lg font-bold text-green-600">
+                      R$ {contribution.price.toFixed(2)} ({contribution.quantity} {contribution.unit})
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {contribution.store_name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {contribution.city}, {contribution.state}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {getStatusBadge(contribution.verified)}
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(contribution.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  {getStatusBadge(contribution.verified)}
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(contribution.created_at).toLocaleDateString('pt-BR')}
-                  </p>
+                
+                <div className="text-sm text-gray-600">
+                  <p><strong>Contribuidor:</strong> {contribution.contributor_name}</p>
                 </div>
-              </div>
-              
-              <div className="text-sm text-gray-600">
-                <p><strong>Contribuidor:</strong> {contribution.contributor_name}</p>
-                <p><strong>ID:</strong> {contribution.id}</p>
-              </div>
 
-              {!contribution.verified && (
                 <div className="flex gap-2">
                   <Button
                     onClick={() => handleApprove(contribution.id)}
@@ -193,11 +189,47 @@ export const PendingContributionsSection = () => {
                     {actionLoading === contribution.id ? 'Rejeitando...' : 'Rejeitar'}
                   </Button>
                 </div>
-              )}
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Approved Contributions */}
+      {approvedContributions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Contribuições Aprovadas ({approvedContributions.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {approvedContributions.map((contribution) => (
+              <div key={contribution.id} className="border rounded-lg p-4 space-y-3 bg-green-50">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold">{contribution.product_name}</h3>
+                    <p className="text-lg font-bold text-green-600">
+                      R$ {contribution.price.toFixed(2)} ({contribution.quantity} {contribution.unit})
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {contribution.store_name} - {contribution.city}, {contribution.state}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {getStatusBadge(contribution.verified)}
+                    <p className="text-sm text-gray-500 mt-1">
+                      {new Date(contribution.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600">
+                  <p><strong>Contribuidor:</strong> {contribution.contributor_name}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };

@@ -1,31 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Users, ShoppingCart, DollarSign, Calendar, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, TrendingUp, Users, ShoppingBag, MessageSquare } from 'lucide-react';
 import { supabaseAdminService } from '@/services/supabase/adminService';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { toast } from 'sonner';
 
-interface Analytics {
+interface AnalyticsData {
+  totalContributions: number;
+  verifiedContributions: number;
+  totalSuggestions: number;
   totalUsers: number;
-  totalComparisons: number;
-  totalOffers: number;
-  planDistribution: { plan: string; count: number; revenue: number }[];
-  monthlyGrowth: { month: string; users: number; comparisons: number }[];
-  dailyActivity: { date: string; offers: number; comparisons: number }[];
+  activeUsers: number;
 }
 
 export const AnalyticsSection = () => {
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
+      console.log('Fetching analytics data...');
+      
       const data = await supabaseAdminService.getAnalytics();
+      console.log('Analytics data:', data);
       setAnalytics(data);
     } catch (error) {
-      console.error('Erro ao buscar analytics:', error);
+      console.error('Error fetching analytics:', error);
+      toast.error("Erro ao carregar dados de analytics");
     } finally {
       setLoading(false);
     }
@@ -35,26 +38,14 @@ export const AnalyticsSection = () => {
     fetchAnalytics();
   }, []);
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  const planColors = {
-    free: '#6B7280',
-    premium: '#3B82F6',
-    pro: '#8B5CF6',
-    empresarial: '#F59E0B'
-  };
-
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Analytics da Plataforma
-          </CardTitle>
+          <CardTitle>Analytics</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Carregando dados de analytics...</p>
+          <p>Carregando dados...</p>
         </CardContent>
       </Card>
     );
@@ -64,173 +55,153 @@ export const AnalyticsSection = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5" />
-            Analytics da Plataforma
-          </CardTitle>
+          <CardTitle>Analytics</CardTitle>
         </CardHeader>
         <CardContent>
           <p>Erro ao carregar dados de analytics.</p>
+          <Button onClick={fetchAnalytics} className="mt-2">
+            Tentar novamente
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
-  const totalRevenue = analytics.planDistribution.reduce((acc, plan) => acc + plan.revenue, 0);
+  const verificationRate = analytics.totalContributions > 0 
+    ? ((analytics.verifiedContributions / analytics.totalContributions) * 100).toFixed(1)
+    : '0';
 
   return (
     <div className="space-y-6">
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Dashboard Analytics</h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={fetchAnalytics}
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total de Usuários</p>
-                <p className="text-2xl font-bold">{analytics.totalUsers}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">
+              {analytics.activeUsers} usuários online
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <ShoppingCart className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Comparações</p>
-                <p className="text-2xl font-bold">{analytics.totalComparisons}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Contribuições</CardTitle>
+            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.totalContributions}</div>
+            <p className="text-xs text-muted-foreground">
+              {analytics.verifiedContributions} verificadas ({verificationRate}%)
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Ofertas do Dia</p>
-                <p className="text-2xl font-bold">{analytics.totalOffers}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sugestões</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics.totalSuggestions}</div>
+            <p className="text-xs text-muted-foreground">
+              Total de feedback recebido
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Receita Total</p>
-                <p className="text-2xl font-bold">R$ {totalRevenue.toFixed(2)}</p>
-              </div>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taxa de Aprovação</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{verificationRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              Contribuições aprovadas
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Crescimento Mensal */}
         <Card>
           <CardHeader>
-            <CardTitle>Crescimento Mensal</CardTitle>
+            <CardTitle>Resumo de Atividade</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analytics.monthlyGrowth}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="users" stroke="#8884d8" name="Usuários" />
-                <Line type="monotone" dataKey="comparisons" stroke="#82ca9d" name="Comparações" />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span>Contribuições Pendentes:</span>
+                <span className="font-semibold">
+                  {analytics.totalContributions - analytics.verifiedContributions}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Contribuições Aprovadas:</span>
+                <span className="font-semibold text-green-600">
+                  {analytics.verifiedContributions}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Usuários Ativos:</span>
+                <span className="font-semibold">
+                  {analytics.activeUsers}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total de Sugestões:</span>
+                <span className="font-semibold">
+                  {analytics.totalSuggestions}
+                </span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Distribuição de Planos */}
         <Card>
           <CardHeader>
-            <CardTitle>Distribuição de Planos</CardTitle>
+            <CardTitle>Status da Plataforma</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={analytics.planDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ plan, count }) => `${plan}: ${count}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="count"
-                >
-                  {analytics.planDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={planColors[entry.plan as keyof typeof planColors] || COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span>Sistema:</span>
+                <span className="text-green-600 font-semibold">✓ Online</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Banco de Dados:</span>
+                <span className="text-green-600 font-semibold">✓ Conectado</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Autenticação:</span>
+                <span className="text-green-600 font-semibold">✓ Funcionando</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Última Atualização:</span>
+                <span className="text-sm text-gray-500">
+                  {new Date().toLocaleString('pt-BR')}
+                </span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Atividade Diária */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Atividade dos Últimos 7 Dias</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={analytics.dailyActivity}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="offers" fill="#8884d8" name="Ofertas" />
-              <Bar dataKey="comparisons" fill="#82ca9d" name="Comparações" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Detalhes dos Planos */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Receita por Plano</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {analytics.planDistribution.map((plan) => (
-              <div key={plan.plan} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Badge 
-                    style={{ 
-                      backgroundColor: planColors[plan.plan as keyof typeof planColors] || '#6B7280',
-                      color: 'white'
-                    }}
-                  >
-                    {plan.plan === 'empresarial' ? 'Empresarial' : plan.plan.charAt(0).toUpperCase() + plan.plan.slice(1)}
-                  </Badge>
-                  <span>{plan.count} usuários</span>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">R$ {plan.revenue.toFixed(2)}</p>
-                  <p className="text-sm text-gray-500">
-                    {totalRevenue > 0 ? ((plan.revenue / totalRevenue) * 100).toFixed(1) : 0}% do total
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

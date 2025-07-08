@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 const DailyOffersSection: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
-  const { city } = useGeolocation();
+  const { city, state } = useGeolocation();
   const [offers, setOffers] = useState<DailyOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,17 +24,27 @@ const DailyOffersSection: React.FC = () => {
     if (authLoading) return;
     
     try {
-      console.log('Fetching daily offers...');
+      console.log('Fetching daily offers for location:', { city, state });
       setLoading(true);
       setError(null);
       
       const fetchedOffers = await dailyOffersService.getTodaysOffers();
-      console.log('Fetched offers:', fetchedOffers);
+      console.log('All fetched offers:', fetchedOffers);
       
-      setOffers(fetchedOffers);
+      // Filter offers by user's location if available
+      let filteredOffers = fetchedOffers;
+      if (city && state) {
+        filteredOffers = fetchedOffers.filter(offer => 
+          offer.city.toLowerCase() === city.toLowerCase() && 
+          offer.state.toLowerCase() === state.toLowerCase()
+        );
+        console.log('Filtered offers by location:', filteredOffers);
+      }
       
-      if (fetchedOffers.length === 0) {
-        console.log('No offers found for today');
+      setOffers(filteredOffers);
+      
+      if (filteredOffers.length === 0) {
+        console.log('No offers found for current location');
       }
     } catch (error) {
       console.error('Error fetching daily offers:', error);
@@ -43,7 +53,7 @@ const DailyOffersSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [authLoading]);
+  }, [authLoading, city, state]);
 
   useEffect(() => {
     fetchOffers();
@@ -81,7 +91,7 @@ const DailyOffersSection: React.FC = () => {
     );
   }
 
-  // Calcular ofertas visíveis
+  // Calculate visible offers
   const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
 
   return (

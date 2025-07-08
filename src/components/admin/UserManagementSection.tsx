@@ -1,42 +1,39 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Search, RefreshCw } from 'lucide-react';
+import { RefreshCw, User, Crown, Shield } from 'lucide-react';
 import { supabaseAdminService } from '@/services/supabase/adminService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface UserProfile {
   id: string;
   email: string;
   name: string | null;
-  plan: string;
-  created_at: string;
+  plan: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  last_activity: string | null;
+  is_online: boolean | null;
 }
 
 export const UserManagementSection = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [planFilter, setPlanFilter] = useState('all');
-  const { toast } = useToast();
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching all users...');
+      
       const data = await supabaseAdminService.getAllUsers();
-      setUsers(data);
-      setFilteredUsers(data);
+      console.log('Fetched users:', data);
+      setUsers(data || []);
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar usuários",
-        variant: "destructive",
-      });
+      console.error('Error fetching users:', error);
+      toast.error("Erro ao carregar usuários");
     } finally {
       setLoading(false);
     }
@@ -46,64 +43,57 @@ export const UserManagementSection = () => {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    let filtered = users;
-
-    if (searchTerm) {
-      filtered = filtered.filter(user => 
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (planFilter !== 'all') {
-      filtered = filtered.filter(user => user.plan === planFilter);
-    }
-
-    setFilteredUsers(filtered);
-  }, [users, searchTerm, planFilter]);
-
-  const handleChangePlan = async (userId: string, newPlan: string) => {
+  const handleUpdateUserPlan = async (userId: string, newPlan: string) => {
     try {
+      setActionLoading(userId);
+      console.log('Updating user plan:', { userId, newPlan });
+      
       await supabaseAdminService.updateUserPlan(userId, newPlan);
-      toast({
-        title: "Sucesso",
-        description: "Plano do usuário atualizado com sucesso",
-      });
-      fetchUsers();
+      toast.success(`Plano do usuário atualizado para ${newPlan}`);
+      
+      // Update local state
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId 
+            ? { ...user, plan: newPlan }
+            : user
+        )
+      );
+      
     } catch (error) {
-      console.error('Erro ao atualizar plano:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar plano do usuário",
-        variant: "destructive",
-      });
+      console.error('Error updating user plan:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao atualizar plano: ${errorMessage}`);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const getPlanBadge = (plan: string) => {
-    const colors = {
-      free: 'bg-gray-100 text-gray-800',
-      premium: 'bg-blue-100 text-blue-800',
-      pro: 'bg-purple-100 text-purple-800',
-      empresarial: 'bg-yellow-100 text-yellow-800'
-    };
+  const getPlanBadge = (plan: string | null) => {
+    switch (plan) {
+      case 'admin':
+        return <Badge variant="destructive"><Crown className="w-3 h-3 mr-1" />Admin</Badge>;
+      case 'premium':
+        return <Badge variant="default"><Shield className="w-3 h-3 mr-1" />Premium</Badge>;
+      case 'free':
+      default:
+        return <Badge variant="secondary"><User className="w-3 h-3 mr-1" />Free</Badge>;
+    }
+  };
 
-    return (
-      <Badge className={colors[plan as keyof typeof colors] || colors.free}>
-        {plan === 'empresarial' ? 'Empresarial' : plan.charAt(0).toUpperCase() + plan.slice(1)}
-      </Badge>
-    );
+  const getStatusBadge = (isOnline: boolean | null) => {
+    if (isOnline) {
+      return <Badge variant="default" className="bg-green-600">Online</Badge>;
+    } else {
+      return <Badge variant="secondary">Offline</Badge>;
+    }
   };
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Gerenciamento de Usuários
-          </CardTitle>
+          <CardTitle>Gerenciamento de Usuários</CardTitle>
         </CardHeader>
         <CardContent>
           <p>Carregando usuários...</p>
@@ -116,84 +106,71 @@ export const UserManagementSection = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Gerenciamento de Usuários ({filteredUsers.length})
-          </CardTitle>
-          <button
+          <CardTitle>Gerenciamento de Usuários ({users.length})</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={fetchUsers}
             disabled={loading}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-        
-        <div className="flex gap-4 mt-4">
-          <div className="flex-1">
-            <Input
-              placeholder="Buscar por email ou nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <Select value={planFilter} onValueChange={setPlanFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filtrar por plano" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os planos</SelectItem>
-              <SelectItem value="free">Gratuito</SelectItem>
-              <SelectItem value="premium">Premium</SelectItem>
-              <SelectItem value="pro">Pro</SelectItem>
-              <SelectItem value="empresarial">Empresarial</SelectItem>
-            </SelectContent>
-          </Select>
+          </Button>
         </div>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        {filteredUsers.length === 0 ? (
+        {users.length === 0 ? (
           <p className="text-gray-500">Nenhum usuário encontrado.</p>
         ) : (
-          <div className="space-y-4">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="border rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{user.name || 'Nome não informado'}</h3>
-                    </div>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                    <p className="text-xs text-gray-500">
-                      Registrado em: {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                  <div className="text-right space-y-2">
-                    {getPlanBadge(user.plan)}
-                  </div>
+          users.map((user) => (
+            <div key={user.id} className="border rounded-lg p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold">{user.name || 'Nome não informado'}</h3>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <p className="text-xs text-gray-400">ID: {user.id}</p>
                 </div>
-                
-                <div className="flex gap-2 flex-wrap">
-                  <Select
-                    value={user.plan}
-                    onValueChange={(newPlan) => handleChangePlan(user.id, newPlan)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="free">Gratuito</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="pro">Pro</SelectItem>
-                      <SelectItem value="empresarial">Empresarial</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="text-right space-y-1">
+                  {getPlanBadge(user.plan)}
+                  {getStatusBadge(user.is_online)}
                 </div>
               </div>
-            ))}
-          </div>
+              
+              <div className="text-sm text-gray-600">
+                <p><strong>Criado em:</strong> {user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}</p>
+                <p><strong>Última atividade:</strong> {user.last_activity ? new Date(user.last_activity).toLocaleDateString('pt-BR') : 'N/A'}</p>
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  onClick={() => handleUpdateUserPlan(user.id, 'free')}
+                  variant="outline"
+                  size="sm"
+                  disabled={actionLoading === user.id || user.plan === 'free'}
+                >
+                  <User className="w-4 h-4 mr-1" />
+                  Free
+                </Button>
+                <Button
+                  onClick={() => handleUpdateUserPlan(user.id, 'premium')}
+                  variant="outline"
+                  size="sm"
+                  disabled={actionLoading === user.id || user.plan === 'premium'}
+                >
+                  <Shield className="w-4 h-4 mr-1" />
+                  Premium
+                </Button>
+                <Button
+                  onClick={() => handleUpdateUserPlan(user.id, 'admin')}
+                  variant="outline"
+                  size="sm"
+                  disabled={actionLoading === user.id || user.plan === 'admin'}
+                >
+                  <Crown className="w-4 h-4 mr-1" />
+                  Admin
+                </Button>
+              </div>
+            </div>
+          ))
         )}
       </CardContent>
     </Card>

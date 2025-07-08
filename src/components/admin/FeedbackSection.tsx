@@ -3,58 +3,70 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, RefreshCw, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { contributionService, UserFeedback } from '@/services/contributionService';
-import { useToast } from '@/hooks/use-toast';
+import { RefreshCw, MessageSquare, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { supabaseAdminService } from '@/services/supabase/adminService';
+import { toast } from 'sonner';
+
+interface Suggestion {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: string;
+  created_at: string;
+  profiles?: {
+    name: string | null;
+    email: string | null;
+  };
+}
 
 export const FeedbackSection = () => {
-  const [feedbacks, setFeedbacks] = useState<UserFeedback[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  const fetchFeedbacks = async () => {
+  const fetchSuggestions = async () => {
     try {
       setLoading(true);
-      console.log('Fetching feedbacks...');
+      console.log('Fetching all suggestions...');
       
-      const data = await contributionService.getAllFeedbacks();
-      console.log('Feedbacks fetched:', data.length);
-      setFeedbacks(data);
+      const data = await supabaseAdminService.getAllSuggestions();
+      console.log('Fetched suggestions:', data);
+      setSuggestions(data || []);
     } catch (error) {
-      console.error('Error fetching feedbacks:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar feedbacks",
-        variant: "destructive",
-      });
+      console.error('Error fetching suggestions:', error);
+      toast.error("Erro ao carregar sugestões");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFeedbacks();
+    fetchSuggestions();
   }, []);
 
-  const handleUpdateStatus = async (feedbackId: string, status: 'in-review' | 'implemented') => {
+  const handleUpdateStatus = async (suggestionId: string, newStatus: string) => {
     try {
-      setActionLoading(feedbackId);
-      await contributionService.updateFeedbackStatus(feedbackId, status);
+      setActionLoading(suggestionId);
+      console.log('Updating suggestion status:', { suggestionId, newStatus });
       
-      toast({
-        title: "Sucesso",
-        description: `Status atualizado para ${status === 'in-review' ? 'Em Análise' : 'Implementado'}`,
-      });
+      await supabaseAdminService.updateSuggestionStatus(suggestionId, newStatus);
+      toast.success(`Status da sugestão atualizado para ${newStatus}`);
       
-      fetchFeedbacks();
+      // Update local state
+      setSuggestions(prev => 
+        prev.map(suggestion => 
+          suggestion.id === suggestionId 
+            ? { ...suggestion, status: newStatus }
+            : suggestion
+        )
+      );
+      
     } catch (error) {
-      console.error('Error updating feedback status:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar status",
-        variant: "destructive",
-      });
+      console.error('Error updating suggestion status:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao atualizar status: ${errorMessage}`);
     } finally {
       setActionLoading(null);
     }
@@ -63,24 +75,30 @@ export const FeedbackSection = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return <Badge variant="outline"><Clock className="w-4 h-4 mr-1" />Aberto</Badge>;
+        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Aberta</Badge>;
       case 'in-review':
-        return <Badge variant="secondary"><AlertCircle className="w-4 h-4 mr-1" />Em Análise</Badge>;
+        return <Badge variant="default"><AlertCircle className="w-3 h-3 mr-1" />Em Análise</Badge>;
       case 'implemented':
-        return <Badge variant="default"><CheckCircle className="w-4 h-4 mr-1" />Implementado</Badge>;
+        return <Badge variant="default" className="bg-green-600"><CheckCircle className="w-3 h-3 mr-1" />Implementada</Badge>;
       case 'closed':
-        return <Badge variant="destructive">Fechado</Badge>;
+        return <Badge variant="outline">Fechada</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const getCategoryColor = (category: string) => {
+  const getCategoryBadge = (category: string) => {
     switch (category) {
-      case 'bug': return 'bg-red-100 text-red-800';
-      case 'feature': return 'bg-blue-100 text-blue-800';
-      case 'improvement': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'improvement':
+        return <Badge variant="outline" className="bg-blue-50">Melhoria</Badge>;
+      case 'feature':
+        return <Badge variant="outline" className="bg-green-50">Nova Funcionalidade</Badge>;
+      case 'bug':
+        return <Badge variant="outline" className="bg-red-50">Bug</Badge>;
+      case 'other':
+        return <Badge variant="outline" className="bg-gray-50">Outro</Badge>;
+      default:
+        return <Badge variant="outline">{category}</Badge>;
     }
   };
 
@@ -88,96 +106,128 @@ export const FeedbackSection = () => {
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5" />
-              Feedback dos Usuários
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchFeedbacks}
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
+          <CardTitle>Feedback dos Usuários</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Carregando feedbacks...</p>
+          <p>Carregando sugestões...</p>
         </CardContent>
       </Card>
     );
   }
 
+  const openSuggestions = suggestions.filter(s => s.status === 'open');
+  const inReviewSuggestions = suggestions.filter(s => s.status === 'in-review');
+  const implementedSuggestions = suggestions.filter(s => s.status === 'implemented');
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
-            Feedback dos Usuários ({feedbacks.length})
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={fetchFeedbacks}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {feedbacks.length === 0 ? (
-          <p className="text-gray-500">Nenhum feedback encontrado.</p>
-        ) : (
-          feedbacks.map((feedback) => (
-            <div key={feedback.id} className="border rounded-lg p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-semibold">{feedback.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{feedback.description}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className={getCategoryColor(feedback.category)}>
-                      {feedback.category}
-                    </Badge>
-                    {getStatusBadge(feedback.status)}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Feedback dos Usuários</h2>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={fetchSuggestions}
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">{suggestions.length}</div>
+            <p className="text-xs text-muted-foreground">Total de Sugestões</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-orange-600">{openSuggestions.length}</div>
+            <p className="text-xs text-muted-foreground">Abertas</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-blue-600">{inReviewSuggestions.length}</div>
+            <p className="text-xs text-muted-foreground">Em Análise</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">{implementedSuggestions.length}</div>
+            <p className="text-xs text-muted-foreground">Implementadas</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Suggestions List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Todas as Sugestões</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {suggestions.length === 0 ? (
+            <div className="text-center py-8">
+              <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="text-gray-500 mt-2">Nenhuma sugestão encontrada.</p>
+            </div>
+          ) : (
+            suggestions.map((suggestion) => (
+              <div key={suggestion.id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{suggestion.title}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
+                  </div>
+                  <div className="flex flex-col gap-1 ml-4">
+                    {getStatusBadge(suggestion.status)}
+                    {getCategoryBadge(suggestion.category)}
                   </div>
                 </div>
-                <div className="text-right text-sm text-gray-500">
-                  <p>{new Date(feedback.created_at).toLocaleDateString('pt-BR')}</p>
-                  <p className="mt-1">{feedback.user_name}</p>
-                  <p>{feedback.user_email}</p>
+                
+                <div className="text-sm text-gray-500">
+                  <p><strong>Usuário:</strong> {suggestion.profiles?.name || 'Nome não disponível'}</p>
+                  <p><strong>Email:</strong> {suggestion.profiles?.email || 'Email não disponível'}</p>
+                  <p><strong>Data:</strong> {new Date(suggestion.created_at).toLocaleDateString('pt-BR')}</p>
                 </div>
-              </div>
 
-              {feedback.status === 'open' && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleUpdateStatus(feedback.id, 'in-review')}
-                    variant="outline"
-                    size="sm"
-                    disabled={actionLoading === feedback.id}
-                  >
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    {actionLoading === feedback.id ? 'Atualizando...' : 'Marcar como Em Análise'}
-                  </Button>
-                  <Button
-                    onClick={() => handleUpdateStatus(feedback.id, 'implemented')}
-                    className="bg-green-600 hover:bg-green-700"
-                    size="sm"
-                    disabled={actionLoading === feedback.id}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    {actionLoading === feedback.id ? 'Atualizando...' : 'Marcar como Implementado'}
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+                {suggestion.status !== 'implemented' && suggestion.status !== 'closed' && (
+                  <div className="flex gap-2 flex-wrap">
+                    <Button
+                      onClick={() => handleUpdateStatus(suggestion.id, 'in-review')}
+                      variant="outline"
+                      size="sm"
+                      disabled={actionLoading === suggestion.id || suggestion.status === 'in-review'}
+                    >
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      Analisar
+                    </Button>
+                    <Button
+                      onClick={() => handleUpdateStatus(suggestion.id, 'implemented')}
+                      variant="outline"
+                      size="sm"
+                      disabled={actionLoading === suggestion.id}
+                      className="text-green-600 border-green-600 hover:bg-green-50"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Implementar
+                    </Button>
+                    <Button
+                      onClick={() => handleUpdateStatus(suggestion.id, 'closed')}
+                      variant="outline"
+                      size="sm"
+                      disabled={actionLoading === suggestion.id}
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
