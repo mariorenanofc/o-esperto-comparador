@@ -11,7 +11,7 @@ export const baseDailyOffersService = {
     return { user };
   },
 
-  async getTodaysDate(): Date {
+  async getTodaysDate(): Promise<Date> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return today;
