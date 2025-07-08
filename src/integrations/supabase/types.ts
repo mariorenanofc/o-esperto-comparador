@@ -93,8 +93,10 @@ export type Database = {
           id: string
           price: number
           product_name: string
+          quantity: number | null
           state: string
           store_name: string
+          unit: string | null
           user_id: string
           verified: boolean | null
         }
@@ -105,8 +107,10 @@ export type Database = {
           id?: string
           price: number
           product_name: string
+          quantity?: number | null
           state: string
           store_name: string
+          unit?: string | null
           user_id: string
           verified?: boolean | null
         }
@@ -117,8 +121,10 @@ export type Database = {
           id?: string
           price?: number
           product_name?: string
+          quantity?: number | null
           state?: string
           store_name?: string
+          unit?: string | null
           user_id?: string
           verified?: boolean | null
         }
