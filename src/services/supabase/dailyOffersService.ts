@@ -126,7 +126,7 @@ export const supabaseDailyOffersService = {
 
       const { data, error } = await supabase
         .from('daily_offers')
-        .select('*')
+        .select('*, quantity, unit')
         .gte('created_at', today.toISOString())
         .eq('verified', true)
         .order('created_at', { ascending: false });
@@ -165,7 +165,7 @@ export const supabaseDailyOffersService = {
     try {
       const { data, error } = await supabase
         .from('daily_offers')
-        .select('*')
+        .select('*, quantity, unit')
         .order('created_at', { ascending: false });
 
       if (error) {
