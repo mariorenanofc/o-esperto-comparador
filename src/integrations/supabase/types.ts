@@ -346,6 +346,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       mark_inactive_users_offline: {
         Args: Record<PropertyKey, never>
         Returns: undefined

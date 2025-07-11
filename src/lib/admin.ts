@@ -1,15 +1,23 @@
 
-// Lista de User IDs que são administradores
-const ADMIN_USER_IDS = [
-  '2e83f998-48e4-4b71-ae39-3118b42a3e51',
-  'bded2150-509c-4d02-a8fc-2c45977a3b13'
-];
+import { supabase } from "@/integrations/supabase/client";
 
-export const isAdmin = (userId: string): boolean => {
-  return ADMIN_USER_IDS.includes(userId);
+export const isAdmin = async (userId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.rpc('is_user_admin');
+    
+    if (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+    
+    return data || false;
+  } catch (error) {
+    console.error('Error in isAdmin function:', error);
+    return false;
+  }
 };
 
-export const requireAdmin = (userId: string | null): boolean => {
+export const requireAdmin = async (userId: string | null): Promise<boolean> => {
   if (!userId) return false;
-  return isAdmin(userId);
+  return await isAdmin(userId);
 };
