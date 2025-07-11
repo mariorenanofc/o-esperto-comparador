@@ -20,14 +20,21 @@ export const useAdminAuth = () => {
       console.log('useAdminAuth: Checking admin status for user:', user.id);
 
       try {
-        const { data, error } = await supabase.rpc('is_user_admin');
-        
-        if (error) {
-          console.error('useAdminAuth: Error checking admin status:', error);
+        // First check if user profile exists and has admin plan
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('plan')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('useAdminAuth: Error fetching profile:', profileError);
           setIsAdmin(false);
         } else {
-          console.log('useAdminAuth: Admin check result:', data);
-          setIsAdmin(data || false);
+          console.log('useAdminAuth: User profile:', profile);
+          const userIsAdmin = profile?.plan === 'admin';
+          console.log('useAdminAuth: Is admin?', userIsAdmin);
+          setIsAdmin(userIsAdmin);
         }
       } catch (error) {
         console.error('useAdminAuth: Error in admin check:', error);

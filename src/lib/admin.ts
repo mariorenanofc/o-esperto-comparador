@@ -4,15 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 export const isAdmin = async (userId?: string): Promise<boolean> => {
   try {
     console.log('isAdmin: Checking admin status...');
-    const { data, error } = await supabase.rpc('is_user_admin');
+    
+    // Check user profile directly from profiles table
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', userId || 'current-user')
+      .single();
     
     if (error) {
       console.error('isAdmin: Error checking admin status:', error);
       return false;
     }
     
-    console.log('isAdmin: Result:', data);
-    return data || false;
+    const result = profile?.plan === 'admin';
+    console.log('isAdmin: Result:', result, 'Profile:', profile);
+    return result;
   } catch (error) {
     console.error('isAdmin: Error in isAdmin function:', error);
     return false;
@@ -20,5 +27,5 @@ export const isAdmin = async (userId?: string): Promise<boolean> => {
 };
 
 export const requireAdmin = async (userId: string | null = null): Promise<boolean> => {
-  return await isAdmin();
+  return await isAdmin(userId || undefined);
 };

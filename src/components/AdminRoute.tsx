@@ -2,15 +2,19 @@
 import React from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AdminRouteProps {
   children: React.ReactNode;
 }
 
 const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
+  const { user, loading } = useAuth();
   const { isAdmin, isLoaded } = useAdminAuth();
 
-  if (!isLoaded) {
+  console.log('AdminRoute: user:', user?.id, 'isAdmin:', isAdmin, 'isLoaded:', isLoaded, 'loading:', loading);
+
+  if (loading || !isLoaded) {
     return (
       <div className="min-h-screen bg-app-gray flex items-center justify-center">
         <div className="text-center">
@@ -21,10 +25,17 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     );
   }
 
+  if (!user) {
+    console.log('AdminRoute: No user, redirecting to sign-in');
+    return <Navigate to="/sign-in" replace />;
+  }
+
   if (!isAdmin) {
+    console.log('AdminRoute: User is not admin, redirecting to home');
     return <Navigate to="/" replace />;
   }
 
+  console.log('AdminRoute: Access granted to admin panel');
   return <>{children}</>;
 };
 
