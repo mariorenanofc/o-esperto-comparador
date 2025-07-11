@@ -28,6 +28,31 @@ export const contributionService = {
     console.log('Submitting suggestion:', { userId, data });
     
     try {
+      // Primeiro, vamos verificar/criar o perfil do usuário
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error checking profile:', profileError);
+      }
+
+      // Se o perfil não existe, criar um
+      if (!profile) {
+        console.log('Creating user profile...');
+        await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            name: data.userName,
+            email: data.userEmail,
+            plan: 'free'
+          });
+      }
+
+      // Agora submeter a sugestão
       const { data: suggestion, error } = await supabase
         .from('suggestions')
         .insert({
@@ -44,17 +69,6 @@ export const contributionService = {
         console.error('Error submitting suggestion:', error);
         throw new Error('Erro ao enviar sugestão');
       }
-
-      // Salvar dados do usuário para referência futura
-      await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          name: data.userName,
-          email: data.userEmail
-        }, {
-          onConflict: 'id'
-        });
 
       console.log('Suggestion submitted successfully:', suggestion);
       return suggestion;

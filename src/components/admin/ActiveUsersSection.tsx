@@ -3,7 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, User, Clock } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import { RefreshCw, UserCheck, Clock } from 'lucide-react';
 import { supabaseAdminService } from '@/services/supabase/adminService';
 import { toast } from 'sonner';
 
@@ -12,8 +20,8 @@ interface ActiveUser {
   email: string;
   name: string | null;
   plan: string | null;
-  last_activity: string | null;
   is_online: boolean | null;
+  last_activity: string | null;
 }
 
 export const ActiveUsersSection = () => {
@@ -26,7 +34,7 @@ export const ActiveUsersSection = () => {
       console.log('Fetching active users...');
       
       const data = await supabaseAdminService.getActiveUsers();
-      console.log('Fetched active users:', data);
+      console.log('Active users data received:', data);
       setActiveUsers(data || []);
     } catch (error) {
       console.error('Error fetching active users:', error);
@@ -39,9 +47,8 @@ export const ActiveUsersSection = () => {
   useEffect(() => {
     fetchActiveUsers();
     
-    // Set up interval to refresh active users every 30 seconds
+    // Auto refresh every 30 seconds
     const interval = setInterval(fetchActiveUsers, 30000);
-    
     return () => clearInterval(interval);
   }, []);
 
@@ -50,22 +57,25 @@ export const ActiveUsersSection = () => {
       case 'admin':
         return <Badge variant="destructive">Admin</Badge>;
       case 'premium':
-        return <Badge variant="default">Premium</Badge>;
-      case 'free':
+        return <Badge variant="default" className="bg-blue-600">Premium</Badge>;
+      case 'pro':
+        return <Badge variant="default" className="bg-purple-600">Pro</Badge>;
+      case 'empresarial':
+        return <Badge variant="default" className="bg-green-600">Empresarial</Badge>;
       default:
-        return <Badge variant="secondary">Free</Badge>;
+        return <Badge variant="outline">Free</Badge>;
     }
   };
 
-  const getLastActivityText = (lastActivity: string | null) => {
+  const formatLastActivity = (lastActivity: string | null) => {
     if (!lastActivity) return 'Nunca';
     
+    const date = new Date(lastActivity);
     const now = new Date();
-    const activity = new Date(lastActivity);
-    const diffInMinutes = Math.floor((now.getTime() - activity.getTime()) / (1000 * 60));
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 1) return 'Agora mesmo';
-    if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
+    if (diffInMinutes < 60) return `${diffInMinutes}m atrás`;
     
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours}h atrás`;
@@ -88,53 +98,93 @@ export const ActiveUsersSection = () => {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Usuários Ativos ({activeUsers.length})</CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={fetchActiveUsers}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {activeUsers.length === 0 ? (
-          <div className="text-center py-8">
-            <User className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="text-gray-500 mt-2">Nenhum usuário ativo no momento.</p>
-          </div>
-        ) : (
-          activeUsers.map((user) => (
-            <div key={user.id} className="border rounded-lg p-4 space-y-3 bg-green-50">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    {user.name || 'Nome não informado'}
-                  </h3>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
-                <div className="text-right space-y-1">
-                  {getPlanBadge(user.plan)}
-                  <Badge variant="default" className="bg-green-600 block">
-                    Online
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="flex items-center text-sm text-gray-600">
-                <Clock className="w-4 h-4 mr-1" />
-                <span>Última atividade: {getLastActivityText(user.last_activity)}</span>
-              </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Usuários Ativos</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchActiveUsers}
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Atualizar
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">{activeUsers.length}</div>
+            <p className="text-xs text-muted-foreground">Usuários Online</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">
+              {activeUsers.filter(u => u.plan === 'premium' || u.plan === 'pro' || u.plan === 'empresarial').length}
             </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
+            <p className="text-xs text-muted-foreground">Usuários Premium Online</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold">
+              {activeUsers.filter(u => u.plan === 'admin').length}
+            </div>
+            <p className="text-xs text-muted-foreground">Administradores Online</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Usuários Ativos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {activeUsers.length === 0 ? (
+            <div className="text-center py-8">
+              <UserCheck className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="text-gray-500 mt-2">Nenhum usuário ativo no momento.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Plano</TableHead>
+                  <TableHead>Última Atividade</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.name || 'Nome não informado'}
+                    </TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{getPlanBadge(user.plan)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {formatLastActivity(user.last_activity)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="default" className="bg-green-600">
+                        <div className="w-2 h-2 bg-white rounded-full mr-1"></div>
+                        Online
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
