@@ -9,9 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin } = useAdminAuth();
+  const { isAdmin, isLoaded } = useAdminAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  console.log('Navbar: user:', user?.id, 'isAdmin:', isAdmin, 'isLoaded:', isLoaded);
 
   const handleSignOut = async () => {
     await signOut();
@@ -65,7 +67,7 @@ const Navbar = () => {
             </Link>
             
             {/* Admin Link - Only visible to administrators */}
-            {isAdmin && (
+            {user && isLoaded && isAdmin && (
               <Link 
                 to="/admin" 
                 className="text-gray-700 hover:text-app-green transition-colors flex items-center gap-1"
@@ -145,7 +147,7 @@ const Navbar = () => {
               </Link>
               
               {/* Admin Link Mobile - Only visible to administrators */}
-              {isAdmin && (
+              {user && isLoaded && isAdmin && (
                 <Link 
                   to="/admin" 
                   className="text-gray-700 hover:text-app-green transition-colors flex items-center gap-1"
