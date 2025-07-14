@@ -14,6 +14,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   console.log('Navbar: user:', user?.id, 'isAdmin:', isAdmin, 'isLoaded:', isLoaded);
+  console.log('Navbar: Should show admin button?', user && isLoaded && isAdmin);
 
   const handleSignOut = async () => {
     await signOut();

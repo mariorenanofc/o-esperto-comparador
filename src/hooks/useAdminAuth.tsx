@@ -20,12 +20,12 @@ export const useAdminAuth = () => {
       console.log('useAdminAuth: Checking admin status for user:', user.id);
 
       try {
-        // First check if user profile exists and has admin plan
+        // Check if user profile exists and has admin plan
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('plan')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error('useAdminAuth: Error fetching profile:', profileError);

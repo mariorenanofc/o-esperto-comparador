@@ -8,17 +8,15 @@ export const fetchService = {
     console.log('Fetching today\'s offers...');
     
     try {
-      const today = await baseDailyOffersService.getTodaysDate();
-
+      // Get all verified offers (not just today's)
       const { data, error } = await supabase
         .from('daily_offers')
         .select('*, quantity, unit')
-        .gte('created_at', today.toISOString())
         .eq('verified', true)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching today\'s offers:', error);
+        console.error('Error fetching verified offers:', error);
         throw error;
       }
 
