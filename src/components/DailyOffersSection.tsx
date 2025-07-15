@@ -28,10 +28,11 @@ const DailyOffersSection: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      // Buscar ofertas das últimas 24 horas
       const fetchedOffers = await dailyOffersService.getTodaysOffers();
-      console.log('All fetched offers:', fetchedOffers);
+      console.log('All fetched offers (last 24h):', fetchedOffers);
       
-      // Filter offers by user's location if available
+      // Filtrar ofertas por localização do usuário se disponível
       let filteredOffers = fetchedOffers;
       if (city && state) {
         filteredOffers = fetchedOffers.filter(offer => 
@@ -44,7 +45,7 @@ const DailyOffersSection: React.FC = () => {
       setOffers(filteredOffers);
       
       if (filteredOffers.length === 0) {
-        console.log('No offers found for current location');
+        console.log('No offers found for current location in the last 24 hours');
       }
     } catch (error) {
       console.error('Error fetching daily offers:', error);
@@ -55,8 +56,16 @@ const DailyOffersSection: React.FC = () => {
     }
   }, [authLoading, city, state]);
 
+  // Atualizar ofertas automaticamente a cada 5 minutos
   useEffect(() => {
     fetchOffers();
+    
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing offers...');
+      fetchOffers();
+    }, 5 * 60 * 1000); // 5 minutos
+
+    return () => clearInterval(interval);
   }, [fetchOffers]);
 
   const handleShowAll = () => {
@@ -91,7 +100,7 @@ const DailyOffersSection: React.FC = () => {
     );
   }
 
-  // Calculate visible offers
+  // Calcular ofertas visíveis
   const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
 
   return (

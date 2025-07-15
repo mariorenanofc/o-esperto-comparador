@@ -1,61 +1,59 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { PriceContribution } from '@/lib/types';
-import { baseDailyOffersService } from './baseService';
 
 export const contributionService = {
   async submitPriceContribution(contribution: PriceContribution, userId: string, contributorName: string): Promise<void> {
-    console.log('=== CONTRIBUTION SERVICE ===');
-    console.log('Submitting price contribution:', { contribution, userId, contributorName });
+    console.log('Submitting price contribution:', contribution);
     
     try {
-      const { user, error: authError } = await baseDailyOffersService.checkUserAuthentication();
-      if (authError) {
-        throw new Error(authError);
+      // Verificar se já existe uma contribuição similar do mesmo usuário nas últimas 24 horas
+      const twentyFourHoursAgo = new Date(Date.now() - (24 * 60 * 60 * 1000));
+      
+      const { data: existingContributions, error: checkError } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('product_name', contribution.productName)
+        .eq('store_name', contribution.storeName)
+        .gte('created_at', twentyFourHoursAgo.toISOString());
+
+      if (checkError) {
+        console.error('Error checking existing contributions:', checkError);
+        throw new Error(`Erro ao verificar contribuições existentes: ${checkError.message}`);
       }
 
-      console.log('User authenticated:', user.id);
+      if (existingContributions && existingContributions.length > 0) {
+        throw new Error('Você já contribuiu com este produto nesta loja nas últimas 24 horas. Aguarde para fazer uma nova contribuição.');
+      }
 
-      const insertData = {
+      // Preparar dados para inserção
+      const contributionData = {
         user_id: userId,
-        product_name: contribution.productName.trim(),
-        price: Number(contribution.price),
-        store_name: contribution.storeName.trim(),
-        city: contribution.city.trim(),
-        state: contribution.state.trim(),
-        contributor_name: contributorName.trim(),
+        product_name: contribution.productName,
+        price: contribution.price,
+        store_name: contribution.storeName,
+        city: contribution.city,
+        state: contribution.state,
+        contributor_name: contributorName,
         quantity: contribution.quantity || 1,
         unit: contribution.unit || 'unidade',
-        verified: false
+        verified: false // Novas contribuições sempre começam como não verificadas
       };
 
-      console.log('Insert data:', insertData);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('daily_offers')
-        .insert(insertData)
-        .select()
-        .single();
+        .insert([contributionData]);
 
       if (error) {
-        console.error('Database error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.details);
-        throw new Error(`Erro na base de dados: ${error.message}`);
+        console.error('Error submitting contribution:', error);
+        throw new Error(`Erro ao enviar contribuição: ${error.message}`);
       }
 
-      console.log('Price contribution submitted successfully:', data);
+      console.log('Contribution submitted successfully');
     } catch (error) {
-      console.error('=== ERROR IN SUBMIT PRICE CONTRIBUTION ===');
-      console.error('Error type:', typeof error);
-      console.error('Error:', error);
-      
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error('Erro desconhecido ao enviar contribuição');
-      }
+      console.error('Error in submitPriceContribution:', error);
+      throw error;
     }
   }
 };
