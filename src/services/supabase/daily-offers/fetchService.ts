@@ -79,8 +79,13 @@ export const fetchService = {
     try {
       console.log('Executing manual cleanup of old offers...');
       
-      // Chamar a função de limpeza do banco de dados
-      const { error } = await supabase.rpc('cleanup_old_daily_offers');
+      // Executar limpeza manual removendo ofertas antigas
+      const twentyFourHoursAgo = new Date(Date.now() - (24 * 60 * 60 * 1000));
+      
+      const { error } = await supabase
+        .from('daily_offers')
+        .delete()
+        .lt('created_at', twentyFourHoursAgo.toISOString());
       
       if (error) {
         console.error('Error during cleanup:', error);
