@@ -1,68 +1,84 @@
+// src/services/dailyOffersService.ts
+import { DailyOffer, PriceContribution, PriceValidationResult } from "@/lib/types";
+// Importa diretamente os serviços de baixo nível ou agrupadores específicos
+import { fetchService } from "./supabase/daily-offers/fetchService";
+import { contributionService as supabaseContributionService } from "./supabase/daily-offers/contributionService";
+import { validationService as localValidationService } from "./daily-offers/validationService"; // Note o alias para evitar conflito de nome se houver outro 'validationService'
+import { adminService } from "./supabase/daily-offers/adminService";
+import { offerVerificationService } from "./daily-offers/offerVerificationService";
 
-import { DailyOffer, PriceContribution } from "@/lib/types";
-import { supabaseDailyOffersService } from "./supabase/dailyOffersService";
-import { validationService } from "./daily-offers/validationService";
 
 export const dailyOffersService = {
-  // Usar serviços do Supabase com limpeza automática
+  // Funções de Leitura (Fetch)
   async getTodaysOffers(): Promise<DailyOffer[]> {
-    console.log('Getting today\'s offers with automatic cleanup...');
-    return await supabaseDailyOffersService.getTodaysOffers();
+    console.log('Getting today\'s offers from fetchService...');
+    // Chama o serviço responsável por buscar dados
+    return await fetchService.getTodaysOffers();
   },
   
+  // Funções de Escrita/Submissão (Contribution)
   async submitPriceContribution(
     contribution: PriceContribution,
     userId: string,
     userName: string
   ): Promise<void> {
-    console.log('Submitting price contribution with 24h validation...');
-    return await supabaseDailyOffersService.submitPriceContribution(
+    console.log('Submitting price contribution via supabaseContributionService...');
+    // Chama o serviço responsável por submeter contribuições
+    return await supabaseContributionService.submitPriceContribution(
       contribution,
       userId,
       userName
     );
   },
 
-  // Manter validações locais
-  validateUserContribution: supabaseDailyOffersService.validateUserContribution,
-  validatePriceContribution: validationService.validatePriceContribution,
+  // Funções de Validação (Validation)
+  // Essas são lógicas que podem ser executadas no frontend ou backend
+  validateUserContribution(
+    newContribution: PriceContribution,
+    userId: string,
+    existingOffers: DailyOffer[] // Passar as ofertas existentes como parâmetro
+  ): PriceValidationResult {
+    console.log('Validating user contribution locally...');
+    return localValidationService.validateUserContribution(newContribution, userId, existingOffers);
+  },
 
-  // Funções de admin
+  validatePriceContribution(
+    newContribution: PriceContribution,
+    existingOffers: DailyOffer[] // Passar as ofertas existentes como parâmetro
+  ): PriceValidationResult {
+    console.log('Validating price contribution locally...');
+    return localValidationService.validatePriceContribution(newContribution, existingOffers);
+  },
+
+  // Funções de Admin
   async getAllContributions(): Promise<any[]> {
-    return await supabaseDailyOffersService.getAllContributions();
+    console.log('Getting all contributions for admin from fetchService...');
+    // Admin usa a mesma função de busca, mas sem o filtro de 'verified'
+    return await fetchService.getAllContributions();
   },
 
   async approveContribution(contributionId: string): Promise<void> {
-    return await supabaseDailyOffersService.approveContribution(contributionId);
+    console.log('Approving contribution via adminService...');
+    // Chama o serviço de admin para aprovação
+    return await adminService.approveContribution(contributionId);
   },
 
   async rejectContribution(contributionId: string): Promise<void> {
-    return await supabaseDailyOffersService.rejectContribution(contributionId);
+    console.log('Rejecting contribution via adminService...');
+    // Chama o serviço de admin para rejeição
+    return await adminService.rejectContribution(contributionId);
   },
 
-  // Função de limpeza manual
+  // Funções de Verificação (Ofertas)
+  checkIfShouldBeVerified: offerVerificationService.checkIfShouldBeVerified,
+  markSimilarOffersAsVerified: offerVerificationService.markSimilarOffersAsVerified,
+
+  // Outras funções de utilidade
   async cleanupOldOffers(): Promise<void> {
-    console.log('Manual cleanup requested - handled by database trigger');
-    // A limpeza agora é feita automaticamente pelo trigger do banco
+    console.log('Manual cleanup requested - delegating to fetchService cleanup.');
+    // A limpeza agora pode ser diretamente chamada do fetchService
+    await fetchService.cleanupOldOffers();
   },
 
-  // Manter função de verificação para compatibilidade
-  checkIfShouldBeVerified: (contribution: PriceContribution, userId: string, offers: DailyOffer[]) => {
-    const similarOffer = offers.find(offer => 
-      offer.userId !== userId &&
-      validationService.areStringsSimilar(offer.productName, contribution.productName) &&
-      validationService.areStringsSimilar(offer.storeName, contribution.storeName) &&
-      validationService.normalizeString(offer.city) === validationService.normalizeString(contribution.city)
-    );
-    return !!similarOffer;
-  },
-
-  markSimilarOffersAsVerified: () => {
-    console.log('markSimilarOffersAsVerified - handled by admin approval system');
-  },
-
-  debugGetAllOffers: () => {
-    console.log('debugGetAllOffers - use Supabase dashboard for debugging');
-    return [];
-  }
+  debugGetAllOffers: fetchService.debugGetAllOffers // Para debug, pode expor
 };
