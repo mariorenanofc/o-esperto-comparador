@@ -1,62 +1,46 @@
 
-import { useState, useEffect } from 'react';
-import { PriceContribution } from '@/lib/types';
+import { useAuth } from '@/hooks/useAuth';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { useFormValidation } from './price-contribution/useFormValidation';
+import { useFormState } from './price-contribution/useFormState';
+import { useFormSubmission } from './price-contribution/useFormSubmission';
+import { toast } from 'sonner';
 
-interface UseFormStateProps {
-  city: string;
-  state: string;
+interface UsePriceContributionFormProps {
+  onClose?: () => void;
 }
 
-export const useFormState = ({ city, state }: UseFormStateProps) => {
-  const [formData, setFormData] = useState<PriceContribution>({
-    productName: '',
-    price: 0,
-    storeName: '',
-    city: '',
-    state: '',
-    userId: '',
-    timestamp: new Date(),
-    verified: false,
-    quantity: 1,
-    unit: 'unidade'
-  });
+export const usePriceContributionForm = (props?: UsePriceContributionFormProps) => {
+  const { user, profile } = useAuth();
+  const { city, state, loading: locationLoading } = useGeolocation();
+  const { validateForm } = useFormValidation();
+  const { formData, setFormData, resetForm } = useFormState({ city, state });
+  const { isSubmitting, submitContribution } = useFormSubmission(props);
 
-  // Atualizar dados de localização automaticamente
-  useEffect(() => {
-    console.log('=== ATUALIZANDO LOCALIZAÇÃO ===');
-    console.log('City:', city);
-    console.log('State:', state);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (city && state) {
-      setFormData(prev => ({
-        ...prev,
-        city,
-        state
-      }));
-      console.log('Localização atualizada no formulário');
+    console.log('=== EVENTO DE SUBMIT DISPARADO ===');
+    console.log('Event:', e);
+    console.log('Event type:', e.type);
+    console.log('Event target:', e.target);
+    
+    // Validações básicas
+    const validation = validateForm(formData, user);
+    if (!validation.isValid) {
+      toast.error(validation.errorMessage!, { id: 'contribution-submit' });
+      return;
     }
-  }, [city, state]);
 
-  const resetForm = (currentCity: string, currentState: string) => {
-    console.log('Resetando formulário...');
-    setFormData({
-      productName: '',
-      price: 0,
-      storeName: '',
-      city: currentCity || '',
-      state: currentState || '',
-      userId: '',
-      timestamp: new Date(),
-      verified: false,
-      quantity: 1,
-      unit: 'unidade'
-    });
-    console.log('Formulário resetado');
+    // Submeter contribuição
+    await submitContribution(formData, user!, profile, resetForm, city, state);
   };
 
   return {
+    isSubmitting,
     formData,
     setFormData,
-    resetForm
+    handleSubmit,
+    locationLoading,
   };
 };
