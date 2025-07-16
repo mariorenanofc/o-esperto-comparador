@@ -1,62 +1,47 @@
 
-import { useState, useEffect } from 'react';
 import { PriceContribution } from '@/lib/types';
+import { User } from '@supabase/supabase-js';
 
-interface UseFormStateProps {
-  city: string;
-  state: string;
-}
-
-export const useFormState = ({ city, state }: UseFormStateProps) => {
-  const [formData, setFormData] = useState<PriceContribution>({
-    productName: '',
-    price: 0,
-    storeName: '',
-    city: '',
-    state: '',
-    userId: '',
-    timestamp: new Date(),
-    verified: false,
-    quantity: 1,
-    unit: 'unidade'
-  });
-
-  // Atualizar dados de localização automaticamente
-  useEffect(() => {
-    console.log('=== ATUALIZANDO LOCALIZAÇÃO ===');
-    console.log('City:', city);
-    console.log('State:', state);
+export const useFormValidation = () => {
+  const validateForm = (
+    formData: PriceContribution,
+    user: User | null
+  ): { isValid: boolean; errorMessage?: string } => {
+    console.log('=== INICIANDO VALIDAÇÕES ===');
     
-    if (city && state) {
-      setFormData(prev => ({
-        ...prev,
-        city,
-        state
-      }));
-      console.log('Localização atualizada no formulário');
+    if (!user) {
+      console.error('❌ Usuário não encontrado');
+      return { isValid: false, errorMessage: 'Você precisa estar logado para contribuir' };
     }
-  }, [city, state]);
+    console.log('✅ Usuário verificado:', user.id);
 
-  const resetForm = (currentCity: string, currentState: string) => {
-    console.log('Resetando formulário...');
-    setFormData({
-      productName: '',
-      price: 0,
-      storeName: '',
-      city: currentCity || '',
-      state: currentState || '',
-      userId: '',
-      timestamp: new Date(),
-      verified: false,
-      quantity: 1,
-      unit: 'unidade'
-    });
-    console.log('Formulário resetado');
+    if (!formData.productName.trim()) {
+      console.error('❌ Nome do produto vazio');
+      return { isValid: false, errorMessage: 'Nome do produto é obrigatório' };
+    }
+    console.log('✅ Nome do produto válido:', formData.productName);
+
+    if (!formData.storeName.trim()) {
+      console.error('❌ Nome da loja vazio');
+      return { isValid: false, errorMessage: 'Nome da loja é obrigatório' };
+    }
+    console.log('✅ Nome da loja válido:', formData.storeName);
+
+    if (formData.price <= 0) {
+      console.error('❌ Preço inválido:', formData.price);
+      return { isValid: false, errorMessage: 'Preço deve ser maior que zero' };
+    }
+    console.log('✅ Preço válido:', formData.price);
+
+    if (!formData.city.trim() || !formData.state.trim()) {
+      console.error('❌ Localização inválida:', { city: formData.city, state: formData.state });
+      return { isValid: false, errorMessage: 'Localização é obrigatória' };
+    }
+    console.log('✅ Localização válida:', formData.city, formData.state);
+
+    console.log('✅ Todas as validações passaram!');
+    return { isValid: true };
   };
 
-  return {
-    formData,
-    setFormData,
-    resetForm
-  };
+  return { validateForm };
 };
