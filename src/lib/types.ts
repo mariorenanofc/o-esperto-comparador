@@ -1,5 +1,3 @@
-import { z } from 'zod'; // Importar Zod
-
 export interface Product {
   id: string;
   name: string;
@@ -161,20 +159,3 @@ export interface UserFeedback {
   userPhone?: string;
   createdAt?: string;
 }
-
-// Schema Zod para PriceContribution
-export const PriceContributionSchema = z.object({
-  productName: z.string().trim().min(1, "Nome do produto é obrigatório."),
-  price: z.number().min(0.01, "Preço deve ser maior que zero.").max(999999, "Preço muito alto."),
-  storeName: z.string().trim().min(1, "Nome da loja é obrigatório."),
-  city: z.string().trim().min(1, "Cidade é obrigatória."),
-  state: z.string().trim().length(2, "Estado deve ter 2 caracteres.").toUpperCase(), // Ex: PE, SP
-  userId: z.string().uuid("ID de usuário inválido."), // Assumindo que userId é um UUID
-  timestamp: z.instanceof(Date, { message: "Timestamp inválido." }),
-  verified: z.boolean(),
-  quantity: z.number().min(1, "Quantidade deve ser pelo menos 1.").optional().default(1),
-  unit: z.string().trim().min(1, "Unidade é obrigatória.").optional().default('unidade'),
-});
-
-// Para inferir o tipo do Zod Schema, útil para tipagem de formulários
-export type PriceContributionFormData = z.infer<typeof PriceContributionSchema>;
