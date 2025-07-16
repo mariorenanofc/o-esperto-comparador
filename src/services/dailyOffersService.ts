@@ -1,136 +1,68 @@
 
-import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useGeolocation } from "@/hooks/useGeolocation";
-import { dailyOffersService } from "@/services/dailyOffersService";
-import { DailyOffer } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
-import LoadingState from "./daily-offers/LoadingState";
-import LoginOverlay from "./daily-offers/LoginOverlay";
-import OffersGrid from "./daily-offers/OffersGrid";
-import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
-import { toast } from "sonner";
+import { DailyOffer, PriceContribution } from "@/lib/types";
+import { supabaseDailyOffersService } from "./supabase/dailyOffersService";
+import { validationService } from "./daily-offers/validationService";
 
-const DailyOffersSection: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { city, state } = useGeolocation();
-  const [offers, setOffers] = useState<DailyOffer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
-
-  const fetchOffers = useCallback(async () => {
-    if (authLoading) return;
-    
-    try {
-      console.log('Fetching daily offers for location:', { city, state });
-      setLoading(true);
-      setError(null);
-      
-      // Buscar ofertas das últimas 24 horas
-      const fetchedOffers = await dailyOffersService.getTodaysOffers();
-      console.log('All fetched offers (last 24h):', fetchedOffers);
-      
-      // Filtrar ofertas por localização do usuário se disponível
-      let filteredOffers = fetchedOffers;
-      if (city && state) {
-        filteredOffers = fetchedOffers.filter(offer => 
-          offer.city.toLowerCase() === city.toLowerCase() && 
-          offer.state.toLowerCase() === state.toLowerCase()
-        );
-        console.log('Filtered offers by location:', filteredOffers);
-      }
-      
-      setOffers(filteredOffers);
-      
-      if (filteredOffers.length === 0) {
-        console.log('No offers found for current location in the last 24 hours');
-      }
-    } catch (error) {
-      console.error('Error fetching daily offers:', error);
-      setError('Erro ao carregar ofertas do dia');
-      toast.error('Erro ao carregar ofertas do dia');
-    } finally {
-      setLoading(false);
-    }
-  }, [authLoading, city, state]);
-
-  // Atualizar ofertas automaticamente a cada 5 minutos
-  useEffect(() => {
-    fetchOffers();
-    
-    const interval = setInterval(() => {
-      console.log('Auto-refreshing offers...');
-      fetchOffers();
-    }, 5 * 60 * 1000); // 5 minutos
-
-    return () => clearInterval(interval);
-  }, [fetchOffers]);
-
-  const handleShowAll = () => {
-    setShowAll(true);
-  };
-
-  const handleRefresh = () => {
-    fetchOffers();
-    toast.success('Ofertas atualizadas!');
-  };
-
-  if (authLoading || loading) {
-    return <LoadingState />;
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full max-w-6xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-red-600">Erro</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>{error}</p>
-          <button 
-            onClick={fetchOffers}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Tentar novamente
-          </button>
-        </CardContent>
-      </Card>
+export const dailyOffersService = {
+  // Usar serviços do Supabase com limpeza automática
+  async getTodaysOffers(): Promise<DailyOffer[]> {
+    console.log('Getting today\'s offers with automatic cleanup...');
+    return await supabaseDailyOffersService.getTodaysOffers();
+  },
+  
+  async submitPriceContribution(
+    contribution: PriceContribution,
+    userId: string,
+    userName: string
+  ): Promise<void> {
+    console.log('Submitting price contribution with 24h validation...');
+    return await supabaseDailyOffersService.submitPriceContribution(
+      contribution,
+      userId,
+      userName
     );
+  },
+
+  // Manter validações locais
+  validateUserContribution: supabaseDailyOffersService.validateUserContribution,
+  validatePriceContribution: validationService.validatePriceContribution,
+
+  // Funções de admin
+  async getAllContributions(): Promise<any[]> {
+    return await supabaseDailyOffersService.getAllContributions();
+  },
+
+  async approveContribution(contributionId: string): Promise<void> {
+    return await supabaseDailyOffersService.approveContribution(contributionId);
+  },
+
+  async rejectContribution(contributionId: string): Promise<void> {
+    return await supabaseDailyOffersService.rejectContribution(contributionId);
+  },
+
+  // Função de limpeza manual
+  async cleanupOldOffers(): Promise<void> {
+    console.log('Manual cleanup requested - handled by database trigger');
+    // A limpeza agora é feita automaticamente pelo trigger do banco
+  },
+
+  // Manter função de verificação para compatibilidade
+  checkIfShouldBeVerified: (contribution: PriceContribution, userId: string, offers: DailyOffer[]) => {
+    const similarOffer = offers.find(offer => 
+      offer.userId !== userId &&
+      validationService.areStringsSimilar(offer.productName, contribution.productName) &&
+      validationService.areStringsSimilar(offer.storeName, contribution.storeName) &&
+      validationService.normalizeString(offer.city) === validationService.normalizeString(contribution.city)
+    );
+    return !!similarOffer;
+  },
+
+  markSimilarOffersAsVerified: () => {
+    console.log('markSimilarOffersAsVerified - handled by admin approval system');
+  },
+
+  debugGetAllOffers: () => {
+    console.log('debugGetAllOffers - use Supabase dashboard for debugging');
+    return [];
   }
-
-  // Calcular ofertas visíveis
-  const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
-
-  return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 relative">
-      <DailyOffersHeader 
-        city={city}
-        actualOffersCount={offers.length}
-        onRefresh={handleRefresh}
-      />
-      
-      {offers.length > 0 ? (
-        <OffersGrid 
-          visibleOffers={visibleOffers}
-          displayOffers={offers}
-          isSignedIn={!!user}
-          showAll={showAll}
-          onShowAll={handleShowAll}
-        />
-      ) : (
-        <ContributeCallToAction />
-      )}
-
-      {!user && !showAll && offers.length > 3 && (
-        <LoginOverlay 
-          totalOffers={offers.length}
-          onShowAll={handleShowAll}
-        />
-      )}
-    </div>
-  );
 };
-
-export default DailyOffersSection;
