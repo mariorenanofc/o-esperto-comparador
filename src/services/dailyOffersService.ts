@@ -1,84 +1,136 @@
-// src/services/dailyOffersService.ts
-import { DailyOffer, PriceContribution, PriceValidationResult } from "@/lib/types";
-// Importa diretamente os serviços de baixo nível ou agrupadores específicos
-import { fetchService } from "./supabase/daily-offers/fetchService";
-import { contributionService as supabaseContributionService } from "./supabase/daily-offers/contributionService";
-import { validationService as localValidationService } from "./daily-offers/validationService"; // Note o alias para evitar conflito de nome se houver outro 'validationService'
-import { adminService } from "./supabase/daily-offers/adminService";
-import { offerVerificationService } from "./daily-offers/offerVerificationService";
 
+import React, { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { dailyOffersService } from "@/services/dailyOffersService";
+import { DailyOffer } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
+import LoadingState from "./daily-offers/LoadingState";
+import LoginOverlay from "./daily-offers/LoginOverlay";
+import OffersGrid from "./daily-offers/OffersGrid";
+import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
+import { toast } from "sonner";
 
-export const dailyOffersService = {
-  // Funções de Leitura (Fetch)
-  async getTodaysOffers(): Promise<DailyOffer[]> {
-    console.log('Getting today\'s offers from fetchService...');
-    // Chama o serviço responsável por buscar dados
-    return await fetchService.getTodaysOffers();
-  },
-  
-  // Funções de Escrita/Submissão (Contribution)
-  async submitPriceContribution(
-    contribution: PriceContribution,
-    userId: string,
-    userName: string
-  ): Promise<void> {
-    console.log('Submitting price contribution via supabaseContributionService...');
-    // Chama o serviço responsável por submeter contribuições
-    return await supabaseContributionService.submitPriceContribution(
-      contribution,
-      userId,
-      userName
+const DailyOffersSection: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
+  const { city, state } = useGeolocation();
+  const [offers, setOffers] = useState<DailyOffer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  const fetchOffers = useCallback(async () => {
+    if (authLoading) return;
+    
+    try {
+      console.log('Fetching daily offers for location:', { city, state });
+      setLoading(true);
+      setError(null);
+      
+      // Buscar ofertas das últimas 24 horas
+      const fetchedOffers = await dailyOffersService.getTodaysOffers();
+      console.log('All fetched offers (last 24h):', fetchedOffers);
+      
+      // Filtrar ofertas por localização do usuário se disponível
+      let filteredOffers = fetchedOffers;
+      if (city && state) {
+        filteredOffers = fetchedOffers.filter(offer => 
+          offer.city.toLowerCase() === city.toLowerCase() && 
+          offer.state.toLowerCase() === state.toLowerCase()
+        );
+        console.log('Filtered offers by location:', filteredOffers);
+      }
+      
+      setOffers(filteredOffers);
+      
+      if (filteredOffers.length === 0) {
+        console.log('No offers found for current location in the last 24 hours');
+      }
+    } catch (error) {
+      console.error('Error fetching daily offers:', error);
+      setError('Erro ao carregar ofertas do dia');
+      toast.error('Erro ao carregar ofertas do dia');
+    } finally {
+      setLoading(false);
+    }
+  }, [authLoading, city, state]);
+
+  // Atualizar ofertas automaticamente a cada 5 minutos
+  useEffect(() => {
+    fetchOffers();
+    
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing offers...');
+      fetchOffers();
+    }, 5 * 60 * 1000); // 5 minutos
+
+    return () => clearInterval(interval);
+  }, [fetchOffers]);
+
+  const handleShowAll = () => {
+    setShowAll(true);
+  };
+
+  const handleRefresh = () => {
+    fetchOffers();
+    toast.success('Ofertas atualizadas!');
+  };
+
+  if (authLoading || loading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full max-w-6xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-red-600">Erro</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>{error}</p>
+          <button 
+            onClick={fetchOffers}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Tentar novamente
+          </button>
+        </CardContent>
+      </Card>
     );
-  },
+  }
 
-  // Funções de Validação (Validation)
-  // Essas são lógicas que podem ser executadas no frontend ou backend
-  validateUserContribution(
-    newContribution: PriceContribution,
-    userId: string,
-    existingOffers: DailyOffer[] // Passar as ofertas existentes como parâmetro
-  ): PriceValidationResult {
-    console.log('Validating user contribution locally...');
-    return localValidationService.validateUserContribution(newContribution, userId, existingOffers);
-  },
+  // Calcular ofertas visíveis
+  const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
 
-  validatePriceContribution(
-    newContribution: PriceContribution,
-    existingOffers: DailyOffer[] // Passar as ofertas existentes como parâmetro
-  ): PriceValidationResult {
-    console.log('Validating price contribution locally...');
-    return localValidationService.validatePriceContribution(newContribution, existingOffers);
-  },
+  return (
+    <div className="w-full max-w-6xl mx-auto space-y-6 relative">
+      <DailyOffersHeader 
+        city={city}
+        actualOffersCount={offers.length}
+        onRefresh={handleRefresh}
+      />
+      
+      {offers.length > 0 ? (
+        <OffersGrid 
+          visibleOffers={visibleOffers}
+          displayOffers={offers}
+          isSignedIn={!!user}
+          showAll={showAll}
+          onShowAll={handleShowAll}
+        />
+      ) : (
+        <ContributeCallToAction />
+      )}
 
-  // Funções de Admin
-  async getAllContributions(): Promise<any[]> {
-    console.log('Getting all contributions for admin from fetchService...');
-    // Admin usa a mesma função de busca, mas sem o filtro de 'verified'
-    return await fetchService.getAllContributions();
-  },
-
-  async approveContribution(contributionId: string): Promise<void> {
-    console.log('Approving contribution via adminService...');
-    // Chama o serviço de admin para aprovação
-    return await adminService.approveContribution(contributionId);
-  },
-
-  async rejectContribution(contributionId: string): Promise<void> {
-    console.log('Rejecting contribution via adminService...');
-    // Chama o serviço de admin para rejeição
-    return await adminService.rejectContribution(contributionId);
-  },
-
-  // Funções de Verificação (Ofertas)
-  checkIfShouldBeVerified: offerVerificationService.checkIfShouldBeVerified,
-  markSimilarOffersAsVerified: offerVerificationService.markSimilarOffersAsVerified,
-
-  // Outras funções de utilidade
-  async cleanupOldOffers(): Promise<void> {
-    console.log('Manual cleanup requested - delegating to fetchService cleanup.');
-    // A limpeza agora pode ser diretamente chamada do fetchService
-    await fetchService.cleanupOldOffers();
-  },
-
-  debugGetAllOffers: fetchService.debugGetAllOffers // Para debug, pode expor
+      {!user && !showAll && offers.length > 3 && (
+        <LoginOverlay 
+          totalOffers={offers.length}
+          onShowAll={handleShowAll}
+        />
+      )}
+    </div>
+  );
 };
+
+export default DailyOffersSection;
