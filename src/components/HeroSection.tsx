@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
@@ -7,6 +7,7 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  CarouselApi,
 } from "@/components/ui/carousel";
 
 const HeroSection: React.FC = () => {
@@ -28,6 +29,46 @@ const HeroSection: React.FC = () => {
       alt: "Carrinho de compras em supermercado",
     },
   ];
+
+  const [api, setApi] = useState<CarouselApi>();
+  const autoplayIntervalRef = React.useRef<NodeJS.Timeout | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    // Função para iniciar o autoplay
+    const startAutoplay = () => {
+      if (autoplayIntervalRef.current) {
+        clearInterval(autoplayIntervalRef.current);
+      }
+      autoplayIntervalRef.current = setInterval(() => {
+        api.scrollNext(); // Rola para o próximo slide
+      }, 3000); // Rola a cada 4 segundos (ajuste o tempo conforme preferir)
+    };
+
+    // Função para parar o autoplay
+    const stopAutoplay = () => {
+      if (autoplayIntervalRef.current) {
+        clearInterval(autoplayIntervalRef.current);
+        autoplayIntervalRef.current = undefined;
+      }
+    };
+
+    // Inicia o autoplay ao montar e reseta ao mudar de slide
+    api.on("init", startAutoplay);
+    api.on("select", startAutoplay); // Reseta o autoplay ao selecionar um slide manualmente
+
+    // Garante que o autoplay pare ao desmontar o componente
+    return () => {
+      stopAutoplay();
+      api.off("init", startAutoplay);
+      api.off("select", startAutoplay);
+    };
+  }, [api]);
 
   return (
     <div className="bg-app-gray dark:bg-gray-900 py-8 sm:py-16 md:py-24">
@@ -64,6 +105,7 @@ const HeroSection: React.FC = () => {
               <Carousel
                 className="w-full"
                 opts={{ align: "start", loop: true }}
+                setApi={setApi}
               >
                 <CarouselContent>
                   {heroImages.map((image, index) => (
@@ -78,8 +120,6 @@ const HeroSection: React.FC = () => {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700" />
-                <CarouselNext className="bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700" />
               </Carousel>
             </div>
           </div>
