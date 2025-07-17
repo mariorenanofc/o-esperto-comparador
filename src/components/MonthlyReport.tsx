@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +20,11 @@ const MonthlyReport: React.FC = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<MonthlyReportData[]>([]);
   const [userComparisons, setUserComparisons] = useState<any[]>([]);
-  const [selectedReport, setSelectedReport] = useState<MonthlyReportData | null>(null);
-  const [selectedComparison, setSelectedComparison] = useState<number | null>(null);
+  const [selectedReport, setSelectedReport] =
+    useState<MonthlyReportData | null>(null);
+  const [selectedComparison, setSelectedComparison] = useState<number | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,14 +35,14 @@ const MonthlyReport: React.FC = () => {
 
   const loadUserData = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
-      console.log('Loading user comparisons and reports...');
-      
+      console.log("Loading user comparisons and reports...");
+
       // Carregar comparações do usuário
       const comparisons = await comparisonService.getUserComparisons(user.id);
-      console.log('User comparisons:', comparisons);
+      console.log("User comparisons:", comparisons);
       setUserComparisons(comparisons);
 
       // Agrupar comparações por mês/ano
@@ -49,7 +51,7 @@ const MonthlyReport: React.FC = () => {
         const month = date.getMonth() + 1;
         const year = date.getFullYear();
         const key = `${year}-${month}`;
-        
+
         if (!acc[key]) {
           acc[key] = {
             id: key,
@@ -57,21 +59,22 @@ const MonthlyReport: React.FC = () => {
             year,
             total_spent: 0,
             comparison_count: 0,
-            comparisons: []
+            comparisons: [],
           };
         }
-        
+
         acc[key].comparisons.push(comparison);
         acc[key].comparison_count++;
-        
+
         return acc;
       }, {});
 
-      const monthlyReports = Object.values(groupedByMonth) as MonthlyReportData[];
+      const monthlyReports = Object.values(
+        groupedByMonth
+      ) as MonthlyReportData[];
       setReports(monthlyReports);
-      
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error("Error loading user data:", error);
     } finally {
       setLoading(false);
     }
@@ -79,25 +82,38 @@ const MonthlyReport: React.FC = () => {
 
   const getMonthName = (month: number) => {
     const months = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+      "Janeiro",
+      "Fevereiro",
+      "Março",
+      "Abril",
+      "Maio",
+      "Junho",
+      "Julho",
+      "Agosto",
+      "Setembro",
+      "Outubro",
+      "Novembro",
+      "Dezembro",
     ];
     return months[month - 1] || "Mês";
   };
 
-  const convertComparisonToDisplayFormat = (comparison: any): ComparisonData => {
+  const convertComparisonToDisplayFormat = (
+    comparison: any
+  ): ComparisonData => {
     // Converter dados do Supabase para formato esperado pelo PriceTable
-    const products = comparison.comparison_products?.map((cp: any) => ({
-      id: cp.product.id,
-      name: cp.product.name,
-      quantity: cp.product.quantity,
-      unit: cp.product.unit,
-      prices: {} // Será preenchido pelos preços
-    })) || [];
+    const products =
+      comparison.comparison_products?.map((cp: any) => ({
+        id: cp.product.id,
+        name: cp.product.name,
+        quantity: cp.product.quantity,
+        unit: cp.product.unit,
+        prices: {}, // Será preenchido pelos preços
+      })) || [];
 
     // Agrupar lojas únicas
     const storesMap = new Map();
-    
+
     // Processar preços e lojas
     comparison.comparison_products?.forEach((cp: any) => {
       // Buscar preços deste produto
@@ -107,7 +123,7 @@ const MonthlyReport: React.FC = () => {
     return {
       products,
       stores: Array.from(storesMap.values()),
-      date: new Date(comparison.created_at)
+      date: new Date(comparison.created_at),
     };
   };
 
@@ -129,7 +145,7 @@ const MonthlyReport: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-950  p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Relatórios Mensais</h2>
 
         {selectedReport ? (
@@ -152,7 +168,9 @@ const MonthlyReport: React.FC = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Comparações Realizadas</CardTitle>
+                  <CardTitle className="text-lg">
+                    Comparações Realizadas
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-app-blue">
@@ -162,21 +180,31 @@ const MonthlyReport: React.FC = () => {
               </Card>
             </div>
 
-            <h3 className="text-lg font-medium mt-8 mb-4">Comparações do Mês</h3>
+            <h3 className="text-lg font-medium mt-8 mb-4">
+              Comparações do Mês
+            </h3>
 
             {selectedReport.comparisons?.map((comparison, index) => (
               <div
                 key={comparison.id}
                 className="border rounded-md p-4 mb-4 cursor-pointer hover:bg-gray-50"
-                onClick={() => setSelectedComparison(selectedComparison === index ? null : index)}
+                onClick={() =>
+                  setSelectedComparison(
+                    selectedComparison === index ? null : index
+                  )
+                }
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">
-                      {comparison.title || `Comparação ${new Date(comparison.created_at).toLocaleDateString()}`}
+                      {comparison.title ||
+                        `Comparação ${new Date(
+                          comparison.created_at
+                        ).toLocaleDateString()}`}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Data: {new Date(comparison.created_at).toLocaleDateString()}
+                      Data:{" "}
+                      {new Date(comparison.created_at).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-600">
                       {comparison.comparison_products?.length || 0} produtos
@@ -194,7 +222,8 @@ const MonthlyReport: React.FC = () => {
                     </div>
                     {comparison.comparison_products?.map((cp: any) => (
                       <div key={cp.id} className="text-sm mb-1">
-                        • {cp.product?.name} - {cp.product?.quantity} {cp.product?.unit}
+                        • {cp.product?.name} - {cp.product?.quantity}{" "}
+                        {cp.product?.unit}
                       </div>
                     ))}
                   </div>
@@ -206,9 +235,12 @@ const MonthlyReport: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {reports.length === 0 ? (
               <div className="col-span-full text-center p-8">
-                <p className="text-gray-500">Nenhuma comparação encontrada ainda.</p>
+                <p className="text-gray-500">
+                  Nenhuma comparação encontrada ainda.
+                </p>
                 <p className="text-sm text-gray-400 mt-2">
-                  Faça sua primeira comparação na página "Comparar Preços" para ver os relatórios aqui.
+                  Faça sua primeira comparação na página "Comparar Preços" para
+                  ver os relatórios aqui.
                 </p>
               </div>
             ) : (

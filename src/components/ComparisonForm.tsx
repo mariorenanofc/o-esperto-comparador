@@ -275,7 +275,7 @@ const ComparisonForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Adicionar Mercados</h2>
         <div className="flex items-end space-x-4">
           <div className="flex-1">
@@ -302,7 +302,7 @@ const ComparisonForm: React.FC = () => {
               {comparisonData.stores.map((store) => (
                 <div
                   key={store.id}
-                  className="flex items-center justify-between bg-gray-50 p-3 rounded border"
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-950 p-3 rounded border"
                 >
                   <span>{store.name}</span>
                   <Button
@@ -320,7 +320,7 @@ const ComparisonForm: React.FC = () => {
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Produtos para Comparação</h2>
           <Button
@@ -342,7 +342,7 @@ const ComparisonForm: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-50">
+                <tr className="bg-gray-50 dark:bg-gray-950">
                   <th className="py-2 px-4 border text-left">Produto</th>
                   <th className="py-2 px-4 border text-left">Quantidade</th>
                   <th className="py-2 px-4 border text-left">Unidade</th>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import AdminRoute from "@/components/AdminRoute";
@@ -8,26 +7,36 @@ import { UserManagementSection } from "@/components/admin/UserManagementSection"
 import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
 import { ActiveUsersSection } from "@/components/admin/ActiveUsersSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, BarChart3, MessageSquare, Clock, UserCheck } from "lucide-react";
+import {
+  Users,
+  BarChart3,
+  MessageSquare,
+  Clock,
+  UserCheck,
+} from "lucide-react";
 
 const Admin: React.FC = () => {
   return (
     <AdminRoute>
-      <div className="min-h-screen bg-app-gray">
+      <div className="min-h-screen bg-app-gray dark:bg-gray-900">
         <Navbar />
         <div className="container mx-auto py-8 px-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            <h1 className="text-3xl font-bold text-gray-800  dark:text-gray-200 mb-2">
               Dashboard Administrativo
             </h1>
             <p className="text-gray-600">
-              Controle completo da plataforma - Gerenciamento, Analytics e Moderação
+              Controle completo da plataforma - Gerenciamento, Analytics e
+              Moderação
             </p>
           </div>
-          
+
           <Tabs defaultValue="analytics" className="space-y-6">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <TabsTrigger
+                value="analytics"
+                className="flex items-center gap-2"
+              >
                 <BarChart3 className="w-4 h-4" />
                 Analytics
               </TabsTrigger>
@@ -35,11 +44,17 @@ const Admin: React.FC = () => {
                 <Users className="w-4 h-4" />
                 Usuários
               </TabsTrigger>
-              <TabsTrigger value="active-users" className="flex items-center gap-2">
+              <TabsTrigger
+                value="active-users"
+                className="flex items-center gap-2"
+              >
                 <UserCheck className="w-4 h-4" />
                 Ativos
               </TabsTrigger>
-              <TabsTrigger value="contributions" className="flex items-center gap-2">
+              <TabsTrigger
+                value="contributions"
+                className="flex items-center gap-2"
+              >
                 <Clock className="w-4 h-4" />
                 Contribuições
               </TabsTrigger>

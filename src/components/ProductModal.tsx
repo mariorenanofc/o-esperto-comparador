@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,18 +41,24 @@ const ProductModal: React.FC<ProductModalProps> = ({
     }
   );
 
-  const { validateProductName, showDuplicateDialog, duplicateInfo, closeDuplicateDialog } = 
-    useProductValidation(existingProducts);
+  const {
+    validateProductName,
+    showDuplicateDialog,
+    duplicateInfo,
+    closeDuplicateDialog,
+  } = useProductValidation(existingProducts);
 
   // Reset form when modal opens/closes or editProduct changes
   useEffect(() => {
     if (isOpen) {
-      setProduct(editProduct || {
-        name: "",
-        quantity: 1,
-        unit: "unid",
-        prices: {},
-      });
+      setProduct(
+        editProduct || {
+          name: "",
+          quantity: 1,
+          unit: "unid",
+          prices: {},
+        }
+      );
     }
   }, [isOpen, editProduct]);
 
@@ -75,7 +80,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Se estamos editando um produto, não precisamos validar duplicatas
     if (editProduct) {
       onSave(product);
@@ -111,7 +116,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 dark:bg-gray-950">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Nome
@@ -158,7 +163,9 @@ const ProductModal: React.FC<ProductModalProps> = ({
               </div>
 
               <div className="mt-4">
-                <h3 className="text-sm font-medium mb-2">Preços por Mercado:</h3>
+                <h3 className="text-sm font-medium mb-2">
+                  Preços por Mercado:
+                </h3>
                 {stores.map((store) => (
                   <div
                     key={store.id}
@@ -201,7 +208,10 @@ const ProductModal: React.FC<ProductModalProps> = ({
           onClose={closeDuplicateDialog}
           newProductName={duplicateInfo.newProductName}
           existingProductName={duplicateInfo.existingProduct.name}
-          isExactMatch={duplicateInfo.newProductName.toLowerCase().trim() === duplicateInfo.existingProduct.name.toLowerCase().trim()}
+          isExactMatch={
+            duplicateInfo.newProductName.toLowerCase().trim() ===
+            duplicateInfo.existingProduct.name.toLowerCase().trim()
+          }
           onReplace={duplicateInfo.onReplace}
           onKeepBoth={duplicateInfo.onKeepBoth}
         />

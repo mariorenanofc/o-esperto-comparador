@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Store, Product } from "@/lib/types";
 
@@ -21,11 +20,11 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-gray-50">
+          <tr className="bg-gray-50 dark:bg-gray-950">
             <th className="py-2 px-4 border text-left">Produto</th>
             <th className="py-2 px-4 border text-left">Quantidade</th>
             {stores.map((store) => (
-              <th key={store.id} className="py-2 px-4 border text-left">
+              <th key={store.id} className="py-2 px-4 border text-left ">
                 {store.name}
               </th>
             ))}
@@ -39,7 +38,7 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
 
             return (
               <tr key={product.id}>
-                <td className="py-2 px-4 border">{product.name}</td>
+                <td className="py-2 px-4 border ">{product.name}</td>
                 <td className="py-2 px-4 border">
                   {product.quantity} {product.unit}
                 </td>
@@ -48,11 +47,20 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
                   return (
                     <td
                       key={store.id}
-                      className={`py-2 px-4 border ${isLowestPrice ? "bg-green-50" : ""}`}
+                      className={`py-2 px-4 border ${
+                        isLowestPrice ? "bg-green-50" : ""
+                      } dark:bg-gray-950`}
                     >
                       {product.prices[store.id] ? (
-                        <span className={isLowestPrice ? "font-semibold text-app-green" : ""}>
-                          R$ {(product.prices[store.id] * product.quantity).toFixed(2)}
+                        <span
+                          className={
+                            isLowestPrice ? "font-semibold text-app-green" : ""
+                          }
+                        >
+                          R${" "}
+                          {(
+                            product.prices[store.id] * product.quantity
+                          ).toFixed(2)}
                         </span>
                       ) : (
                         <span className="text-gray-400">N/A</span>
@@ -60,7 +68,7 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
                     </td>
                   );
                 })}
-                <td className="py-2 px-4 border bg-green-50 font-medium text-app-green">
+                <td className="py-2 px-4 border dark:bg-gray-950 bg-green-50 font-medium text-app-green">
                   {bestStore ? bestStore.name : "N/A"}
                 </td>
               </tr>
@@ -68,21 +76,26 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
           })}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-100">
-            <td colSpan={2} className="py-2 px-4 border font-semibold text-right">
+          <tr className="bg-gray-100 dark:bg-gray-950">
+            <td
+              colSpan={2}
+              className="py-2 px-4 border font-semibold text-right dark:bg-gray-950"
+            >
               Total:
             </td>
             {stores.map((store) => (
               <td
                 key={store.id}
                 className={`py-2 px-4 border font-semibold ${
-                  store.id === cheapestStoreId ? "bg-green-100 text-app-green" : ""
-                }`}
+                  store.id === cheapestStoreId
+                    ? "bg-green-100 text-app-green"
+                    : ""
+                } dark:bg-gray-950`}
               >
                 R$ {totals[store.id].toFixed(2)}
               </td>
             ))}
-            <td className="py-2 px-4 border"></td>
+            <td className="py-2 px-4 border dark:bg-gray-950"></td>
           </tr>
         </tfoot>
       </table>

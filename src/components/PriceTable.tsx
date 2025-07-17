@@ -54,7 +54,9 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     let highestTotal = 0;
 
     // Só considera produtos que têm pelo menos um preço válido
-    const productsWithPrice = products.filter((prod, idx) => findBestPriceStore(idx));
+    const productsWithPrice = products.filter((prod, idx) =>
+      findBestPriceStore(idx)
+    );
 
     productsWithPrice.forEach((product, index) => {
       // Aqui está correto pois filtered
@@ -75,14 +77,17 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
 
   // Filtra somente mercados existentes
   const validStoreIds = stores.map((s) => s.id);
-  const cheapestStoreId = validStoreIds.reduce((acc: string | undefined, storeId) => {
-    // Desconsidera se não há produtos para o mercado
-    if (acc === undefined) return storeId;
-    return totals[storeId] < totals[acc] ? storeId : acc;
-  }, undefined);
+  const cheapestStoreId = validStoreIds.reduce(
+    (acc: string | undefined, storeId) => {
+      // Desconsidera se não há produtos para o mercado
+      if (acc === undefined) return storeId;
+      return totals[storeId] < totals[acc] ? storeId : acc;
+    },
+    undefined
+  );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
       <h2 className="text-xl font-semibold mb-4">Resultados da Comparação</h2>
       <PriceTableResultCards
         products={products}

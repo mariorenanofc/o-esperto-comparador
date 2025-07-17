@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TrendingDown, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,13 +11,13 @@ interface DailyOffersHeaderProps {
 const DailyOffersHeader: React.FC<DailyOffersHeaderProps> = ({
   city,
   actualOffersCount,
-  onRefresh
+  onRefresh,
 }) => {
   return (
     <div className="text-center mb-12">
       <div className="flex items-center justify-center mb-4">
         <TrendingDown className="text-app-green mr-3" size={32} />
-        <h2 className="text-3xl font-bold text-app-dark">
+        <h2 className="text-3xl font-bold text-app-dark dark:text-gray-200">
           🔥 Ofertas do Dia
         </h2>
         <Button
@@ -31,8 +30,9 @@ const DailyOffersHeader: React.FC<DailyOffersHeaderProps> = ({
           <RefreshCw size={16} />
         </Button>
       </div>
-      <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-        Preços compartilhados pela nossa comunidade hoje em <strong>{city || "Trindade"}, PE</strong>
+      <p className="text-lg text-gray-600 max-w-2xl mx-auto dark:text-gray-300">
+        Preços compartilhados pela nossa comunidade hoje em{" "}
+        <strong>{city || "Trindade"}, PE</strong>
       </p>
       <div className="flex items-center justify-center mt-3 text-sm text-orange-600">
         <AlertTriangle size={16} className="mr-2" />

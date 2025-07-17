@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -22,35 +21,38 @@ const DailyOffersSection: React.FC = () => {
 
   const fetchOffers = useCallback(async () => {
     if (authLoading) return;
-    
+
     try {
-      console.log('Fetching daily offers for location:', { city, state });
+      console.log("Fetching daily offers for location:", { city, state });
       setLoading(true);
       setError(null);
-      
+
       // Buscar ofertas das últimas 24 horas
       const fetchedOffers = await dailyOffersService.getTodaysOffers();
-      console.log('All fetched offers (last 24h):', fetchedOffers);
-      
+      console.log("All fetched offers (last 24h):", fetchedOffers);
+
       // Filtrar ofertas por localização do usuário se disponível
       let filteredOffers = fetchedOffers;
       if (city && state) {
-        filteredOffers = fetchedOffers.filter(offer => 
-          offer.city.toLowerCase() === city.toLowerCase() && 
-          offer.state.toLowerCase() === state.toLowerCase()
+        filteredOffers = fetchedOffers.filter(
+          (offer) =>
+            offer.city.toLowerCase() === city.toLowerCase() &&
+            offer.state.toLowerCase() === state.toLowerCase()
         );
-        console.log('Filtered offers by location:', filteredOffers);
+        console.log("Filtered offers by location:", filteredOffers);
       }
-      
+
       setOffers(filteredOffers);
-      
+
       if (filteredOffers.length === 0) {
-        console.log('No offers found for current location in the last 24 hours');
+        console.log(
+          "No offers found for current location in the last 24 hours"
+        );
       }
     } catch (error) {
-      console.error('Error fetching daily offers:', error);
-      setError('Erro ao carregar ofertas do dia');
-      toast.error('Erro ao carregar ofertas do dia');
+      console.error("Error fetching daily offers:", error);
+      setError("Erro ao carregar ofertas do dia");
+      toast.error("Erro ao carregar ofertas do dia");
     } finally {
       setLoading(false);
     }
@@ -59,9 +61,9 @@ const DailyOffersSection: React.FC = () => {
   // Atualizar ofertas automaticamente a cada 5 minutos
   useEffect(() => {
     fetchOffers();
-    
+
     const interval = setInterval(() => {
-      console.log('Auto-refreshing offers...');
+      console.log("Auto-refreshing offers...");
       fetchOffers();
     }, 5 * 60 * 1000); // 5 minutos
 
@@ -74,7 +76,7 @@ const DailyOffersSection: React.FC = () => {
 
   const handleRefresh = () => {
     fetchOffers();
-    toast.success('Ofertas atualizadas!');
+    toast.success("Ofertas atualizadas!");
   };
 
   if (authLoading || loading) {
@@ -89,7 +91,7 @@ const DailyOffersSection: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p>{error}</p>
-          <button 
+          <button
             onClick={fetchOffers}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -104,15 +106,15 @@ const DailyOffersSection: React.FC = () => {
   const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 relative">
-      <DailyOffersHeader 
+    <div className="w-full max-w-6xl mx-auto space-y-6 relative dark:bg-gray-900">
+      <DailyOffersHeader
         city={city}
         actualOffersCount={offers.length}
         onRefresh={handleRefresh}
       />
-      
+
       {offers.length > 0 ? (
-        <OffersGrid 
+        <OffersGrid
           visibleOffers={visibleOffers}
           displayOffers={offers}
           isSignedIn={!!user}
@@ -124,10 +126,7 @@ const DailyOffersSection: React.FC = () => {
       )}
 
       {!user && !showAll && offers.length > 3 && (
-        <LoginOverlay 
-          totalOffers={offers.length}
-          onShowAll={handleShowAll}
-        />
+        <LoginOverlay totalOffers={offers.length} onShowAll={handleShowAll} />
       )}
     </div>
   );

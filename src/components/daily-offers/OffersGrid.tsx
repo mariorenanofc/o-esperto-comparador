@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DailyOffer } from "@/lib/types";
 import OfferCard from "./OfferCard";
@@ -17,7 +16,7 @@ const OffersGrid: React.FC<OffersGridProps> = ({
   displayOffers,
   isSignedIn,
   showAll,
-  onShowAll
+  onShowAll,
 }) => {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
