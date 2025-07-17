@@ -31,14 +31,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  useEffect(() => {
-    console.log("App mounted, attempting to show a test toast.");
-    toast.success("Teste de toast: Funcionando!", {
-      description: "Este é um toast de teste para verificar a exibição.",
-      duration: 5000,
-    });
-  }, []);
-
   // Add defensive check for React
   if (!React || !React.useEffect) {
     console.error("React hooks not properly available");
