@@ -19,6 +19,7 @@ import Privacy from "./pages/Privacy";
 import Plans from "./pages/Plans";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import UserDetailPage from "./pages/admin/UserDetailPage";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -68,6 +69,10 @@ function App() {
                   <Route path="/sign-in" element={<SignIn />} />
                   <Route path="/sign-up" element={<SignUp />} />
                   <Route path="*" element={<NotFound />} />
+                  <Route
+                    path="/admin/users/:userId"
+                    element={<UserDetailPage />}
+                  />
                 </Routes>
               </div>
             </Router>

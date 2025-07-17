@@ -14,6 +14,7 @@ import { RefreshCw, User, Crown, Calendar } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   id: string;
@@ -27,6 +28,7 @@ interface UserProfile {
 
 export const UserManagementSection = () => {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -137,20 +139,7 @@ export const UserManagementSection = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Gerenciamento de Usuários</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchUsers}
-          disabled={loading}
-        >
-          <RefreshCw
-            className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-          />
-          Atualizar
-        </Button>
-      </div>
+      {/* ... (cabeçalho e cards de resumo) */}
 
       <Card>
         <CardHeader>
@@ -171,12 +160,17 @@ export const UserManagementSection = () => {
                   <TableHead>Plano</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Cadastro</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead>Ações</TableHead>{" "}
+                  {/* Adicione uma coluna para ações se os botões não estiverem na linha clicável */}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id}>
+                  <TableRow
+                    key={user.id}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" // Torna a linha clicável
+                    onClick={() => navigate(`/admin/users/${user.id}`)} // <-- ADICIONE ESTA LINHA
+                  >
                     <TableCell className="font-medium">
                       {user.name || "Nome não informado"}
                     </TableCell>
@@ -190,63 +184,18 @@ export const UserManagementSection = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        {user.plan !== "admin" && (
-                          <Button
-                            onClick={() => handleUpdatePlan(user.id, "admin")}
-                            variant="outline"
-                            size="sm"
-                            disabled={
-                              actionLoading === user.id ||
-                              (currentUser && user.id === currentUser.id)
-                            }
-                          >
-                            <Crown className="w-4 h-4 mr-1" />
-                            Admin
-                          </Button>
-                        )}
-                        {user.plan !== "premium" && (
-                          <Button
-                            onClick={() => handleUpdatePlan(user.id, "premium")}
-                            variant="outline"
-                            size="sm"
-                            disabled={
-                              actionLoading === user.id ||
-                              (currentUser && user.id === currentUser.id)
-                            }
-                          >
-                            Premium
-                          </Button>
-                        )}
-                        {user.plan !== "pro" && (
-                          <Button
-                            onClick={() => handleUpdatePlan(user.id, "pro")}
-                            variant="outline"
-                            size="sm"
-                            disabled={
-                              actionLoading === user.id ||
-                              (currentUser && user.id === currentUser.id)
-                            } // MODIFICADO
-                          >
-                            Pro
-                          </Button>
-                        )}
-                        {user.plan !== "empresarial" && (
-                          <Button
-                            onClick={() =>
-                              handleUpdatePlan(user.id, "empresarial")
-                            }
-                            variant="outline"
-                            size="sm"
-                            disabled={
-                              actionLoading === user.id ||
-                              (currentUser && user.id === currentUser.id)
-                            } // MODIFICADO
-                          >
-                            Empresarial
-                          </Button>
-                        )}
-                      </div>
+                      {/* Botão de "Ver Detalhes" ou icone de edit, se preferir */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          // Impede que o clique na linha também ative o botão
+                          e.stopPropagation(); // Previne que o evento de clique da linha se propague
+                          navigate(`/admin/users/${user.id}`);
+                        }}
+                      >
+                        Detalhes
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
