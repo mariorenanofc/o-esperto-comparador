@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Product } from "@/lib/types";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useProductValidation = (existingProducts: Product[]) => {
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -14,22 +13,25 @@ export const useProductValidation = (existingProducts: Product[]) => {
 
   const checkForSimilarProducts = (newProductName: string): Product | null => {
     const normalizedNewName = newProductName.toLowerCase().trim();
-    
+
     // Busca por correspondência exata
     const exactMatch = existingProducts.find(
-      product => product.name.toLowerCase().trim() === normalizedNewName
+      (product) => product.name.toLowerCase().trim() === normalizedNewName
     );
-    
+
     if (exactMatch) {
       return exactMatch;
     }
 
     // Busca por correspondência parcial (uma palavra contém a outra)
-    const partialMatch = existingProducts.find(product => {
+    const partialMatch = existingProducts.find((product) => {
       const existingName = product.name.toLowerCase().trim();
-      
+
       // Verifica se o novo nome está contido no existente ou vice-versa
-      return existingName.includes(normalizedNewName) || normalizedNewName.includes(existingName);
+      return (
+        existingName.includes(normalizedNewName) ||
+        normalizedNewName.includes(existingName)
+      );
     });
 
     return partialMatch || null;
@@ -41,19 +43,20 @@ export const useProductValidation = (existingProducts: Product[]) => {
     onReplace?: (existingProduct: Product) => void
   ): boolean => {
     if (!newProductName.trim()) {
-      toast({
-        title: "Nome obrigatório",
+      toast.error("Nome obrigatório", {
         description: "O nome do produto não pode estar vazio.",
-        variant: "destructive",
+        duration: 3000,
       });
       return false;
     }
 
     const similarProduct = checkForSimilarProducts(newProductName);
-    
+
     if (similarProduct) {
-      const isExactMatch = similarProduct.name.toLowerCase().trim() === newProductName.toLowerCase().trim();
-      
+      const isExactMatch =
+        similarProduct.name.toLowerCase().trim() ===
+        newProductName.toLowerCase().trim();
+
       if (isExactMatch) {
         // Correspondência exata - oferecer substituição
         setDuplicateInfo({
@@ -67,14 +70,15 @@ export const useProductValidation = (existingProducts: Product[]) => {
             setDuplicateInfo(null);
           },
           onKeepBoth: () => {
-            toast({
-              title: "Nome deve ser único",
-              description: "Por favor, escolha um nome diferente para o produto.",
-              variant: "destructive",
+            toast.error("Nome deve ser único", {
+              // Ajuste aqui se necessário
+              description:
+                "Por favor, escolha um nome diferente para o produto.",
+              duration: 3000,
             });
             setShowDuplicateDialog(false);
             setDuplicateInfo(null);
-          }
+          },
         });
       } else {
         // Correspondência parcial - oferecer opções
@@ -92,10 +96,10 @@ export const useProductValidation = (existingProducts: Product[]) => {
             onProceed();
             setShowDuplicateDialog(false);
             setDuplicateInfo(null);
-          }
+          },
         });
       }
-      
+
       setShowDuplicateDialog(true);
       return false;
     }

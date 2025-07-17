@@ -1,12 +1,24 @@
-
 import React from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Crown, Zap, TrendingUp } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PLANS, PlanTier } from "@/lib/plans";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface UpgradePromptProps {
   isOpen: boolean;
@@ -19,10 +31,10 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
   isOpen,
   onClose,
   feature,
-  suggestedPlan = 'premium'
+  suggestedPlan = "premium",
 }) => {
   const { createCheckout, isLoading } = useSubscription();
-  const plan = PLANS.find(p => p.id === suggestedPlan);
+  const plan = PLANS.find((p) => p.id === suggestedPlan);
 
   const handleUpgrade = () => {
     createCheckout(suggestedPlan);
@@ -38,7 +50,8 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
             <span>Recurso Premium</span>
           </DialogTitle>
           <DialogDescription>
-            Você atingiu o limite do plano gratuito para: <strong>{feature}</strong>
+            Você atingiu o limite do plano gratuito para:{" "}
+            <strong>{feature}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -49,7 +62,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
               <span>Desbloqueie com {plan?.name}</span>
             </CardTitle>
             <CardDescription>
-              A partir de R$ {plan?.price.toFixed(2).replace('.', ',')}/mês
+              A partir de R$ {plan?.price.toFixed(2).replace(".", ",")}/mês
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -69,14 +82,10 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
         </Card>
 
         <div className="flex space-x-3">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={onClose} className="flex-1">
             Continuar Gratuito
           </Button>
-          <Button 
+          <Button
             onClick={handleUpgrade}
             disabled={isLoading}
             className="flex-1 bg-yellow-500 hover:bg-yellow-600"
@@ -86,8 +95,8 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
         </div>
 
         <div className="text-center">
-          <Link 
-            to="/plans" 
+          <Link
+            to="/plans"
             className="text-sm text-blue-600 hover:underline"
             onClick={onClose}
           >

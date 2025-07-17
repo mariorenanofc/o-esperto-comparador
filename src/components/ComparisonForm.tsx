@@ -7,14 +7,17 @@ import ProductModal from "./ProductModal";
 import PriceTable from "./PriceTable";
 import BestPricesByStore from "./BestPricesByStore";
 import { ComparisonData, Product, ProductFormData, Store } from "@/lib/types";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
+import { getPlanById, canUseFeature } from "@/lib/plans";
 import { comparisonService } from "@/services/comparisonService";
 
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
 const ComparisonForm: React.FC = () => {
   const { user } = useAuth();
+  const { currentPlan } = useSubscription();
   const isSignedIn = !!user;
   const [comparisonData, setComparisonData] = useState<ComparisonData>({
     products: [],
@@ -22,8 +25,12 @@ const ComparisonForm: React.FC = () => {
   });
   const [storeName, setStoreName] = useState("");
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductFormData | undefined>(undefined);
-  const [editingProductIndex, setEditingProductIndex] = useState<number | null>(null);
+  const [editingProduct, setEditingProduct] = useState<
+    ProductFormData | undefined
+  >(undefined);
+  const [editingProductIndex, setEditingProductIndex] = useState<number | null>(
+    null
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   // Carregar do localStorage ao montar
@@ -36,7 +43,7 @@ const ComparisonForm: React.FC = () => {
         if (parsed.date) parsed.date = new Date(parsed.date);
         setComparisonData(parsed);
       } catch (e) {
-        console.error('Error loading from localStorage:', e);
+        console.error("Error loading from localStorage:", e);
       }
     }
   }, []);
@@ -49,19 +56,15 @@ const ComparisonForm: React.FC = () => {
   const handleAddStore = () => {
     // Limite: 2 para não logado, ilimitado para logado
     if (!isSignedIn && comparisonData.stores.length >= 2) {
-      toast({
-        title: "Faça login para adicionar mais mercados",
+      toast.error("Faça login para adicionar mais mercados", {
         description: "Cadastre-se ou entre para poder comparar mais mercados!",
-        variant: "destructive",
+        duration: 3000, // Exemplo de opção do sonner
       });
       return;
     }
     if (!storeName.trim()) {
-      toast({
-        title: "Erro",
-        description: "O nome do mercado não pode estar vazio",
-        variant: "destructive",
-      });
+      toast.error("O nome do mercado não pode estar vazio"); // Ajuste aqui se necessário
+      return;
       return;
     }
     const newStore: Store = {
@@ -96,10 +99,10 @@ const ComparisonForm: React.FC = () => {
   const handleOpenProductModal = () => {
     // Limite: 5 produtos para não logado
     if (!isSignedIn && comparisonData.products.length >= 5) {
-      toast({
-        title: "Faça login para adicionar mais produtos",
-        description: "Cadastre-se ou entre para poder adicionar quantos produtos quiser!",
-        variant: "destructive",
+      toast.error("Faça login para adicionar mais produtos", {
+        description:
+          "Cadastre-se ou entre para poder adicionar quantos produtos quiser!",
+        duration: 3000,
       });
       return;
     }
@@ -122,7 +125,10 @@ const ComparisonForm: React.FC = () => {
 
   const handleSaveProduct = (productFormData: ProductFormData) => {
     const newProduct: Product = {
-      id: editingProductIndex !== null ? comparisonData.products[editingProductIndex].id : `product-${Date.now()}`,
+      id:
+        editingProductIndex !== null
+          ? comparisonData.products[editingProductIndex].id
+          : `product-${Date.now()}`,
       ...productFormData,
     };
 
@@ -134,17 +140,18 @@ const ComparisonForm: React.FC = () => {
         ...comparisonData,
         products: updatedProducts,
       });
-      toast({
-        title: "Produto atualizado",
+      toast.success("Produto atualizado", {
         description: `${newProduct.name} foi atualizado com sucesso.`,
+        duration: 4000,
       });
     } else {
       // Limite reaplicado do lado da modal (caso algo estranho aconteça)
       if (!isSignedIn && comparisonData.products.length >= 5) {
-        toast({
-          title: "Faça login para adicionar mais produtos",
-          description: "Cadastre-se ou entre para poder adicionar quantos produtos quiser!",
-          variant: "destructive",
+        toast.error("Faça login para adicionar mais produtos", {
+          // Ajuste aqui se necessário
+          description:
+            "Cadastre-se ou entre para poder adicionar quantos produtos quiser!",
+          duration: 3000,
         });
         return;
       }
@@ -153,29 +160,24 @@ const ComparisonForm: React.FC = () => {
         ...comparisonData,
         products: [...comparisonData.products, newProduct],
       });
-      toast({
-        title: "Produto adicionado",
-        description: `${newProduct.name} foi adicionado com sucesso.`,
-      });
+      toast.success(`Produto ${newProduct.name} adicionado com sucesso.`); // Ajuste aqui se necessário
     }
   };
 
-  const handleUpdateExistingProduct = (productToUpdate: Product, newData: ProductFormData) => {
-    const updatedProducts = comparisonData.products.map(product => 
-      product.id === productToUpdate.id 
-        ? { ...product, ...newData }
-        : product
+  const handleUpdateExistingProduct = (
+    productToUpdate: Product,
+    newData: ProductFormData
+  ) => {
+    const updatedProducts = comparisonData.products.map((product) =>
+      product.id === productToUpdate.id ? { ...product, ...newData } : product
     );
-    
+
     setComparisonData({
       ...comparisonData,
       products: updatedProducts,
     });
-    
-    toast({
-      title: "Produto atualizado",
-      description: `${newData.name} foi atualizado com sucesso.`,
-    });
+
+    toast.success(`Produto ${newData.name} atualizado com sucesso.`);
   };
 
   const handleDeleteProduct = (index: number) => {
@@ -186,66 +188,85 @@ const ComparisonForm: React.FC = () => {
       ...comparisonData,
       products: updatedProducts,
     });
-    toast({
-      title: "Produto removido",
-      description: `${productName} foi removido da lista.`,
-    });
+    toast.success(`Produto ${productName} removido da lista.`);
   };
 
   const saveComparisonData = async () => {
     if (!isSignedIn || !user) {
-      toast({
-        title: "Login necessário",
+      toast.error("Login necessário", {
         description: "Você precisa estar logado para salvar comparações.",
-        variant: "destructive",
+        duration: 3000,
       });
       return;
     }
 
     if (comparisonData.products.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Adicione pelo menos um produto para salvar a comparação.",
-        variant: "destructive",
-      });
+      toast.error("Adicione pelo menos um produto para salvar a comparação.");
       return;
     }
 
     setIsSaving(true);
     try {
+      // --- VERIFICAÇÃO DE LIMITE DO PLANO ---
+      const planDetails = getPlanById(currentPlan); // Obtém detalhes do plano atual
+      const userComparisons = await comparisonService.getUserComparisons(
+        user.id
+      ); // Busca as comparações salvas do usuário
+
+      // Verifica se o usuário pode salvar mais comparações
+      if (
+        !canUseFeature(currentPlan, "savedComparisons", userComparisons.length)
+      ) {
+        toast.error("Limite de comparações salvas atingido!", {
+          description: `Seu plano (${planDetails.name}) permite salvar até ${
+            planDetails.limitations.savedComparisons === -1
+              ? "ilimitadas"
+              : planDetails.limitations.savedComparisons
+          } comparações. Faça upgrade para salvar mais.`,
+          duration: 5000,
+          action: {
+            label: "Upgrade",
+            onClick: () => (window.location.href = "/plans"), // Redireciona para a página de planos
+          },
+        });
+        setIsSaving(false);
+        return;
+      }
+      // --- FIM DA VERIFICAÇÃO DE LIMITE ---
+
       const currentDate = new Date();
       const updatedComparisonData = {
         ...comparisonData,
         date: currentDate,
         userId: user.id,
       };
-      
+
       console.log("Saving comparison data:", updatedComparisonData);
-      
+
       // Salvar no Supabase
-      const savedComparison = await comparisonService.saveComparison(updatedComparisonData);
-      
+      const savedComparison = await comparisonService.saveComparison(
+        updatedComparisonData
+      );
+
       console.log("Comparison saved:", savedComparison);
-      
+
       // Limpar localStorage após salvar com sucesso
       localStorage.removeItem(LOCAL_STORAGE_KEY);
-      
+
       // Resetar formulário
       setComparisonData({
         products: [],
         stores: [],
       });
-      
-      toast({
-        title: "Comparação salva",
-        description: `Sua comparação de preços foi salva com sucesso no banco de dados.`,
-      });
+
+      toast.success(
+        `Sua comparação de preços foi salva com sucesso no banco de dados.`
+      );
     } catch (error) {
-      console.error('Error saving comparison:', error);
-      toast({
-        title: "Erro ao salvar",
+      console.error("Error saving comparison:", error);
+      toast.error("Erro ao salvar", {
         description: "Ocorreu um erro ao salvar a comparação. Tente novamente.",
-        variant: "destructive",
+        duration: 3000,
       });
     } finally {
       setIsSaving(false);
@@ -377,8 +398,8 @@ const ComparisonForm: React.FC = () => {
 
         {comparisonData.products.length > 0 && (
           <div className="mt-6">
-            <Button 
-              onClick={saveComparisonData} 
+            <Button
+              onClick={saveComparisonData}
               className="bg-app-green hover:bg-green-700"
               disabled={isSaving}
             >
