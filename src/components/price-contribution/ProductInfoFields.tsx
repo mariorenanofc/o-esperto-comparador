@@ -1,8 +1,13 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PriceContribution } from "@/lib/types";
 
 interface ProductInfoFieldsProps {
@@ -10,7 +15,10 @@ interface ProductInfoFieldsProps {
   setFormData: (data: PriceContribution) => void;
 }
 
-const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, setFormData }) => {
+const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({
+  formData,
+  setFormData,
+}) => {
   return (
     <>
       <div>
@@ -18,7 +26,9 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, setForm
         <Input
           id="productName"
           value={formData.productName}
-          onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, productName: e.target.value })
+          }
           placeholder="Ex: Arroz Tio João 5kg"
           required
         />
@@ -29,7 +39,9 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, setForm
         <Input
           id="storeName"
           value={formData.storeName}
-          onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, storeName: e.target.value })
+          }
           placeholder="Ex: Supermercado ABC"
           required
         />
@@ -43,12 +55,20 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, setForm
             type="number"
             min="1"
             value={formData.quantity || 1}
-            onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                quantity: parseInt(e.target.value) || 1,
+              })
+            }
           />
         </div>
         <div>
           <Label htmlFor="unit">Unidade</Label>
-          <Select value={formData.unit || 'unidade'} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+          <Select
+            value={formData.unit || "unidade"}
+            onValueChange={(value) => setFormData({ ...formData, unit: value })}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -72,8 +92,10 @@ const ProductInfoFields: React.FC<ProductInfoFieldsProps> = ({ formData, setForm
           type="number"
           step="0.01"
           min="0"
-          value={formData.price}
-          onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+          value={formData.price == 0 ? "" : formData.price}
+          onChange={(e) =>
+            setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })
+          }
           placeholder="0,00"
           required
         />

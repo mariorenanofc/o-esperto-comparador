@@ -1,8 +1,10 @@
+// src/App.tsx
 
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster, toast } from "@/components/ui/sonner"; // <-- LINHA ALTERADA
+
 import { AuthProvider } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ThemeProvider from "./components/ThemeProvider";
@@ -29,6 +31,14 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  useEffect(() => {
+    console.log("App mounted, attempting to show a test toast.");
+    toast.success("Teste de toast: Funcionando!", {
+      description: "Este é um toast de teste para verificar a exibição.",
+      duration: 5000,
+    });
+  }, []);
+
   // Add defensive check for React
   if (!React || !React.useEffect) {
     console.error("React hooks not properly available");
@@ -38,7 +48,7 @@ function App() {
           <h1 className="text-2xl font-bold text-red-600">
             Erro de carregamento
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="mt-2 text-gray-600">
             Recarregue a página para tentar novamente.
           </p>
         </div>
@@ -52,7 +62,7 @@ function App() {
         <AuthProvider>
           <SubscriptionProvider>
             <Router>
-              <Toaster />
+              <Toaster /> {/* Este agora é o Toaster do sonner */}
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
                 <Routes>
                   <Route path="/" element={<Home />} />
