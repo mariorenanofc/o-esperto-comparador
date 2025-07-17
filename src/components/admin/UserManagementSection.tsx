@@ -1,19 +1,19 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { RefreshCw, User, Crown, Calendar } from 'lucide-react';
-import { supabaseAdminService } from '@/services/supabase/adminService';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { RefreshCw, User, Crown, Calendar } from "lucide-react";
+import { supabaseAdminService } from "@/services/supabase/adminService";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserProfile {
   id: string;
@@ -26,6 +26,7 @@ interface UserProfile {
 }
 
 export const UserManagementSection = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -33,13 +34,13 @@ export const UserManagementSection = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      console.log('Fetching all users...');
-      
+      console.log("Fetching all users...");
+
       const data = await supabaseAdminService.getAllUsers();
-      console.log('Users data received:', data);
+      console.log("Users data received:", data);
       setUsers(data || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       toast.error("Erro ao carregar usuários");
     } finally {
       setLoading(false);
@@ -51,25 +52,28 @@ export const UserManagementSection = () => {
   }, []);
 
   const handleUpdatePlan = async (userId: string, newPlan: string) => {
+    if (currentUser && userId === currentUser.id) {
+      toast.error("Você não pdoe alterar o seu próprio plano por aqui.");
+      return;
+    }
+
     try {
       setActionLoading(userId);
-      console.log('Updating user plan:', { userId, newPlan });
-      
+      console.log("Updating user plan:", { userId, newPlan });
+
       await supabaseAdminService.updateUserPlan(userId, newPlan);
       toast.success(`Plano atualizado para ${newPlan}`);
-      
+
       // Update local state
-      setUsers(prev => 
-        prev.map(user => 
-          user.id === userId 
-            ? { ...user, plan: newPlan }
-            : user
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === userId ? { ...user, plan: newPlan } : user
         )
       );
-      
     } catch (error) {
-      console.error('Error updating user plan:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error("Error updating user plan:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
       toast.error(`Erro ao atualizar plano: ${errorMessage}`);
     } finally {
       setActionLoading(null);
@@ -78,23 +82,44 @@ export const UserManagementSection = () => {
 
   const getPlanBadge = (plan: string | null) => {
     switch (plan) {
-      case 'admin':
-        return <Badge variant="destructive"><Crown className="w-3 h-3 mr-1" />Admin</Badge>;
-      case 'premium':
-        return <Badge variant="default" className="bg-blue-600">Premium</Badge>;
-      case 'pro':
-        return <Badge variant="default" className="bg-purple-600">Pro</Badge>;
-      case 'empresarial':
-        return <Badge variant="default" className="bg-green-600">Empresarial</Badge>;
+      case "admin":
+        return (
+          <Badge variant="destructive">
+            <Crown className="w-3 h-3 mr-1" />
+            Admin
+          </Badge>
+        );
+      case "premium":
+        return (
+          <Badge variant="default" className="bg-blue-600">
+            Premium
+          </Badge>
+        );
+      case "pro":
+        return (
+          <Badge variant="default" className="bg-purple-600">
+            Pro
+          </Badge>
+        );
+      case "empresarial":
+        return (
+          <Badge variant="default" className="bg-green-600">
+            Empresarial
+          </Badge>
+        );
       default:
         return <Badge variant="outline">Free</Badge>;
     }
   };
 
   const getStatusBadge = (isOnline: boolean | null) => {
-    return isOnline ? 
-      <Badge variant="default" className="bg-green-600">Online</Badge> :
-      <Badge variant="outline">Offline</Badge>;
+    return isOnline ? (
+      <Badge variant="default" className="bg-green-600">
+        Online
+      </Badge>
+    ) : (
+      <Badge variant="outline">Offline</Badge>
+    );
   };
 
   if (loading) {
@@ -120,7 +145,9 @@ export const UserManagementSection = () => {
           onClick={fetchUsers}
           disabled={loading}
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+          />
           Atualizar
         </Button>
       </div>
@@ -151,7 +178,7 @@ export const UserManagementSection = () => {
                 {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
-                      {user.name || 'Nome não informado'}
+                      {user.name || "Nome não informado"}
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{getPlanBadge(user.plan)}</TableCell>
@@ -159,30 +186,64 @@ export const UserManagementSection = () => {
                     <TableCell>
                       <div className="flex items-center text-sm text-gray-500">
                         <Calendar className="w-4 h-4 mr-1" />
-                        {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                        {new Date(user.created_at).toLocaleDateString("pt-BR")}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {user.plan !== 'admin' && (
+                        {user.plan !== "admin" && (
                           <Button
-                            onClick={() => handleUpdatePlan(user.id, 'admin')}
+                            onClick={() => handleUpdatePlan(user.id, "admin")}
                             variant="outline"
                             size="sm"
-                            disabled={actionLoading === user.id}
+                            disabled={
+                              actionLoading === user.id ||
+                              (currentUser && user.id === currentUser.id)
+                            }
                           >
                             <Crown className="w-4 h-4 mr-1" />
                             Admin
                           </Button>
                         )}
-                        {user.plan !== 'premium' && (
+                        {user.plan !== "premium" && (
                           <Button
-                            onClick={() => handleUpdatePlan(user.id, 'premium')}
+                            onClick={() => handleUpdatePlan(user.id, "premium")}
                             variant="outline"
                             size="sm"
-                            disabled={actionLoading === user.id}
+                            disabled={
+                              actionLoading === user.id ||
+                              (currentUser && user.id === currentUser.id)
+                            }
                           >
                             Premium
+                          </Button>
+                        )}
+                        {user.plan !== "pro" && (
+                          <Button
+                            onClick={() => handleUpdatePlan(user.id, "pro")}
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              actionLoading === user.id ||
+                              (currentUser && user.id === currentUser.id)
+                            } // MODIFICADO
+                          >
+                            Pro
+                          </Button>
+                        )}
+                        {user.plan !== "empresarial" && (
+                          <Button
+                            onClick={() =>
+                              handleUpdatePlan(user.id, "empresarial")
+                            }
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              actionLoading === user.id ||
+                              (currentUser && user.id === currentUser.id)
+                            } // MODIFICADO
+                          >
+                            Empresarial
                           </Button>
                         )}
                       </div>
