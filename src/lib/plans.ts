@@ -1,4 +1,4 @@
-export type PlanTier = "free" | "premium" | "pro";
+export type PlanTier = "free" | "premium" | "pro" | "admin";
 
 export interface Plan {
   id: PlanTier;
@@ -96,6 +96,25 @@ export const PLANS: Plan[] = [
 ];
 
 export const getPlanById = (id: PlanTier): Plan => {
+  if (id === "admin") {
+    return {
+      id: "admin",
+      name: "Administrador",
+      price: 0,
+      priceId: "",
+      description: "Acesso total e ilimitado para administradores do sistema",
+      features: ["Todas as funcionalidades ilimitadas"],
+      limitations: {
+        comparisonsPerMonth: -1,
+        savedComparisons: -1,
+        reportsHistory: -1,
+        priceAlerts: -1,
+        maxStoresPerComparison: -1,
+        maxProductsPerComparison: -1,
+        dailyOffersVisible: -1,
+      },
+    };
+  }
   return PLANS.find((plan) => plan.id === id) || PLANS[0];
 };
 
@@ -104,6 +123,9 @@ export const canUseFeature = (
   feature: keyof Plan["limitations"],
   currentUsage: number
 ): boolean => {
+  if (userPlan == "admin") {
+    return true;
+  }
   const plan = getPlanById(userPlan);
   const limit = plan.limitations[feature];
 
