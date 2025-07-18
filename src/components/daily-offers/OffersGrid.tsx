@@ -1,43 +1,42 @@
 import React from "react";
 import { DailyOffer } from "@/lib/types";
 import OfferCard from "./OfferCard";
-import LoginOverlay from "./LoginOverlay";
 
 interface OffersGridProps {
   visibleOffers: DailyOffer[];
   displayOffers: DailyOffer[];
-  isSignedIn: boolean;
-  showAll: boolean;
-  onShowAll: () => void;
+  isSignedIn: boolean; // Prop que vem de DailyOffersSection
+  isFreePlanLoggedIn: boolean;
+  maxDailyOffersVisible: number;
+  showAllForGuest: boolean; // Prop que vem de DailyOffersSection
 }
 
 const OffersGrid: React.FC<OffersGridProps> = ({
   visibleOffers,
   displayOffers,
-  isSignedIn,
-  showAll,
-  onShowAll,
+  isSignedIn, // Uso da prop
+  isFreePlanLoggedIn,
+  maxDailyOffersVisible,
+  showAllForGuest, // Uso da prop
 }) => {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
-      {visibleOffers.map((offer, index) => (
-        <OfferCard
-          key={offer.id}
-          offer={offer}
-          index={index}
-          isSignedIn={isSignedIn}
-          showAll={showAll}
-          isBlurred={!isSignedIn && index >= 3 && !showAll}
-        />
-      ))}
+      {displayOffers.map((offer, index) => {
+        const isBlurred =
+          (!isSignedIn && index >= 3 && !showAllForGuest) || // Uso das props
+          (isFreePlanLoggedIn && index >= maxDailyOffersVisible);
 
-      {/* Overlay de blur para usuários não logados */}
-      {!isSignedIn && !showAll && displayOffers.length > 3 && (
-        <LoginOverlay
-          totalOffers={displayOffers.length}
-          onShowAll={onShowAll}
-        />
-      )}
+        return (
+          <OfferCard
+            key={offer.id}
+            offer={offer}
+            index={index}
+            isSignedIn={isSignedIn} // Passa a prop para OfferCard
+            isBlurred={isBlurred}
+            showAll={true}
+          />
+        );
+      })}
     </div>
   );
 };

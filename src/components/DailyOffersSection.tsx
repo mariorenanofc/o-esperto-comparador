@@ -8,16 +8,23 @@ import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
 import LoadingState from "./daily-offers/LoadingState";
 import LoginOverlay from "./daily-offers/LoginOverlay";
 import OffersGrid from "./daily-offers/OffersGrid";
-import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/useSubscription";
+import { getPlanById } from "@/lib/plans";
+import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
+import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
 
 const DailyOffersSection: React.FC = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, profile } = useAuth();
+  const { currentPlan } = useSubscription();
   const { city, state } = useGeolocation();
   const [offers, setOffers] = useState<DailyOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [showAllForGuest, setShowAllForGuest] = useState(false);
+
+  // REMOVIDO: const isSignedIn = !!user; <-- Não existe mais aqui
 
   const fetchOffers = useCallback(async () => {
     if (authLoading) return;
@@ -27,11 +34,8 @@ const DailyOffersSection: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Buscar ofertas das últimas 24 horas
       const fetchedOffers = await dailyOffersService.getTodaysOffers();
-      console.log("All fetched offers (last 24h):", fetchedOffers);
 
-      // Filtrar ofertas por localização do usuário se disponível
       let filteredOffers = fetchedOffers;
       if (city && state) {
         filteredOffers = fetchedOffers.filter(
@@ -39,7 +43,6 @@ const DailyOffersSection: React.FC = () => {
             offer.city.toLowerCase() === city.toLowerCase() &&
             offer.state.toLowerCase() === state.toLowerCase()
         );
-        console.log("Filtered offers by location:", filteredOffers);
       }
 
       setOffers(filteredOffers);
@@ -58,7 +61,6 @@ const DailyOffersSection: React.FC = () => {
     }
   }, [authLoading, city, state]);
 
-  // Atualizar ofertas automaticamente a cada 5 minutos
   useEffect(() => {
     fetchOffers();
 
@@ -70,8 +72,8 @@ const DailyOffersSection: React.FC = () => {
     return () => clearInterval(interval);
   }, [fetchOffers]);
 
-  const handleShowAll = () => {
-    setShowAll(true);
+  const handleShowAllForGuest = () => {
+    setShowAllForGuest(true);
   };
 
   const handleRefresh = () => {
@@ -102,11 +104,42 @@ const DailyOffersSection: React.FC = () => {
     );
   }
 
-  // Calcular ofertas visíveis
-  const visibleOffers = user || showAll ? offers : offers.slice(0, 3);
+  // --- ESTA É A NOVA DECLARAÇÃO E USO CONSISTENTE ---
+  const currentUserIsSignedIn = !!user; // Usamos este nome agora
+  const planDetails = getPlanById(currentPlan);
+  const maxDailyOffersVisibleByPlan =
+    currentUserIsSignedIn && planDetails.limitations.dailyOffersVisible !== -1
+      ? planDetails.limitations.dailyOffersVisible || 0
+      : Infinity;
+
+  const guestVisibleLimit = 3;
+
+  const totalOffersAvailable = offers.length;
+  let offersToDisplayInGrid: DailyOffer[] = [];
+  let showLoginOverlayForGuests = false;
+  let showUpgradeOverlayForFreeUser = false;
+  const offersBlurredForFree = Math.max(
+    0,
+    offers.length - maxDailyOffersVisibleByPlan
+  );
+
+  if (!currentUserIsSignedIn) {
+    // Uso do novo nome
+    offersToDisplayInGrid = showAllForGuest
+      ? offers
+      : offers.slice(0, guestVisibleLimit);
+    showLoginOverlayForGuests =
+      !showAllForGuest && offers.length > guestVisibleLimit;
+  } else if (currentPlan === "free") {
+    offersToDisplayInGrid = offers.slice(0, maxDailyOffersVisibleByPlan);
+    showUpgradeOverlayForFreeUser = offersBlurredForFree > 0;
+  } else {
+    offersToDisplayInGrid = offers;
+  }
+  // --- FIM DA CONSISTÊNCIA ---
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 relative dark:bg-gray-900">
+    <div className="w-full max-w-6xl mx-auto space-y-6 relative">
       <DailyOffersHeader
         city={city}
         actualOffersCount={offers.length}
@@ -115,18 +148,45 @@ const DailyOffersSection: React.FC = () => {
 
       {offers.length > 0 ? (
         <OffersGrid
-          visibleOffers={visibleOffers}
+          visibleOffers={offersToDisplayInGrid}
           displayOffers={offers}
-          isSignedIn={!!user}
-          showAll={showAll}
-          onShowAll={handleShowAll}
+          isSignedIn={currentUserIsSignedIn} // Passa o novo nome como prop
+          isFreePlanLoggedIn={currentUserIsSignedIn && currentPlan === "free"} // Usa o novo nome aqui
+          maxDailyOffersVisible={maxDailyOffersVisibleByPlan}
+          showAllForGuest={showAllForGuest}
         />
       ) : (
         <ContributeCallToAction />
       )}
 
-      {!user && !showAll && offers.length > 3 && (
-        <LoginOverlay totalOffers={offers.length} onShowAll={handleShowAll} />
+      {showLoginOverlayForGuests && (
+        <LoginOverlay
+          totalOffers={totalOffersAvailable}
+          onShowAll={handleShowAllForGuest}
+        />
+      )}
+
+      {showUpgradeOverlayForFreeUser && (
+        <div className="absolute inset-0 flex items-end justify-center pb-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 text-center shadow-lg max-w-md">
+            <h3 className="text-lg font-semibold mb-2 text-app-blue">
+              Desbloqueie Todas as Ofertas!
+            </h3>
+            <p className="text-gray-600 mb-4 text-sm">
+              Seu plano Gratuito exibe apenas {maxDailyOffersVisibleByPlan} de{" "}
+              {totalOffersAvailable} ofertas diárias. Existem **mais{" "}
+              {offersBlurredForFree}** ofertas disponíveis! Faça upgrade para
+              ver todas e economizar ainda mais!
+            </p>
+            <div className="space-y-2">
+              <Link to="/plans">
+                <Button className="w-full bg-app-green hover:bg-green-600">
+                  Ver Planos e Fazer Upgrade
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

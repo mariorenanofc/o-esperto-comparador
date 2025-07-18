@@ -336,7 +336,7 @@ const UserDetailPage: React.FC = () => {
           {/* Seção de Exclusão de Usuário */}
           <Card className="bg-white dark:bg-gray-800 border-red-300">
             <CardHeader>
-              <CardTitle className="text-red-600">Zona de Perigo</CardTitle>
+              <CardTitle className="text-red-600">Atenção!</CardTitle>
               <CardDescription>
                 Excluir este usuário permanentemente. Esta ação não pode ser
                 desfeita.

@@ -48,43 +48,31 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     return bestStoreId;
   };
 
-  // Economia máxima comprando cada produto onde está mais barato (ignorar produtos sem preço em todos os mercados)
-  const calculateOptimalSavings = () => {
+  // Função para calcular o total ótimo (comprando cada produto no mercado mais barato)
+  const calculateOptimalTotal = (): number => {
     let optimalTotal = 0;
-    let highestTotal = 0;
-
-    // Só considera produtos que têm pelo menos um preço válido
-    const productsWithPrice = products.filter((prod, idx) =>
-      findBestPriceStore(idx)
-    );
-
-    productsWithPrice.forEach((product, index) => {
-      // Aqui está correto pois filtered
+    products.forEach((product) => {
       const bestStoreId = findBestPriceStore(products.indexOf(product));
-      if (bestStoreId) {
+      if (bestStoreId && typeof product.prices[bestStoreId] === "number") {
         optimalTotal += product.prices[bestStoreId]! * product.quantity;
       }
     });
-
-    // Encontrar o maior total entre todos mercados para mostrar economia possível
-    const totalsByStore = calculateTotalByStore();
-    highestTotal = Math.max(...Object.values(totalsByStore));
-
-    return highestTotal - optimalTotal;
+    return optimalTotal;
   };
 
-  const totals = calculateTotalByStore();
+  const totals = calculateTotalByStore(); // Totais por mercado
+  const optimalTotal = calculateOptimalTotal(); // Total se comprado no mais barato
 
-  // Filtra somente mercados existentes
-  const validStoreIds = stores.map((s) => s.id);
-  const cheapestStoreId = validStoreIds.reduce(
-    (acc: string | undefined, storeId) => {
-      // Desconsidera se não há produtos para o mercado
-      if (acc === undefined) return storeId;
-      return totals[storeId] < totals[acc] ? storeId : acc;
-    },
-    undefined
-  );
+  const highestTotal = Math.max(...Object.values(totals)); // Maior total entre os mercados
+  const averageTotal =
+    Object.values(totals).reduce((sum, current) => sum + current, 0) /
+    Object.values(totals).length; // Média dos totais dos mercados
+
+  const cheapestStoreId = stores.reduce((acc: string | undefined, store) => {
+    if (Object.keys(totals).length === 0) return undefined; // Nenhuma loja com produtos
+    if (acc === undefined) return store.id;
+    return totals[store.id] < totals[acc] ? store.id : acc;
+  }, undefined);
 
   return (
     <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
@@ -94,7 +82,9 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
         stores={stores}
         totals={totals}
         cheapestStoreId={cheapestStoreId}
-        calculateOptimalSavings={calculateOptimalSavings}
+        optimalTotal={optimalTotal}
+        highestTotal={highestTotal}
+        averageTotal={averageTotal}
       />
       <ProductPriceTable
         products={products}
