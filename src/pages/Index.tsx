@@ -196,7 +196,7 @@ const Index: React.FC = () => {
                         <div className="flex flex-col items-center">
                           {" "}
                           {/* Removido posicionamento relativo */}
-                          <div className="flex items-center justify-center h-24 w-24 rounded-full border-2 border-app-blue bg-app-blue/10 text-app-blue text-4xl font-bold flex-shrink-0">
+                          <div className="flex items-center justify-center h-28 w-28 rounded-full border-2 border-app-blue bg-app-blue/10 text-app-blue text-5xl font-bold flex-shrink-0">
                             {userDashboardStats.daysOnPlatform}
                           </div>
                           <p className="text-sm font-bold text-gray-600 dark:text-gray-300 mt-2 text-center">
@@ -209,7 +209,7 @@ const Index: React.FC = () => {
                           {/* max-w-sm para controlar largura, mt-6 para subir um pouco e aproximar */}
                           {/* Total de Feedbacks (Esquerda - Verde) */}
                           <div className="flex flex-col items-center">
-                            <div className="flex items-center justify-center h-20 w-20 rounded-full border-2 border-app-green bg-app-green/10 text-app-green text-3xl font-bold flex-shrink-0">
+                            <div className="flex items-center justify-center h-24 w-24 rounded-full border-2 border-app-green bg-app-green/10 text-app-green text-3xl font-bold flex-shrink-0">
                               {userDashboardStats.totalFeedbacks}
                             </div>
                             <p className="text- font-bold text-gray-600 dark:text-gray-300 mt-2 text-center">
@@ -218,7 +218,7 @@ const Index: React.FC = () => {
                           </div>
                           {/* Economia Total Estimada (Direita - Amarelo) */}
                           <div className="flex flex-col items-center">
-                            <div className="flex items-center justify-center h-20 w-20 rounded-full border-2 border-yellow-500 bg-yellow-500/10 text-yellow-500 text-2xl font-bold flex-shrink-0">
+                            <div className="flex items-center justify-center h-24 w-24 rounded-full border-2 border-yellow-500 bg-yellow-500/10 text-yellow-500 text-2xl font-bold flex-shrink-0 text-center">
                               R${" "}
                               {userDashboardStats.estimatedTotalSavings.toFixed(
                                 0

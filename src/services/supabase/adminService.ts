@@ -1,3 +1,5 @@
+// src/services/supabase/adminService.ts
+
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
@@ -126,6 +128,37 @@ export const supabaseAdminService = {
       throw error;
     }
   },
+
+  // --- INÍCIO DA FUNÇÃO deleteUserAuthAndProfile COM AUTORIZAÇÃO ---
+  async deleteUserAuthAndProfile(userId: string, accessToken: string): Promise<void> { // <-- Adicionado accessToken
+    console.log(`=== ADMIN SERVICE: INVOCANDO EDGE FUNCTION PARA DELETAR USUÁRIO: ${userId} ===`);
+
+    try {
+      const SUPABASE_URL = "https://diqdsmrlhldanxxrtozl.supabase.co"; // URL base do seu projeto Supabase
+      const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/delete-user`;
+
+      const response = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`, // <-- AQUI! Adicionando o token de autorização
+        },
+        body: JSON.stringify({ userId: userId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Erro ao chamar Edge Function:', response.status, errorData);
+        throw new Error(`Erro ao deletar usuário: ${errorData.error || 'Erro desconhecido'}`);
+      }
+
+      console.log('✅ Usuário e perfil deletados com sucesso via Edge Function.');
+    } catch (error) {
+      console.error('❌ Erro no serviço de deleção de usuário:', error);
+      throw error;
+    }
+  },
+  // --- FIM DA FUNÇÃO deleteUserAuthAndProfile COM AUTORIZAÇÃO ---
 
   async incrementComparisonsMade(userId: string): Promise<void> {
     console.log(

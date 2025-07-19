@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth"; // <-- Importado para pegar o session/token
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Crown, Trash2, User } from "lucide-react";
-import { Badge } from "@/components/ui/badge"; // Importe Badge
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"; // Importe AlertDialog
+} from "@/components/ui/alert-dialog";
 
 interface UserProfile {
   id: string;
@@ -38,12 +38,15 @@ interface UserProfile {
 }
 
 const UserDetailPage: React.FC = () => {
-  const { userId } = useParams<{ userId: string }>(); // Obtém o userId da URL
+  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth(); // Usuário logado
+  // --- INÍCIO DA MODIFICAÇÃO AQUI ---
+  const { user: currentUser, session } = useAuth(); // <-- Obtendo o session para pegar o token
+  const accessToken = session?.access_token || ""; // Extrai o token de acesso
+  // --- FIM DA MODIFICAÇÃO AQUI ---
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState<string | null>(null); // Para gerenciar loading de ações
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -55,15 +58,15 @@ const UserDetailPage: React.FC = () => {
     setLoading(true);
     try {
       console.log(`Fetching user profile for: ${id}`);
-      const users = await supabaseAdminService.getAllUsers(); // Busca todos os usuários
-      const foundUser = users.find((u) => u.id === id); // Encontra o usuário pelo ID
+      const users = await supabaseAdminService.getAllUsers();
+      const foundUser = users.find((u) => u.id === id);
 
       if (foundUser) {
         setUserProfile(foundUser);
         console.log("User profile fetched:", foundUser);
       } else {
         toast.error("Usuário não encontrado.");
-        navigate("/admin"); // Redireciona de volta se o usuário não for encontrado
+        navigate("/admin");
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -89,7 +92,7 @@ const UserDetailPage: React.FC = () => {
           userProfile.name || userProfile.email
         } atualizado para ${newPlan}.`
       );
-      setUserProfile((prev) => (prev ? { ...prev, plan: newPlan } : null)); // Atualiza estado local
+      setUserProfile((prev) => (prev ? { ...prev, plan: newPlan } : null));
     } catch (error) {
       console.error("Error updating user plan:", error);
       toast.error("Erro ao atualizar plano.");
@@ -106,23 +109,34 @@ const UserDetailPage: React.FC = () => {
       return;
     }
 
-    try {
-      setActionLoading("delete");
-      // Aqui, você chamaria um serviço de admin para deletar o usuário
-      // Por exemplo: await supabaseAdminService.deleteUser(userId);
-      // Supondo que supabaseAdminService.deleteUser existe e apaga de auth.users
-      // Atualmente, não há um deleteUser no adminService, então seria um TODO ou direto no SQL/Auth API
-      toast.info(
-        "Funcionalidade de exclusão de usuário a ser implementada no backend (Admin Service)."
-      ); // Feedback temporário
-      console.log(`Solicitação de exclusão para o usuário: ${userId}`);
+    // --- INÍCIO DA MODIFICAÇÃO AQUI ---
+    if (!accessToken) {
+      // Verifica se há um token antes de prosseguir
+      toast.error("Você não está autenticado. Faça login novamente.");
+      setActionLoading(null);
+      return;
+    }
+    // --- FIM DA MODIFICAÇÃO AQUI ---
 
-      // Se a exclusão fosse bem-sucedida no backend, você redirecionaria:
-      // toast.success(`Usuário ${userProfile.name || userProfile.email} excluído com sucesso.`);
-      // navigate("/admin/users");
+    setActionLoading("delete"); // Ativa o loading
+
+    try {
+      console.log(`Iniciando deleção para o usuário: ${userId}`);
+      // --- INÍCIO DA MODIFICAÇÃO AQUI ---
+      await supabaseAdminService.deleteUserAuthAndProfile(userId, accessToken); // <-- Passando o token
+      // --- FIM DA MODIFICAÇÃO AQUI ---
+
+      toast.success(
+        `Usuário ${userProfile.name || userProfile.email} excluído com sucesso.`
+      );
+      navigate("/admin/users");
     } catch (error) {
       console.error("Error deleting user:", error);
-      toast.error("Erro ao excluir usuário.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Erro desconhecido ao excluir usuário.";
+      toast.error(`Erro ao excluir usuário: ${errorMessage}`);
     } finally {
       setActionLoading(null);
     }
