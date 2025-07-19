@@ -1,23 +1,22 @@
-
-import { supabase } from '@/lib/supabase';
-import { SuggestionData } from '@/services/contributionService';
+import { supabase } from "@/integrations/supabase/client";
+import { SuggestionData } from "@/services/contributionService";
 
 export const supabaseContributionService = {
   async submitSuggestion(userId: string, data: SuggestionData) {
     const { data: suggestion, error } = await supabase
-      .from('suggestions')
+      .from("suggestions")
       .insert({
         user_id: userId,
         title: data.title,
         description: data.description,
         category: data.category,
-        status: 'open',
+        status: "open",
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error submitting suggestion:', error);
+      console.error("Error submitting suggestion:", error);
       throw error;
     }
 
@@ -26,13 +25,13 @@ export const supabaseContributionService = {
 
   async getUserSuggestions(userId: string) {
     const { data, error } = await supabase
-      .from('suggestions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .from("suggestions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching user suggestions:', error);
+      console.error("Error fetching user suggestions:", error);
       throw error;
     }
 
@@ -41,15 +40,17 @@ export const supabaseContributionService = {
 
   async getAllSuggestions() {
     const { data, error } = await supabase
-      .from('suggestions')
-      .select(`
+      .from("suggestions")
+      .select(
+        `
         *,
         profile:profiles(name, email)
-      `)
-      .order('created_at', { ascending: false });
+      `
+      )
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching all suggestions:', error);
+      console.error("Error fetching all suggestions:", error);
       throw error;
     }
 
@@ -57,18 +58,18 @@ export const supabaseContributionService = {
   },
 
   async updateSuggestionStatus(
-    suggestionId: string, 
-    status: 'open' | 'in-review' | 'implemented' | 'closed'
+    suggestionId: string,
+    status: "open" | "in-review" | "implemented" | "closed"
   ) {
     const { data, error } = await supabase
-      .from('suggestions')
+      .from("suggestions")
       .update({ status })
-      .eq('id', suggestionId)
+      .eq("id", suggestionId)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating suggestion status:', error);
+      console.error("Error updating suggestion status:", error);
       throw error;
     }
 

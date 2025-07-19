@@ -149,9 +149,11 @@ const Privacy: React.FC = () => {
             </p>
           </section>
 
-          <div className="border-t pt-6 mt-8">
-            <p className="text-sm text-gray-500">
-              Última atualização: {new Date().toLocaleDateString("pt-BR")}
+          <div className="border-t pt-6 mt-8 text-center">
+            {/* Ano atualizado automaticamente */}
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              © {new Date().getFullYear()} Comparador Online. Todos os direitos
+              reservados.
             </p>
           </div>
         </div>

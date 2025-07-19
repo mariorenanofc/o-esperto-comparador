@@ -97,7 +97,7 @@ export interface ContributionStatus {
   price: number;
   city: string;
   state: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at?: string;
   reviewer_id?: string;
@@ -111,7 +111,7 @@ export interface PlanLimits {
   features: string[];
 }
 
-export type PlanTier = 'free' | 'premium' | 'pro';
+export type PlanTier = "free" | "premium" | "pro";
 
 // Additional types needed for the application
 export interface ComparisonData {
@@ -149,7 +149,7 @@ export interface UserFeedback {
   title: string;
   description: string;
   category: string;
-  status: 'new' | 'reviewed' | 'resolved';
+  status: "open" | "in-review" | "implemented" | "closed";
   created_at: string;
   user_name?: string;
   user_email?: string;

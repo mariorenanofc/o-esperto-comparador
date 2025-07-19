@@ -1,18 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { PlanTier } from "@/lib/plans";
 
 type UserProfile = {
   id: string;
   email: string;
   name: string | null;
-  plan: string | null;
+  plan: PlanTier | null;
   created_at: string | null;
   updated_at: string | null;
   last_activity: string | null;
   is_online: boolean | null;
-  comparisons_made_this_month: number | null; // <-- ADICIONADO
-  last_comparison_reset_month: number | null; // <-- ADICIONADO
+  comparisons_made_this_month: number | null;
+  last_comparison_reset_month: number | null;
 };
 
 type AuthContextType = {

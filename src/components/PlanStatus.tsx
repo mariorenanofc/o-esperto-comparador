@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -15,17 +15,17 @@ import { getPlanById } from "@/lib/plans";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { comparisonService } from "@/services/comparisonService";
-import { useEffect, useState } from "react";
 
-export const PlanStatus: React.FC<PlanStatusProps> = () => {
-  const { user, profile } = useAuth(); // Linha 23 (no meu contexto)
+export const PlanStatus: React.FC<any> = () => {
+  // Ajuste 'any' para o tipo correto se houver PlanStatusProps
+  const { user, profile } = useAuth();
   const { currentPlan, manageSubscription, isLoading } = useSubscription();
   const plan = getPlanById(currentPlan);
 
   const [userCurrentUsage, setUserCurrentUsage] = useState({
     comparisonsMade: 0,
     savedComparisons: 0,
-    priceAlerts: 0,
+    priceAlerts: 0, // Mantenha este valor como 0
   });
   const [loadingUsage, setLoadingUsage] = useState(true);
 
@@ -37,28 +37,29 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
       }
       setLoadingUsage(true);
       try {
-        // profile?.comparisons_made_this_month está OK após a correção em useAuth.tsx
         const comparisonsMade = profile?.comparisons_made_this_month || 0;
         const savedComparisonsList = await comparisonService.getUserComparisons(
           user.id
         );
+        // Remova a linha abaixo:
+        // const activePriceAlerts = await priceAlertService.getUserPriceAlerts(user.id, 'active');
 
         setUserCurrentUsage({
           comparisonsMade: comparisonsMade,
           savedComparisons: savedComparisonsList.length,
-          priceAlerts: 0, // Alertas de preço ainda não são rastreados no banco, manter 0
+          priceAlerts: 0, // Mantenha este valor como 0
         });
       } catch (error) {
         console.error("Erro ao carregar uso do usuário:", error);
       } finally {
-        setLoadingUsage(false);
+        setLoadingUsage(false); // Era setLoadingUsage(false);
       }
     };
 
     fetchUserUsage();
     const interval = setInterval(fetchUserUsage, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [user, profile, currentPlan]); // Depende de user, profile e currentPlan
+  }, [user, profile, currentPlan]);
 
   const getUsagePercentage = (current: number, limit: number | undefined) => {
     if (limit === -1 || limit === undefined || limit === 0) return 0;
@@ -83,9 +84,9 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
 
   return (
     <Card className="dark:bg-gray-800">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 py-4">
         <div>
-          <CardTitle className="flex items-center space-x-2">
+          <CardTitle className="flex items-center space-x-2 py-3">
             <Crown className="w-5 h-5 text-yellow-500" />
             <span>Plano {plan.name}</span>
           </CardTitle>
@@ -106,7 +107,7 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
       <CardContent className="space-y-4">
         {/* Comparações Feitas (comparisonsPerMonth) */}
         <div>
-          <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
+          <div className="flex justify-between font-semibold text-sm pt-4 mb-2 text-gray-700 dark:text-gray-300">
             <span>Comparações feitas este mês</span>
             <span>
               {userCurrentUsage.comparisonsMade}/
@@ -128,7 +129,7 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
 
         {/* Comparações Salvas (savedComparisons) */}
         <div>
-          <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
+          <div className="flex justify-between font-semibold text-sm pt-4 mb-2 text-gray-700 dark:text-gray-300">
             <span>Comparações salvas (histórico)</span>
             <span>
               {userCurrentUsage.savedComparisons}/
@@ -150,7 +151,7 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
 
         {/* Alertas de Preço (priceAlerts) */}
         <div>
-          <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
+          <div className="flex justify-between font-semibold text-sm pt-4 mb-2 text-gray-700 dark:text-gray-300">
             <span>Alertas de preço</span>
             <span>
               {userCurrentUsage.priceAlerts}/
@@ -171,9 +172,9 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
         </div>
 
         {/* Ofertas Diárias Visíveis (dailyOffersVisible) */}
-        {plan.limitations.dailyOffersVisible !== Infinity && ( // Apenas mostra se houver limite ou não for Pro/Premium ilimitado
+        {plan.limitations.dailyOffersVisible !== Infinity && (
           <div>
-            <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
+            <div className="flex justify-between text-sm pt-4 mb-2 text-gray-700 dark:text-gray-300">
               <span>Ofertas diárias visíveis</span>
               <span>
                 {plan.limitations.dailyOffersVisible === -1
@@ -182,7 +183,6 @@ export const PlanStatus: React.FC<PlanStatusProps> = () => {
                 / Total na cidade
               </span>
             </div>
-            {/* Não há progresso aqui, pois é um limite fixo para visualização */}
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Você vê até{" "}
               {plan.limitations.dailyOffersVisible === -1

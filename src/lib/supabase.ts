@@ -1,12 +1,13 @@
-
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 // Para desenvolvimento local, usando valores placeholder
 // No ambiente de produção, essas variáveis devem ser configuradas adequadamente
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL || "https://your-project.supabase.co";
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY || "your-anon-key";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+//export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Tipos para o banco de dados
 export interface Database {
@@ -17,7 +18,7 @@ export interface Database {
           id: string;
           email: string;
           name: string | null;
-          plan: 'free' | 'premium' | 'pro' | 'empresarial';
+          plan: "free" | "premium" | "pro" | "empresarial";
           created_at: string;
           updated_at: string;
         };
@@ -25,7 +26,7 @@ export interface Database {
           id: string;
           email: string;
           name?: string | null;
-          plan?: 'free' | 'premium' | 'pro' | 'empresarial';
+          plan?: "free" | "premium" | "pro" | "empresarial";
           created_at?: string;
           updated_at?: string;
         };
@@ -33,7 +34,7 @@ export interface Database {
           id?: string;
           email?: string;
           name?: string | null;
-          plan?: 'free' | 'premium' | 'pro' | 'empresarial';
+          plan?: "free" | "premium" | "pro" | "empresarial";
           created_at?: string;
           updated_at?: string;
         };
@@ -223,8 +224,8 @@ export interface Database {
           user_id: string;
           title: string;
           description: string;
-          category: 'improvement' | 'feature' | 'bug' | 'other';
-          status: 'open' | 'in-review' | 'implemented' | 'closed';
+          category: "improvement" | "feature" | "bug" | "other";
+          status: "open" | "in-review" | "implemented" | "closed";
           created_at: string;
           updated_at: string;
         };
@@ -233,8 +234,8 @@ export interface Database {
           user_id: string;
           title: string;
           description: string;
-          category: 'improvement' | 'feature' | 'bug' | 'other';
-          status?: 'open' | 'in-review' | 'implemented' | 'closed';
+          category: "improvement" | "feature" | "bug" | "other";
+          status?: "open" | "in-review" | "implemented" | "closed";
           created_at?: string;
           updated_at?: string;
         };
@@ -243,8 +244,8 @@ export interface Database {
           user_id?: string;
           title?: string;
           description?: string;
-          category?: 'improvement' | 'feature' | 'bug' | 'other';
-          status?: 'open' | 'in-review' | 'implemented' | 'closed';
+          category?: "improvement" | "feature" | "bug" | "other";
+          status?: "open" | "in-review" | "implemented" | "closed";
           created_at?: string;
           updated_at?: string;
         };

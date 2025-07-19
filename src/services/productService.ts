@@ -1,5 +1,4 @@
-
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ProductData {
   name: string;
@@ -10,12 +9,12 @@ export interface ProductData {
 export const productService = {
   async getProducts() {
     const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name');
+      .from("products")
+      .select("*")
+      .order("name");
 
     if (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
       throw error;
     }
 
@@ -24,13 +23,13 @@ export const productService = {
 
   async createProduct(productData: ProductData) {
     const { data, error } = await supabase
-      .from('products')
+      .from("products")
       .insert(productData)
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating product:', error);
+      console.error("Error creating product:", error);
       throw error;
     }
 
@@ -39,14 +38,14 @@ export const productService = {
 
   async updateProduct(id: string, productData: Partial<ProductData>) {
     const { data, error } = await supabase
-      .from('products')
+      .from("products")
       .update(productData)
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating product:', error);
+      console.error("Error updating product:", error);
       throw error;
     }
 
@@ -54,13 +53,10 @@ export const productService = {
   },
 
   async deleteProduct(id: string) {
-    const { error } = await supabase
-      .from('products')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from("products").delete().eq("id", id);
 
     if (error) {
-      console.error('Error deleting product:', error);
+      console.error("Error deleting product:", error);
       throw error;
     }
   },
