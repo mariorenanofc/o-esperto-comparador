@@ -35,7 +35,10 @@ export const supabaseContributionService = {
       throw error;
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as "open" | "in-review" | "implemented" | "closed"
+    }));
   },
 
   async getAllSuggestions() {
@@ -54,7 +57,10 @@ export const supabaseContributionService = {
       throw error;
     }
 
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as "open" | "in-review" | "implemented" | "closed"
+    }));
   },
 
   async updateSuggestionStatus(
