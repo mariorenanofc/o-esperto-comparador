@@ -8,17 +8,20 @@ import { Toaster, toast } from "@/components/ui/sonner"; // <-- LINHA ALTERADA
 import { AuthProvider } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ThemeProvider from "./components/ThemeProvider";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import Home from "./pages/Index";
 import Comparison from "./pages/Comparison";
 import Contribute from "./pages/Contribute";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Plans from "./pages/Plans";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import Admin from "./pages/Admin";
 import UserDetailPage from "./pages/admin/UserDetailPage";
 
 // Create QueryClient with proper configuration
@@ -59,11 +62,12 @@ function App() {
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/comparison" element={<Comparison />} />
-                  <Route path="/contribute" element={<Contribute />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/plans" element={<Plans />} />
-                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/comparison" element={<ProtectedRoute><Comparison /></ProtectedRoute>} />
+                  <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
+                  <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
+                  <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/sign-in" element={<SignIn />} />
@@ -71,7 +75,7 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                   <Route
                     path="/admin/users/:userId"
-                    element={<UserDetailPage />}
+                    element={<AdminRoute><UserDetailPage /></AdminRoute>}
                   />
                 </Routes>
               </div>

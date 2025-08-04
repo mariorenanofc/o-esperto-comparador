@@ -84,6 +84,12 @@ const Navbar = () => {
 
             {user ? (
               <div className="flex items-center space-x-3">
+                <Link to="/profile">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Perfil
+                  </Button>
+                </Link>
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
                   <AvatarFallback className="bg-app-green text-white text-sm">
@@ -165,24 +171,34 @@ const Navbar = () => {
               )}
 
               {user ? (
-                <div className="flex items-center space-x-3 pt-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                    <AvatarFallback className="bg-app-green text-white text-sm">
-                      {getUserInitials(user.email || "")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{user.email}</span>
-                  <Button
-                    onClick={() => {
-                      handleSignOut();
-                      setIsMenuOpen(false);
-                    }}
-                    variant="outline"
-                    size="sm"
+                <div className="flex flex-col space-y-3">
+                  <Link 
+                    to="/profile" 
+                    className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
                   >
-                    Sair
-                  </Button>
+                    <User className="w-4 h-4" />
+                    Meu Perfil
+                  </Link>
+                  <div className="flex items-center space-x-3 pt-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                      <AvatarFallback className="bg-app-green text-white text-sm">
+                        {getUserInitials(user.email || "")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{user.email}</span>
+                    <Button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMenuOpen(false);
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Sair
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
