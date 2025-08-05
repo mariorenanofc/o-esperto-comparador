@@ -314,103 +314,122 @@ const Index: React.FC = () => {
         )}
 
         <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-app-dark dark:text-white">
-            Como Funciona
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
+            ✨ Como Funciona ✨
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto px-4">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             O Comparador Online ajuda você a encontrar os melhores preços em
             diferentes supermercados de forma simples e eficiente.
           </p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md text-center border dark:border-gray-700">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-app-green rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-lg sm:text-2xl font-bold">
-                1
-              </span>
+          <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:from-emerald-900/30 dark:via-gray-800 dark:to-green-900/30 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-emerald-100 dark:border-emerald-800/50 hover:scale-105 hover:-rotate-1">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <span className="text-white text-2xl font-bold animate-pulse">
+                  🛒
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
+                Adicione Produtos
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                Insira os produtos que deseja comparar e os preços em diferentes
+                supermercados com nossa interface intuitiva.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-app-dark dark:text-white">
-              Adicione Produtos
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-              Insira os produtos que deseja comparar e os preços em diferentes
-              supermercados.
-            </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md text-center border dark:border-gray-700">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-app-blue rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-lg sm:text-2xl font-bold">
-                2
-              </span>
+          <div className="group relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-blue-900/30 dark:via-gray-800 dark:to-cyan-900/30 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-blue-100 dark:border-blue-800/50 hover:scale-105 hover:rotate-1">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <span className="text-white text-2xl font-bold animate-bounce">
+                  📊
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                Compare Preços
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                Veja instantaneamente onde cada produto está mais barato e quanto
+                você pode economizar com análises em tempo real.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-app-dark dark:text-white">
-              Compare Preços
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-              Veja instantaneamente onde cada produto está mais barato e quanto
-              você pode economizar.
-            </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md text-center sm:col-span-2 lg:col-span-1 border dark:border-gray-700">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-app-green rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-lg sm:text-2xl font-bold">
-                3
-              </span>
+          <div className="group relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-yellow-50 dark:from-amber-900/30 dark:via-gray-800 dark:to-yellow-900/30 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-amber-100 dark:border-amber-800/50 hover:scale-105 hover:-rotate-1 sm:col-span-2 lg:col-span-1">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <span className="text-white text-2xl font-bold animate-pulse">
+                  💰
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
+                Economize
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                Faça suas compras com base nos resultados e acompanhe sua economia
+                ao longo do tempo com relatórios detalhados.
+              </p>
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold mb-2 text-app-dark dark:text-white">
-              Economize
-            </h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-              Faça suas compras com base nos resultados e acompanhe sua economia
-              ao longo do tempo.
-            </p>
           </div>
         </div>
 
-        <div className="mt-12 sm:mt-20 bg-white dark:bg-gray-800 p-4 sm:p-8 rounded-lg shadow-md border dark:border-gray-700">
-          <div className="flex flex-col lg:flex-row items-center">
-            <div className="lg:w-1/2 mb-6 lg:mb-0 lg:pr-8">
-              <h2 className="text-xl sm:text-2xl font-bold mb-4 text-app-dark dark:text-white">
-                Por que usar o Comparador Online?
+        <div className="mt-12 sm:mt-20 relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-purple-900/20 dark:via-gray-800 dark:to-indigo-900/20 p-8 rounded-2xl shadow-2xl border border-purple-100 dark:border-purple-800/30">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-indigo-400/5"></div>
+          <div className="relative z-10 flex flex-col lg:flex-row items-center">
+            <div className="lg:w-1/2 mb-8 lg:mb-0 lg:pr-8">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                🚀 Por que usar o Comparador Online?
               </h2>
-              <ul className="space-y-3">
-                <li className="flex items-start">
-                  <span className="text-app-green font-bold mr-2 mt-1">✓</span>
-                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+              <ul className="space-y-4">
+                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-900/20 dark:hover:to-green-900/20">
+                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-white font-bold text-sm">💰</span>
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-300">
                     Economize tempo e dinheiro em suas compras de supermercado
                   </span>
                 </li>
-                <li className="flex items-start">
-                  <span className="text-app-green font-bold mr-2 mt-1">✓</span>
-                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                    Compare preços em diferentes mercados de forma rápida e
-                    fácil
+                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/20 dark:hover:to-cyan-900/20">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-white font-bold text-sm">⚡</span>
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
+                    Compare preços em diferentes mercados de forma rápida e fácil
                   </span>
                 </li>
-                <li className="flex items-start">
-                  <span className="text-app-green font-bold mr-2 mt-1">✓</span>
-                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
-                    Acompanhe seus gastos mensais e identifique oportunidades de
-                    economia
+                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:from-amber-900/20 dark:hover:to-orange-900/20">
+                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-white font-bold text-sm">📊</span>
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors duration-300">
+                    Acompanhe seus gastos mensais e identifique oportunidades de economia
                   </span>
                 </li>
-                <li className="flex items-start">
-                  <span className="text-app-green font-bold mr-2 mt-1">✓</span>
-                  <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 dark:hover:from-purple-900/20 dark:hover:to-indigo-900/20">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-white font-bold text-sm">✨</span>
+                  </div>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors duration-300">
                     Interface intuitiva e fácil de usar
                   </span>
                 </li>
               </ul>
             </div>
-            <div className="lg:w-1/2">
-              <img
-                src="https://images.unsplash.com/photo-1579113800032-c38bd7635818?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-                alt="Economizando nas compras"
-                className="rounded-lg shadow-lg w-full max-w-md mx-auto"
-              />
+            <div className="lg:w-1/2 relative">
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+                <img
+                  src="https://images.unsplash.com/photo-1579113800032-c38bd7635818?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
+                  alt="Economizando nas compras"
+                  className="relative rounded-xl shadow-2xl w-full max-w-md mx-auto transform group-hover:scale-105 transition-all duration-500"
+                />
+              </div>
             </div>
           </div>
         </div>
