@@ -1,4 +1,5 @@
 // src/pages/Index.tsx
+
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
@@ -161,6 +162,7 @@ const Index: React.FC = () => {
     icon,
     color,
     description,
+    displayValue,
   }: {
     title: string;
     current: number;
@@ -168,6 +170,7 @@ const Index: React.FC = () => {
     icon: React.ReactNode;
     color: string;
     description: string;
+    displayValue?: string; // NOVO: valor já formatado para exibição
   }) => (
     <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
       <div className="flex items-center justify-between mb-3">
@@ -184,11 +187,13 @@ const Index: React.FC = () => {
         </div>
         <div className="text-right">
           <div className={`text-lg font-bold text-${color}-600 dark:text-${color}-400`}>
-            {current}
+            {displayValue || current}
           </div>
-          <div className="text-xs text-muted-foreground">
-            de {limit === -1 ? "∞" : limit}
-          </div>
+          {limit !== -1 && (
+            <div className="text-xs text-muted-foreground">
+              de {limit === -1 ? "∞" : limit}
+            </div>
+          )}
         </div>
       </div>
       {limit !== -1 && (
@@ -269,6 +274,7 @@ const Index: React.FC = () => {
                           limit={-1}
                           icon={<DollarSign />}
                           color="yellow"
+                          displayValue={`R$ ${userDashboardStats.estimatedTotalSavings.toFixed(2).replace('.', ',')}`}
                         />
                       </div>
                       {currentPlanDetails.id === "free" && (
