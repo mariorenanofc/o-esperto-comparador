@@ -19,6 +19,13 @@ import { contributionService } from "@/services/contributionService";
 import { comparisonService } from "@/services/comparisonService";
 import { Product, Store, ComparisonData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import {
+  Zap,
+  Target,
+  DollarSign,
+  MessageSquare,
+  Badge,
+} from "lucide-react";
 
 const Index: React.FC = () => {
   const { user, profile } = useAuth();
@@ -147,6 +154,52 @@ const Index: React.FC = () => {
     return Math.min((current / limit) * 100, 100);
   };
 
+  const ProgressItem = ({
+    title,
+    current,
+    limit,
+    icon,
+    color,
+    description,
+  }: {
+    title: string;
+    current: number;
+    limit: number;
+    icon: React.ReactNode;
+    color: string;
+    description: string;
+  }) => (
+    <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2 rounded-lg bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg group-hover/item:scale-110 transition-transform duration-300`}
+          >
+            {icon}
+          </div>
+          <div>
+            <h4 className="font-semibold text-foreground">{title}</h4>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={`text-lg font-bold text-${color}-600 dark:text-${color}-400`}>
+            {current}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            de {limit === -1 ? "∞" : limit}
+          </div>
+        </div>
+      </div>
+      {limit !== -1 && (
+        <Progress
+          value={getUsagePercentage(current, limit)}
+          className={`h-3 bg-${color}-100 dark:bg-${color}-900/30`}
+        />
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-app-gray dark:bg-gray-900">
       <Navbar />
@@ -161,17 +214,13 @@ const Index: React.FC = () => {
               Meu plano e uso
             </h2>
             <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
-              {/* Card do Status do Plano */}
+              {/* Card do Status do Plano (Esquerda) */}
               <div className="min-h-[360px]">
-                {" "}
-                {/* Mantido min-h para igualar ao outro card */}
                 <PlanStatus />
               </div>
 
-              {/* Novo Card: Visão Geral do Uso */}
-              <Card className="dark:bg-gray-800 min-h-[360px] flex flex-col justify-between">
-                {" "}
-                {/* Mantido min-h e flex para espaçamento interno */}
+              {/* Card: Visão Geral do Uso (Direita - Refatorado) */}
+              <Card className="dark:bg-gray-800 min-h-[360px] flex flex-col justify-between relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="text-xl">
                     Visão Geral do Seu Uso
@@ -180,7 +229,7 @@ const Index: React.FC = () => {
                     Acompanhe suas atividades e benefícios do plano.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-between items-center px-6 py-4">
+                <CardContent className="flex-1 flex flex-col justify-start items-center px-6 py-4">
                   {loadingDashboardStats ? (
                     <div className="text-center py-4">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
@@ -188,109 +237,42 @@ const Index: React.FC = () => {
                     </div>
                   ) : currentPlanDetails ? (
                     <>
-                      {/* Círculos de Métricas - Layout Pirâmide (Ajustado) */}
-                      <div className="flex flex-col items-center w-full mt-4 mb-8">
-                        {" "}
-                        {/* mt-4 para espaçamento do header, mb-8 para empurrar o conteúdo de baixo */}
-                        {/* Círculo do Topo (Dias na Plataforma) */}
-                        <div className="flex flex-col items-center">
-                          {" "}
-                          {/* Removido posicionamento relativo */}
-                          <div className="flex items-center justify-center h-28 w-28 rounded-full border-2 border-app-blue bg-app-blue/10 text-app-blue text-5xl font-bold flex-shrink-0">
-                            {userDashboardStats.daysOnPlatform}
-                          </div>
-                          <p className="text-sm font-bold text-gray-600 dark:text-gray-300 mt-2 text-center">
-                            Dias na plataforma
-                          </p>
-                        </div>
-                        {/* Círculos de Baixo (Feedbacks e Economia) - Novo container flex para as 2 bolinhas */}
-                        <div className="flex justify-around w-full max-w-sm mt-6">
-                          {" "}
-                          {/* max-w-sm para controlar largura, mt-6 para subir um pouco e aproximar */}
-                          {/* Total de Feedbacks (Esquerda - Verde) */}
-                          <div className="flex flex-col items-center">
-                            <div className="flex items-center justify-center h-24 w-24 rounded-full border-2 border-app-green bg-app-green/10 text-app-green text-3xl font-bold flex-shrink-0">
-                              {userDashboardStats.totalFeedbacks}
-                            </div>
-                            <p className="text- font-bold text-gray-600 dark:text-gray-300 mt-2 text-center">
-                              Seus Feedbacks
-                            </p>
-                          </div>
-                          {/* Economia Total Estimada (Direita - Amarelo) */}
-                          <div className="flex flex-col items-center">
-                            <div className="flex items-center justify-center h-24 w-24 rounded-full border-2 border-yellow-500 bg-yellow-500/10 text-yellow-500 text-2xl font-bold flex-shrink-0 text-center">
-                              R${" "}
-                              {userDashboardStats.estimatedTotalSavings.toFixed(
-                                0
-                              )}
-                            </div>
-                            <p className="text- font-bold text-gray-600 dark:text-gray-300 mt-2 text-center">
-                              Economia Total
-                            </p>
-                          </div>
-                        </div>
+                      <div className="w-full space-y-4">
+                        <ProgressItem
+                          title="Comparações Este Mês"
+                          description="Pesquisas realizadas"
+                          current={profile?.comparisons_made_this_month || 0}
+                          limit={currentPlanDetails.limitations.comparisonsPerMonth}
+                          icon={<Zap />}
+                          color="blue"
+                        />
+                        <ProgressItem
+                          title="Histórico Salvo"
+                          description="Comparações arquivadas"
+                          current={userDashboardStats.savedComparisonsCount}
+                          limit={currentPlanDetails.limitations.savedComparisons}
+                          icon={<Target />}
+                          color="green"
+                        />
+                        <ProgressItem
+                          title="Seus Feedbacks"
+                          description="Total de feedbacks enviados"
+                          current={userDashboardStats.totalFeedbacks}
+                          limit={-1}
+                          icon={<MessageSquare />}
+                          color="purple"
+                        />
+                        <ProgressItem
+                          title="Economia Total"
+                          description="Economia estimada (R$)"
+                          current={userDashboardStats.estimatedTotalSavings}
+                          limit={-1}
+                          icon={<DollarSign />}
+                          color="yellow"
+                        />
                       </div>
-
-                      {/* Comparações Mês (Consumo) */}
-                      <div className="w-full mt-auto">
-                        {" "}
-                        {/* mt-auto para empurrar para baixo, w-full para ocupar espaço */}
-                        <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
-                          <span>Comparações Mês (Consumo)</span>
-                          <span>
-                            {profile?.comparisons_made_this_month || 0}/
-                            {currentPlanDetails.limitations
-                              .comparisonsPerMonth === -1
-                              ? "∞"
-                              : currentPlanDetails.limitations
-                                  .comparisonsPerMonth}
-                          </span>
-                        </div>
-                        {currentPlanDetails.limitations.comparisonsPerMonth !==
-                          -1 && (
-                          <Progress
-                            value={getUsagePercentage(
-                              profile?.comparisons_made_this_month || 0,
-                              currentPlanDetails.limitations.comparisonsPerMonth
-                            )}
-                            trackClassName="bg-green-200 dark:bg-green-800"
-                            indicatorClassName="bg-red-500"
-                            className="h-2"
-                          />
-                        )}
-                      </div>
-
-                      {/* Comparações Salvas (consumo) */}
-                      <div className="w-full mt-4">
-                        {" "}
-                        {/* mt-4 para espaçamento entre as barras */}
-                        <div className="flex justify-between text-sm mb-1 text-gray-700 dark:text-gray-300">
-                          <span>Comparações Salvas (Consumo)</span>
-                          <span>
-                            {userDashboardStats.savedComparisonsCount}/
-                            {currentPlanDetails.limitations.savedComparisons ===
-                            -1
-                              ? "∞"
-                              : currentPlanDetails.limitations.savedComparisons}
-                          </span>
-                        </div>
-                        {currentPlanDetails.limitations.savedComparisons !==
-                          -1 && (
-                          <Progress
-                            value={getUsagePercentage(
-                              userDashboardStats.savedComparisonsCount,
-                              currentPlanDetails.limitations.savedComparisons
-                            )}
-                            trackClassName="bg-green-200 dark:bg-green-800"
-                            indicatorClassName="bg-red-500"
-                            className="h-2"
-                          />
-                        )}
-                      </div>
-
-                      {/* Se for plano Gratuito, oferecer Upgrade */}
                       {currentPlanDetails.id === "free" && (
-                        <div className="pt-4 text-center w-full">
+                        <div className="pt-8 text-center w-full">
                           <p className="text-gray-600 dark:text-gray-300 mb-3">
                             Desbloqueie mais com um plano Premium!
                           </p>
