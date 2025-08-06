@@ -30,11 +30,13 @@ import {
   Sparkles,
   Star,
   Zap,
+  ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Link } from "react-router-dom";
 
 export default function Profile() {
   const { user, profile, signOut } = useAuth();
@@ -120,7 +122,7 @@ export default function Profile() {
         <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-gradient-to-br from-secondary/5 to-accent/5 rounded-full blur-2xl animate-pulse delay-2000" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
           <div className="flex items-center justify-between mb-6">
@@ -132,6 +134,12 @@ export default function Profile() {
                 Gerencie suas informações e configurações da conta
               </p>
             </div>
+            {/* NOVO: Botão Voltar para a Home */}
+            <Link to="/">
+              <Button variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+              </Button>
+            </Link>
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-blue-500/20 rounded-full blur-lg animate-pulse" />
               <Badge
@@ -161,9 +169,10 @@ export default function Profile() {
           <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Informações do Perfil */}
-          <div className="lg:col-span-2 space-y-8">
+        {/* MUDANÇA PRINCIPAL: De `lg:grid-cols-3` para `md:grid-cols-2` e ajuste de layout */}
+        <div className="grid gap-8 md:grid-cols-2">
+          {/* Main Content */}
+          <div className="space-y-8">
             {/* Informações Básicas */}
             <Card className="relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.01] group animate-scale-in">
               {/* Background Effects */}
@@ -294,7 +303,7 @@ export default function Profile() {
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div className="p-6 rounded-xl bg-gradient-to-r from-emerald-50/50 to-emerald-100/30 dark:from-emerald-950/20 dark:to-emerald-900/10 border border-emerald-200/30 dark:border-emerald-800/30 hover:shadow-lg transition-all duration-300 group/card">
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg group-hover/card:scale-110 transition-transform duration-300">
+                      <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg group-hover/card:scale-110 transition-transform duration-300">
                         <TrendingUp className="w-5 h-5" />
                       </div>
                       <div>
@@ -431,7 +440,7 @@ export default function Profile() {
           </div>
 
           {/* Sidebar - Status do Plano */}
-          <div className="lg:col-span-1">
+          <div className="md:pr-4">
             <div className="sticky top-8 animate-fade-in">
               <PlanStatus />
             </div>
