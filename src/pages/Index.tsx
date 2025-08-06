@@ -1,11 +1,8 @@
-// src/pages/Index.tsx
-
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import DailyOffersSection from "@/components/DailyOffersSection";
 import { PlanStatus } from "@/components/PlanStatus";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Card,
   CardContent,
@@ -26,7 +23,93 @@ import {
   DollarSign,
   MessageSquare,
   Badge,
+  Clock,
+  PlusCircle,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+
+// Componente para itens com barra de progresso (uso limitado para manter padrão)
+const ProgressItem = ({
+  title,
+  current,
+  limit,
+  icon,
+  color,
+  description,
+}: {
+  title: string;
+  current: number;
+  limit: number;
+  icon: React.ReactNode;
+  color: string;
+  description: string;
+}) => (
+  <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-3">
+        <div
+          className={`p-2 rounded-lg bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg group-hover/item:scale-110 transition-transform duration-300`}
+        >
+          {icon}
+        </div>
+        <div>
+          <h4 className="font-semibold text-foreground">{title}</h4>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className={`text-lg font-bold text-${color}-600 dark:text-${color}-400`}>
+          {current}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          de {limit === -1 ? "∞" : limit}
+        </div>
+      </div>
+    </div>
+    {limit !== -1 && (
+      <Progress
+        value={Math.min((current / limit) * 100, 100)}
+        className={`h-3 bg-${color}-100 dark:bg-${color}-900/30`}
+      />
+    )}
+  </div>
+);
+
+// Componente para itens sem barra de progresso
+const InsightItem = ({
+  title,
+  value,
+  icon,
+  color,
+  description,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  description: string;
+}) => (
+  <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div
+          className={`p-2 rounded-lg bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg group-hover/item:scale-110 transition-transform duration-300`}
+        >
+          {icon}
+        </div>
+        <div>
+          <h4 className="font-semibold text-foreground">{title}</h4>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className={`text-xl font-bold text-${color}-600 dark:text-${color}-400`}>
+          {value}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const Index: React.FC = () => {
   const { user, profile } = useAuth();
@@ -150,61 +233,6 @@ const Index: React.FC = () => {
     fetchDashboardStats();
   }, [user, profile]);
 
-  const getUsagePercentage = (current: number, limit: number | undefined) => {
-    if (limit === -1 || limit === undefined || limit === 0) return 0;
-    return Math.min((current / limit) * 100, 100);
-  };
-
-  const ProgressItem = ({
-    title,
-    current,
-    limit,
-    icon,
-    color,
-    description,
-    displayValue,
-  }: {
-    title: string;
-    current: number;
-    limit: number;
-    icon: React.ReactNode;
-    color: string;
-    description: string;
-    displayValue?: string; // NOVO: valor já formatado para exibição
-  }) => (
-    <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div
-            className={`p-2 rounded-lg bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg group-hover/item:scale-110 transition-transform duration-300`}
-          >
-            {icon}
-          </div>
-          <div>
-            <h4 className="font-semibold text-foreground">{title}</h4>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className={`text-lg font-bold text-${color}-600 dark:text-${color}-400`}>
-            {displayValue || current}
-          </div>
-          {limit !== -1 && (
-            <div className="text-xs text-muted-foreground">
-              de {limit === -1 ? "∞" : limit}
-            </div>
-          )}
-        </div>
-      </div>
-      {limit !== -1 && (
-        <Progress
-          value={getUsagePercentage(current, limit)}
-          className={`h-3 bg-${color}-100 dark:bg-${color}-900/30`}
-        />
-      )}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-app-gray dark:bg-gray-900">
       <Navbar />
@@ -243,52 +271,38 @@ const Index: React.FC = () => {
                   ) : currentPlanDetails ? (
                     <>
                       <div className="w-full space-y-4">
-                        <ProgressItem
-                          title="Comparações Este Mês"
-                          description="Pesquisas realizadas"
-                          current={profile?.comparisons_made_this_month || 0}
-                          limit={currentPlanDetails.limitations.comparisonsPerMonth}
-                          icon={<Zap />}
+                        <InsightItem
+                          title="Dias na plataforma"
+                          description="Total de dias desde o cadastro"
+                          value={userDashboardStats.daysOnPlatform}
+                          icon={<Clock />}
                           color="blue"
                         />
-                        <ProgressItem
-                          title="Histórico Salvo"
-                          description="Comparações arquivadas"
-                          current={userDashboardStats.savedComparisonsCount}
-                          limit={currentPlanDetails.limitations.savedComparisons}
-                          icon={<Target />}
-                          color="green"
-                        />
-                        <ProgressItem
+                        <InsightItem
                           title="Seus Feedbacks"
                           description="Total de feedbacks enviados"
-                          current={userDashboardStats.totalFeedbacks}
-                          limit={-1}
+                          value={userDashboardStats.totalFeedbacks}
                           icon={<MessageSquare />}
                           color="purple"
                         />
-                        <ProgressItem
+                         <InsightItem
                           title="Economia Total"
                           description="Economia estimada (R$)"
-                          current={userDashboardStats.estimatedTotalSavings}
-                          limit={-1}
+                          value={`R$ ${userDashboardStats.estimatedTotalSavings.toFixed(2).replace('.', ',')}`}
                           icon={<DollarSign />}
                           color="yellow"
-                          displayValue={`R$ ${userDashboardStats.estimatedTotalSavings.toFixed(2).replace('.', ',')}`}
                         />
                       </div>
-                      {currentPlanDetails.id === "free" && (
-                        <div className="pt-8 text-center w-full">
+                      <div className="pt-8 text-center w-full">
                           <p className="text-gray-600 dark:text-gray-300 mb-3">
-                            Desbloqueie mais com um plano Premium!
+                            Ajude a comunidade e ganhe benefícios!
                           </p>
-                          <Link to="/plans">
-                            <Button className="w-full bg-app-green hover:bg-green-600">
-                              Ver Planos e Fazer Upgrade
+                          <Link to="/contribute">
+                            <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                              <PlusCircle className="w-5 h-5 mr-2" /> Adicionar uma Contribuição
                             </Button>
                           </Link>
                         </div>
-                      )}
                     </>
                   ) : (
                     <p className="text-gray-500">
