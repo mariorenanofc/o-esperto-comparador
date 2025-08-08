@@ -31,12 +31,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-md border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-card shadow-md border-b border-border">
       <div className="container mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2">
-            <ShoppingCart className="h-8 w-8 text-app-green" />
-            <span className="text-xl font-bold text-app-dark dark:text-white">
+            <ShoppingCart className="h-8 w-8 text-app-secondary" />
+            <span className="text-xl font-bold text-foreground">
               O Esperto Comparador
             </span>
           </Link>
@@ -45,25 +45,25 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-6">
             <Link 
               to="/comparison" 
-              className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
               Comparar Preços
             </Link>
             <Link 
               to="/contribute" 
-              className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
               Contribuir
             </Link>
             <Link 
               to="/reports" 
-              className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
               Relatórios
             </Link>
             <Link 
               to="/plans" 
-              className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
               Planos
             </Link>
@@ -72,7 +72,7 @@ const Navbar = () => {
             {user && isLoaded && isAdmin && (
               <Link 
                 to="/admin" 
-                className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors flex items-center gap-1"
+                className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
               >
                 <Settings className="w-4 h-4" />
                 Admin
@@ -92,7 +92,7 @@ const Navbar = () => {
                 </Link>
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                  <AvatarFallback className="bg-app-green text-white text-sm">
+                  <AvatarFallback className="bg-app-secondary text-primary-foreground text-sm">
                     {getUserInitials(user.email || "")}
                   </AvatarFallback>
                 </Avatar>
@@ -106,7 +106,7 @@ const Navbar = () => {
               </div>
             ) : (
               <Link to="/sign-in">
-                <Button size="sm" className="bg-app-green hover:bg-green-600">
+                <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground">
                   Entrar com Google
                 </Button>
               </Link>
@@ -118,7 +118,7 @@ const Navbar = () => {
             <ThemeToggle />
             <button
               onClick={toggleMenu}
-              className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -127,32 +127,32 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="md:hidden mt-4 pb-4 border-t border-border">
             <div className="flex flex-col space-y-4 pt-4">
               <Link 
                 to="/comparison" 
-                className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+                className="text-muted-foreground hover:text-app-secondary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Comparar Preços
               </Link>
               <Link 
                 to="/contribute" 
-                className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+                className="text-muted-foreground hover:text-app-secondary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contribuir
               </Link>
               <Link 
                 to="/reports" 
-                className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+                className="text-muted-foreground hover:text-app-secondary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Relatórios
               </Link>
               <Link 
                 to="/plans" 
-                className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors"
+                className="text-muted-foreground hover:text-app-secondary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Planos
@@ -162,7 +162,7 @@ const Navbar = () => {
               {user && isLoaded && isAdmin && (
                 <Link 
                   to="/admin" 
-                  className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors flex items-center gap-1"
+                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Settings className="w-4 h-4" />
@@ -174,7 +174,7 @@ const Navbar = () => {
                 <div className="flex flex-col space-y-3">
                   <Link 
                     to="/profile" 
-                    className="text-gray-700 dark:text-gray-300 hover:text-app-green transition-colors flex items-center gap-2"
+                    className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <User className="w-4 h-4" />
@@ -183,11 +183,11 @@ const Navbar = () => {
                   <div className="flex items-center space-x-3 pt-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                      <AvatarFallback className="bg-app-green text-white text-sm">
+                      <AvatarFallback className="bg-app-secondary text-primary-foreground text-sm">
                         {getUserInitials(user.email || "")}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{user.email}</span>
+                    <span className="text-sm text-muted-foreground">{user.email}</span>
                     <Button
                       onClick={() => {
                         handleSignOut();
@@ -202,7 +202,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
-                  <Button size="sm" className="bg-app-green hover:bg-green-600 w-full">
+                  <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground w-full">
                     Entrar com Google
                   </Button>
                 </Link>
