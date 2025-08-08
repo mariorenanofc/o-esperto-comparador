@@ -34,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           </h2>
           <p className="text-gray-600 mb-6">{fallbackMessage}</p>
           <Link to="/">
-            <Button className="bg-app-green hover:bg-green-600 text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               Fazer Login
             </Button>
           </Link>
