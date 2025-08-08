@@ -85,8 +85,8 @@ const HeroSection: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start px-4 lg:px-0">
               <Link to="/comparison">
-                <Button className="bg-app-green hover:bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg w-full sm:w-auto">
-                  Comparar Agora
+                <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-6 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto transform hover:scale-105">
+                  ✨ Comparar Agora
                 </Button>
               </Link>
               <Link to="/reports">

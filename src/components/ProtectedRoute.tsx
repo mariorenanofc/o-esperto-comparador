@@ -27,14 +27,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-app-gray dark:bg-gray-950 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-app-dark mb-4">
-            Acesso Restrito
-          </h2>
-          <p className="text-gray-600 mb-6">{fallbackMessage}</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto p-8 bg-card rounded-xl shadow-xl border border-border">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-primary-foreground text-2xl">🔒</span>
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Acesso Restrito
+            </h2>
+          </div>
+          <p className="text-muted-foreground mb-6 leading-relaxed">{fallbackMessage}</p>
           <Link to="/">
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 w-full">
               Fazer Login
             </Button>
           </Link>
