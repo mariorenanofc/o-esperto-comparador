@@ -25,7 +25,7 @@ const LoginOverlay: React.FC<LoginOverlayProps> = ({
         </p>
         <div className="space-y-2">
           <Link to="/sign-in">
-            <Button className="w-full bg-app-green hover:bg-green-600">
+            <Button className="w-full bg-app-green hover:bg-app-green/90 text-white">
               Fazer Login
             </Button>
           </Link>

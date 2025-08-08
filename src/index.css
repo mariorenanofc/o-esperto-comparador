@@ -42,6 +42,12 @@
     --app-warning: 43 87% 55%; /* Warning orange */
     --app-error: 0 65% 51%; /* Error red */
     
+    /* Additional semantic colors */
+    --app-blue: 221 39% 47%; /* Same as app-primary */
+    --app-green: 151 50% 45%; /* Same as app-secondary */
+    --app-gray: 210 40% 96.1%; /* Light gray for backgrounds */
+    --app-dark: 222.2 84% 4.9%; /* Dark color */
+    
     /* Gradient definitions */
     --gradient-primary: linear-gradient(135deg, hsl(var(--app-primary)), hsl(var(--primary)));
     --gradient-secondary: linear-gradient(135deg, hsl(var(--app-secondary)), hsl(var(--app-success)));
@@ -92,6 +98,12 @@
     --app-success: 151 65% 50%; /* Success green for dark mode */
     --app-warning: 43 87% 65%; /* Warning orange for dark mode */
     --app-error: 0 75% 61%; /* Error red for dark mode */
+    
+    /* Additional semantic colors for dark mode */
+    --app-blue: 221 49% 57%; /* Same as app-primary for dark mode */
+    --app-green: 151 60% 55%; /* Same as app-secondary for dark mode */
+    --app-gray: 217.2 32.6% 17.5%; /* Dark gray for backgrounds */
+    --app-dark: 210 40% 98%; /* Light color for dark mode */
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;

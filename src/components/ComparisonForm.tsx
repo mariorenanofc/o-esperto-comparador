@@ -421,7 +421,7 @@ const ComparisonForm: React.FC = () => {
               </div>
               <Button
                 onClick={handleAddStore}
-                className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground"
+                className="bg-app-primary hover:bg-app-primary/90 text-white"
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Mercado
               </Button>
@@ -461,7 +461,7 @@ const ComparisonForm: React.FC = () => {
               </h2>
               <Button
                 onClick={handleOpenProductModal}
-                className="bg-app-secondary hover:bg-app-secondary/90 text-primary-foreground"
+                className="bg-app-secondary hover:bg-app-secondary/90 text-white"
                 disabled={comparisonData.stores.length === 0}
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
@@ -539,7 +539,7 @@ const ComparisonForm: React.FC = () => {
               <div className="mt-6">
                 <Button
                   onClick={doComparison} // Chamada para a função "Fazer Comparação"
-                  className="bg-app-success hover:bg-app-success/90 text-primary-foreground"
+                  className="bg-app-success hover:bg-app-success/90 text-white"
                   disabled={isProcessingComparison} // Usa o novo estado de loading
                 >
                   {isProcessingComparison
@@ -581,7 +581,7 @@ const ComparisonForm: React.FC = () => {
             {/* <-- MOVIDO AQUI */}
             <Button
               onClick={saveComparisonData}
-              className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground"
+              className="bg-app-primary hover:bg-app-primary/90 text-white"
               disabled={
                 isSavingComparison ||
                 !isSignedIn ||
@@ -604,7 +604,7 @@ const ComparisonForm: React.FC = () => {
                 setIsEditingMode(true);
                 setShowResults(false);
               }}
-              className="bg-app-warning hover:bg-app-warning/90 text-primary-foreground"
+              className="bg-app-warning hover:bg-app-warning/90 text-white"
             >
               <Edit className="mr-2 h-4 w-4" /> Editar Comparação
             </Button>
@@ -615,7 +615,7 @@ const ComparisonForm: React.FC = () => {
                 setShowResults(false);
                 setIsEditingMode(true);
               }}
-              className="bg-app-error hover:bg-app-error/90 text-primary-foreground"
+              className="bg-app-error hover:bg-app-error/90 text-white"
             >
               <Plus className="mr-2 h-4 w-4" /> Nova Comparação
             </Button>

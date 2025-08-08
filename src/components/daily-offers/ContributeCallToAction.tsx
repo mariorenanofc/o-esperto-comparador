@@ -10,7 +10,7 @@ const ContributeCallToAction: React.FC = () => {
           Encontrou um preço melhor? Compartilhe com a comunidade!
         </p>
         <Link to="/contribute">
-          <Button className="bg-app-blue hover:bg-blue-600">
+          <Button className="bg-app-blue hover:bg-app-blue/90 text-white">
             Contribuir com Preços
           </Button>
         </Link>

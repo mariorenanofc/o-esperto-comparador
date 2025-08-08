@@ -69,6 +69,10 @@ export default {
 				'app-success': 'hsl(var(--app-success))',
 				'app-warning': 'hsl(var(--app-warning))',
 				'app-error': 'hsl(var(--app-error))',
+				'app-blue': 'hsl(var(--app-blue))',
+				'app-green': 'hsl(var(--app-green))',
+				'app-gray': 'hsl(var(--app-gray))',
+				'app-dark': 'hsl(var(--app-dark))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

@@ -92,7 +92,7 @@ const Navbar = () => {
                 </Link>
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                  <AvatarFallback className="bg-app-secondary text-primary-foreground text-sm">
+                  <AvatarFallback className="bg-app-secondary text-white text-sm">
                     {getUserInitials(user.email || "")}
                   </AvatarFallback>
                 </Avatar>
@@ -106,7 +106,7 @@ const Navbar = () => {
               </div>
             ) : (
               <Link to="/sign-in">
-                <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground">
+                <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-white">
                   Entrar com Google
                 </Button>
               </Link>
@@ -183,7 +183,7 @@ const Navbar = () => {
                   <div className="flex items-center space-x-3 pt-2">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                      <AvatarFallback className="bg-app-secondary text-primary-foreground text-sm">
+                      <AvatarFallback className="bg-app-secondary text-white text-sm">
                         {getUserInitials(user.email || "")}
                       </AvatarFallback>
                     </Avatar>
@@ -202,7 +202,7 @@ const Navbar = () => {
                 </div>
               ) : (
                 <Link to="/sign-in" onClick={() => setIsMenuOpen(false)}>
-                  <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground w-full">
+                  <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-white w-full">
                     Entrar com Google
                   </Button>
                 </Link>

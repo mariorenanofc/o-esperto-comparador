@@ -94,7 +94,7 @@ const PriceContributionForm: React.FC<PriceContributionFormProps> = ({
                 type="submit"
                 onClick={onButtonClick}
                 disabled={isSubmitting || locationLoading || !formData.city}
-                className="flex-1 bg-app-blue hover:bg-blue-700"
+                className="flex-1 bg-app-blue hover:bg-app-blue/90 text-white"
               >
                 {isSubmitting ? (
                   <>

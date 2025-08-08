@@ -194,7 +194,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-app-green text-white">
+              <Button type="submit" className="bg-app-green hover:bg-app-green/90 text-white">
                 {editProduct ? "Atualizar" : "Adicionar"}
               </Button>
             </DialogFooter>
