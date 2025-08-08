@@ -35,6 +35,18 @@
 
     --radius: 0.5rem;
 
+    /* App colors for price comparison */
+    --app-primary: 221 39% 47%; /* Beautiful blue */
+    --app-secondary: 151 50% 45%; /* Fresh green */
+    --app-success: 151 55% 40%; /* Success green */
+    --app-warning: 43 87% 55%; /* Warning orange */
+    --app-error: 0 65% 51%; /* Error red */
+    
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--app-primary)), hsl(var(--primary)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--app-secondary)), hsl(var(--app-success)));
+    --gradient-hero: linear-gradient(135deg, hsl(221 39% 47% / 0.1), hsl(151 50% 45% / 0.1));
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -73,6 +85,14 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+    
+    /* Dark mode app colors */
+    --app-primary: 221 49% 57%; /* Lighter blue for dark mode */
+    --app-secondary: 151 60% 55%; /* Lighter green for dark mode */
+    --app-success: 151 65% 50%; /* Success green for dark mode */
+    --app-warning: 43 87% 65%; /* Warning orange for dark mode */
+    --app-error: 0 75% 61%; /* Error red for dark mode */
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

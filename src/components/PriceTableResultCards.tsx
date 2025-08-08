@@ -25,70 +25,64 @@ const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
 }) => {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-      <Card className="dark:bg-gray-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Mercado Mais Barato</CardTitle>
         </CardHeader>
         <CardContent>
           {cheapestStoreId ? (
             <div>
-              <p className="text-2xl font-bold text-app-green">
+              <p className="text-2xl font-bold text-app-success">
                 {stores.find((s) => s.id === cheapestStoreId)?.name}
               </p>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 Total: R$ {totals[cheapestStoreId].toFixed(2).replace(".", ",")}
               </p>
             </div>
           ) : (
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-muted-foreground">
               Nenhum dado disponível
             </p>
           )}
         </CardContent>
       </Card>
-      <Card className="dark:bg-gray-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">
             Economia (Comparado ao Mais Caro)
-          </CardTitle>{" "}
-          {/* <-- TEXTO ALTERADO */}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-app-green">
-            R$ {(highestTotal - optimalTotal).toFixed(2).replace(".", ",")}{" "}
-            {/* Usa highestTotal */}
+          <p className="text-2xl font-bold text-app-success">
+            R$ {(highestTotal - optimalTotal).toFixed(2).replace(".", ",")}
           </p>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted-foreground">
             Comprando cada produto no mercado mais barato
           </p>
         </CardContent>
       </Card>
-      {/* --- NOVO CARD: Economia (Média dos Mercados) --- */}
-      <Card className="dark:bg-gray-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">
             Economia (Comparado à Média)
-          </CardTitle>{" "}
-          {/* <-- NOVO CARD */}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-app-green">
-            R$ {(averageTotal - optimalTotal).toFixed(2).replace(".", ",")}{" "}
-            {/* Usa averageTotal */}
+          <p className="text-2xl font-bold text-app-success">
+            R$ {(averageTotal - optimalTotal).toFixed(2).replace(".", ",")}
           </p>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-muted-foreground">
             Se você comprasse tudo em um mercado com preço médio
           </p>
         </CardContent>
       </Card>
-      {/* --- FIM DO NOVO CARD --- */}
-      <Card className="dark:bg-gray-800">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Total de Produtos</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-app-blue">{products.length}</p>
-          <p className="text-gray-500 dark:text-gray-400">Itens comparados</p>
+          <p className="text-2xl font-bold text-app-primary">{products.length}</p>
+          <p className="text-muted-foreground">Itens comparados</p>
         </CardContent>
       </Card>
     </div>

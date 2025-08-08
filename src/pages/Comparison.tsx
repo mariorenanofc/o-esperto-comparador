@@ -4,11 +4,11 @@ import ComparisonForm from "@/components/ComparisonForm";
 
 const Comparison: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/20">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-secondary/20 dark:from-background dark:via-muted/10 dark:to-accent/5">
       <Navbar />
       <div className="container mx-auto py-12 px-6">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-6">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-app-primary via-app-secondary to-app-success bg-clip-text text-transparent mb-6">
             📊 Comparação de Preços ✨
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">

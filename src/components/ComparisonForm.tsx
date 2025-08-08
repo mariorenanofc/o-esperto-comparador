@@ -392,7 +392,7 @@ const ComparisonForm: React.FC = () => {
       {/* Seção de Adicionar Mercados e Produtos - Visível apenas em modo de edição */}
       {isEditingMode && (
         <>
-          <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
+          <div className="bg-card p-6 rounded-lg shadow border">
             <h2 className="text-xl font-semibold mb-4">Adicionar Mercados</h2>
             <div className="flex items-end space-x-4">
               <div className="flex-1">
@@ -406,7 +406,7 @@ const ComparisonForm: React.FC = () => {
               </div>
               <Button
                 onClick={handleAddStore}
-                className="bg-app-blue hover:bg-blue-700 hover:text-gray-200"
+                className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground"
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Mercado
               </Button>
@@ -421,14 +421,14 @@ const ComparisonForm: React.FC = () => {
                   {comparisonData.stores.map((store) => (
                     <div
                       key={store.id}
-                      className="flex items-center justify-between bg-gray-50 dark:bg-gray-950 p-3 rounded border"
+                      className="flex items-center justify-between bg-muted p-3 rounded border"
                     >
                       <span>{store.name}</span>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemoveStore(store.id)}
-                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="h-8 w-8 text-app-error hover:text-app-error/80 hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -439,14 +439,14 @@ const ComparisonForm: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
+          <div className="bg-card p-6 rounded-lg shadow border">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">
                 Produtos para Comparação
               </h2>
               <Button
                 onClick={handleOpenProductModal}
-                className="bg-app-green hover:bg-green-700 hover:text-gray-200"
+                className="bg-app-secondary hover:bg-app-secondary/90 text-primary-foreground"
                 disabled={comparisonData.stores.length === 0}
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
@@ -454,7 +454,7 @@ const ComparisonForm: React.FC = () => {
             </div>
 
             {comparisonData.stores.length === 0 && (
-              <p className="text-gray-500 italic">
+              <p className="text-muted-foreground italic">
                 Adicione pelo menos um mercado antes de cadastrar produtos.
               </p>
             )}
@@ -463,7 +463,7 @@ const ComparisonForm: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 dark:bg-gray-950">
+                    <tr className="bg-muted/50">
                       <th className="py-2 px-4 border text-left">Produto</th>
                       <th className="py-2 px-4 border text-left">Quantidade</th>
                       <th className="py-2 px-4 border text-left">Unidade</th>
@@ -489,7 +489,7 @@ const ComparisonForm: React.FC = () => {
                             {product.prices[store.id] ? (
                               `R$ ${product.prices[store.id].toFixed(2)}`
                             ) : (
-                              <span className="text-gray-400">N/A</span>
+                              <span className="text-muted-foreground">N/A</span>
                             )}
                           </td>
                         ))}
@@ -499,7 +499,7 @@ const ComparisonForm: React.FC = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEditProduct(index)}
-                              className="h-8 w-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                              className="h-8 w-8 text-app-primary hover:text-app-primary/80 hover:bg-primary/10"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -507,7 +507,7 @@ const ComparisonForm: React.FC = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteProduct(index)}
-                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="h-8 w-8 text-app-error hover:text-app-error/80 hover:bg-destructive/10"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -524,7 +524,7 @@ const ComparisonForm: React.FC = () => {
               <div className="mt-6">
                 <Button
                   onClick={doComparison} // Chamada para a função "Fazer Comparação"
-                  className="bg-app-green hover:bg-green-700 hover:text-gray-200"
+                  className="bg-app-success hover:bg-app-success/90 text-primary-foreground"
                   disabled={isProcessingComparison} // Usa o novo estado de loading
                 >
                   {isProcessingComparison
@@ -532,7 +532,7 @@ const ComparisonForm: React.FC = () => {
                     : "Fazer Comparação"}
                 </Button>
                 {!isSignedIn && (
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-muted-foreground mt-2">
                     * Faça login para salvar suas comparações
                   </p>
                 )}
@@ -558,7 +558,7 @@ const ComparisonForm: React.FC = () => {
           <BestPricesByStore comparisonData={comparisonData} />
           {/* A PriceTable foi movida para DENTRO da div de "Salvar esta Comparação" */}
 
-          <div className="mt-6 p-6 bg-white dark:bg-gray-950 rounded-lg shadow">
+          <div className="mt-6 p-6 bg-card rounded-lg shadow border">
             <h3 className="text-xl font-semibold mb-4">
               Salvar esta Comparação
             </h3>
@@ -566,7 +566,7 @@ const ComparisonForm: React.FC = () => {
             {/* <-- MOVIDO AQUI */}
             <Button
               onClick={saveComparisonData}
-              className="bg-app-blue hover:bg-blue-700 hover:text-gray-200"
+              className="bg-app-primary hover:bg-app-primary/90 text-primary-foreground"
               disabled={
                 isSavingComparison ||
                 !isSignedIn ||
@@ -576,20 +576,20 @@ const ComparisonForm: React.FC = () => {
               {isSavingComparison ? "Salvando..." : "Salvar Comparação"}
             </Button>
             {!isSignedIn && (
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 Faça login para salvar suas comparações.
               </p>
             )}
           </div>
 
           {/* Botões para Editar ou Iniciar Nova Comparação */}
-          <div className="mt-6 p-6 bg-white dark:bg-gray-950 rounded-lg shadow flex justify-center space-x-4">
+          <div className="mt-6 p-6 bg-card rounded-lg shadow border flex justify-center space-x-4">
             <Button
               onClick={() => {
                 setIsEditingMode(true);
                 setShowResults(false);
               }}
-              className="bg-yellow-500 hover:bg-yellow-600 hover:text-gray-200"
+              className="bg-app-warning hover:bg-app-warning/90 text-primary-foreground"
             >
               <Edit className="mr-2 h-4 w-4" /> Editar Comparação
             </Button>
@@ -600,7 +600,7 @@ const ComparisonForm: React.FC = () => {
                 setShowResults(false);
                 setIsEditingMode(true);
               }}
-              className="bg-red-500 hover:bg-red-600 hover:text-gray-200"
+              className="bg-app-error hover:bg-app-error/90 text-primary-foreground"
             >
               <Plus className="mr-2 h-4 w-4" /> Nova Comparação
             </Button>

@@ -63,11 +63,12 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom colors for our price comparison app
-				'app-green': '#38A169',
-				'app-blue': '#3182CE',
-				'app-gray': '#F7FAFC',
-				'app-dark': '#2D3748',
+				// Semantic app colors using CSS variables
+				'app-primary': 'hsl(var(--app-primary))',
+				'app-secondary': 'hsl(var(--app-secondary))',
+				'app-success': 'hsl(var(--app-success))',
+				'app-warning': 'hsl(var(--app-warning))',
+				'app-error': 'hsl(var(--app-error))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
