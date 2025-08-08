@@ -89,6 +89,20 @@ const ComparisonForm: React.FC = () => {
       return;
     }
 
+    // Verificar se já existe um mercado com o mesmo nome (ignorando maiúsculas/minúsculas)
+    const storeNameLower = storeName.trim().toLowerCase();
+    const existingStore = comparisonData.stores.find(
+      store => store.name.toLowerCase() === storeNameLower
+    );
+
+    if (existingStore) {
+      toast.error("Mercado já adicionado", {
+        description: `O mercado "${existingStore.name}" já foi adicionado à comparação.`,
+        duration: 3000,
+      });
+      return;
+    }
+
     if (comparisonData.stores.length >= maxStores) {
       if (!isSignedIn) {
         toast.error("Limite atingido", {
@@ -117,6 +131,7 @@ const ComparisonForm: React.FC = () => {
       stores: [...comparisonData.stores, newStore],
     });
     setStoreName("");
+    toast.success(`Mercado "${newStore.name}" adicionado com sucesso!`);
   };
 
   const handleRemoveStore = (storeId: string) => {
