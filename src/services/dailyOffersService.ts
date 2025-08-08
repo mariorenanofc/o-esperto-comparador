@@ -1,44 +1,25 @@
 
 import { DailyOffer, PriceContribution } from "@/lib/types";
+import { enhancedDailyOffersService } from "./enhancedDailyOffersService";
 import { supabaseDailyOffersService } from "./supabase/dailyOffersService";
 import { validationService } from "./daily-offers/validationService";
 
 export const dailyOffersService = {
-  // Usar serviços do Supabase com limpeza automática
-  async getTodaysOffers(): Promise<DailyOffer[]> {
-    console.log('Getting today\'s offers with automatic cleanup...');
-    return await supabaseDailyOffersService.getTodaysOffers();
-  },
-  
-  async submitPriceContribution(
-    contribution: PriceContribution,
-    userId: string,
-    userName: string
-  ): Promise<void> {
-    console.log('Submitting price contribution with 24h validation...');
-    return await supabaseDailyOffersService.submitPriceContribution(
-      contribution,
-      userId,
-      userName
-    );
-  },
+  // Use enhanced service for offline-first functionality
+  getTodaysOffers: enhancedDailyOffersService.getTodaysOffers,
+  submitPriceContribution: enhancedDailyOffersService.submitPriceContribution,
+  validateUserContribution: enhancedDailyOffersService.validateUserContribution,
+
+  // Admin functions (online only)
+  getAllContributions: enhancedDailyOffersService.getAllContributions,
+  approveContribution: enhancedDailyOffersService.approveContribution,
+  rejectContribution: enhancedDailyOffersService.rejectContribution,
+
+  // Keep original supabase service for direct access if needed
+  _supabase: supabaseDailyOffersService,
 
   // Manter validações locais
-  validateUserContribution: supabaseDailyOffersService.validateUserContribution,
   validatePriceContribution: validationService.validatePriceContribution,
-
-  // Funções de admin
-  async getAllContributions(): Promise<any[]> {
-    return await supabaseDailyOffersService.getAllContributions();
-  },
-
-  async approveContribution(contributionId: string): Promise<void> {
-    return await supabaseDailyOffersService.approveContribution(contributionId);
-  },
-
-  async rejectContribution(contributionId: string): Promise<void> {
-    return await supabaseDailyOffersService.rejectContribution(contributionId);
-  },
 
   // Função de limpeza manual
   async cleanupOldOffers(): Promise<void> {

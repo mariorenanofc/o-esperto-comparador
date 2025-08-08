@@ -2,7 +2,6 @@ import { ComparisonData } from '@/lib/types';
 import { supabaseComparisonService } from './supabase/comparisonService';
 import { offlineStorageService, OfflineComparison } from './offlineStorageService';
 import { useOffline } from '@/hooks/useOffline';
-import { toast } from 'sonner';
 
 export const enhancedComparisonService = {
   // Get comparisons (online + offline)
@@ -33,53 +32,52 @@ export const enhancedComparisonService = {
         return result;
       } catch (error) {
         console.error('Failed to save online, saving offline:', error);
-        toast.warning('Conexão instável. Salvando offline...');
       }
     }
     
     // Save offline
+    const timestamp = Date.now();
     const offlineComparison: OfflineComparison = {
       ...data,
-      id: `offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      date: data.date?.toISOString() || new Date(timestamp).toISOString(), // Convert Date to string
+      id: `offline_${timestamp}_${Math.random().toString(36).substr(2, 9)}`,
       userId,
-      timestamp: Date.now(),
+      user_id: userId, // For compatibility
+      title: `Comparação ${new Date().toLocaleDateString()}`,
+      created_at: new Date(timestamp).toISOString(),
+      updated_at: new Date(timestamp).toISOString(),
+      timestamp,
       synced: false,
+      comparison_products: [],
+      prices: [],
     };
     
     offlineStorageService.saveOfflineComparison(offlineComparison);
-    
-    if (!isOnline) {
-      toast.info('Comparação salva offline. Será sincronizada quando voltar online.');
-    } else {
-      toast.success('Comparação salva offline devido a problema de conexão.');
-    }
+    console.log('Comparison saved offline successfully');
     
     return offlineComparison;
   },
 
   // Delete comparison
   async deleteComparison(comparisonId: string) {
-    const isOnline = navigator.onLine;
-    
     if (comparisonId.startsWith('offline_')) {
       // Remove from offline storage
       const comparisons = offlineStorageService.getOfflineComparisons();
       const filtered = comparisons.filter(comp => comp.id !== comparisonId);
       localStorage.setItem('offline_comparisons', JSON.stringify(filtered));
-      toast.success('Comparação removida');
+      console.log('Offline comparison removed');
       return;
     }
     
-    if (isOnline) {
+    if (navigator.onLine) {
       try {
         await supabaseComparisonService.deleteComparison(comparisonId);
-        toast.success('Comparação removida');
+        console.log('Comparison deleted successfully');
       } catch (error) {
         console.error('Failed to delete online:', error);
-        toast.error('Falha ao remover comparação. Tente novamente.');
       }
     } else {
-      toast.error('Não é possível remover comparações online quando offline.');
+      console.log('Cannot delete online comparisons when offline');
     }
   },
 

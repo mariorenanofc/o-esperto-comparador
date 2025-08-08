@@ -6,10 +6,8 @@ import { toast } from 'sonner';
 export const enhancedDailyOffersService = {
   // Get today's offers (online only)
   async getTodaysOffers(): Promise<DailyOffer[]> {
-    const isOnline = navigator.onLine;
-    
-    if (!isOnline) {
-      toast.info('Ofertas não disponíveis offline. Conecte-se à internet.');
+    if (!navigator.onLine) {
+      console.log('Offline mode: returning empty offers array');
       return [];
     }
     
@@ -17,7 +15,6 @@ export const enhancedDailyOffersService = {
       return await supabaseDailyOffersService.getTodaysOffers();
     } catch (error) {
       console.error('Failed to get offers:', error);
-      toast.error('Falha ao carregar ofertas. Verifique sua conexão.');
       return [];
     }
   },
@@ -28,20 +25,17 @@ export const enhancedDailyOffersService = {
     userId: string,
     userName: string
   ): Promise<void> {
-    const isOnline = navigator.onLine;
-    
-    if (isOnline) {
+    if (navigator.onLine) {
       try {
         await supabaseDailyOffersService.submitPriceContribution(
           contribution,
           userId,
           userName
         );
-        toast.success('Contribuição enviada com sucesso!');
+        console.log('Contribution submitted successfully online');
         return;
       } catch (error) {
         console.error('Failed to submit online, saving offline:', error);
-        toast.warning('Conexão instável. Salvando contribuição offline...');
       }
     }
     
@@ -61,19 +55,12 @@ export const enhancedDailyOffersService = {
     };
     
     offlineStorageService.saveOfflineContribution(offlineContribution);
-    
-    if (!isOnline) {
-      toast.success('Contribuição salva offline. Será enviada quando voltar online.');
-    } else {
-      toast.success('Contribuição salva offline devido a problema de conexão.');
-    }
+    console.log('Contribution saved offline successfully');
   },
 
   // Validate user contribution
   async validateUserContribution(contribution: PriceContribution, userId: string) {
-    const isOnline = navigator.onLine;
-    
-    if (!isOnline) {
+    if (!navigator.onLine) {
       // Basic offline validation
       if (!contribution.productName?.trim() || !contribution.storeName?.trim()) {
         return { isValid: false, message: 'Nome do produto e loja são obrigatórios' };
@@ -96,10 +83,8 @@ export const enhancedDailyOffersService = {
 
   // Admin functions (online only)
   async getAllContributions(): Promise<any[]> {
-    const isOnline = navigator.onLine;
-    
-    if (!isOnline) {
-      toast.error('Funcionalidade de admin requer conexão com internet');
+    if (!navigator.onLine) {
+      console.log('Admin functionality requires internet connection');
       return [];
     }
     
@@ -107,10 +92,8 @@ export const enhancedDailyOffersService = {
   },
 
   async approveContribution(contributionId: string): Promise<void> {
-    const isOnline = navigator.onLine;
-    
-    if (!isOnline) {
-      toast.error('Funcionalidade de admin requer conexão com internet');
+    if (!navigator.onLine) {
+      console.log('Admin functionality requires internet connection');
       return;
     }
     
@@ -118,10 +101,8 @@ export const enhancedDailyOffersService = {
   },
 
   async rejectContribution(contributionId: string): Promise<void> {
-    const isOnline = navigator.onLine;
-    
-    if (!isOnline) {
-      toast.error('Funcionalidade de admin requer conexão com internet');
+    if (!navigator.onLine) {
+      console.log('Admin functionality requires internet connection');
       return;
     }
     

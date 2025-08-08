@@ -7,11 +7,18 @@ const STORAGE_KEYS = {
   LAST_SYNC: 'last_sync',
 };
 
-export interface OfflineComparison extends ComparisonData {
+export interface OfflineComparison extends Omit<ComparisonData, 'date'> {
   id: string;
   userId: string;
+  user_id: string; // Add for compatibility
+  title: string;
+  date: string; // Override as string for compatibility
+  created_at: string; // Add for compatibility  
+  updated_at: string; // Add for compatibility
   timestamp: number;
   synced: boolean;
+  comparison_products: any[]; // Required for compatibility
+  prices: any[]; // Required for compatibility
 }
 
 export interface OfflineContribution {

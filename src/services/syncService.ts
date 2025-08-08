@@ -37,7 +37,14 @@ class SyncService {
     
     for (const comparison of unsyncedComparisons) {
       try {
-        await comparisonService.saveComparison({ ...comparison, userId });
+        // Convert date string back to Date object for ComparisonData compatibility
+        const comparisonForSync = {
+          ...comparison,
+          date: new Date(comparison.date),
+          userId: comparison.userId,
+        };
+        
+        await comparisonService.saveComparison(comparisonForSync);
         offlineStorageService.markComparisonSynced(comparison.id);
         console.log(`Synced comparison: ${comparison.id}`);
       } catch (error) {
