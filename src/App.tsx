@@ -23,6 +23,7 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Admin from "./pages/Admin";
 import UserDetailPage from "./pages/admin/UserDetailPage";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -78,6 +79,7 @@ function App() {
                     element={<AdminRoute><UserDetailPage /></AdminRoute>}
                   />
                 </Routes>
+                <PWAInstallBanner />
               </div>
             </Router>
           </SubscriptionProvider>
