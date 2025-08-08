@@ -24,6 +24,7 @@ import SignUp from "./pages/SignUp";
 import Admin from "./pages/Admin";
 import UserDetailPage from "./pages/admin/UserDetailPage";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -80,6 +81,7 @@ function App() {
                   />
                 </Routes>
                 <PWAInstallBanner />
+                <OfflineIndicator />
               </div>
             </Router>
           </SubscriptionProvider>
