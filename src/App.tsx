@@ -25,6 +25,7 @@ import Admin from "./pages/Admin";
 import UserDetailPage from "./pages/admin/UserDetailPage";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import { OfflineIndicator } from "./components/OfflineIndicator";
+import { useRealTimeUserStatus } from "./hooks/useRealTimeUserStatus";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -37,6 +38,9 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Initialize real-time user status tracking
+  useRealTimeUserStatus();
+
   // Add defensive check for React
   if (!React || !React.useEffect) {
     console.error("React hooks not properly available");

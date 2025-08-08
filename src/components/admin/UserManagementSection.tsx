@@ -51,6 +51,10 @@ export const UserManagementSection = () => {
 
   useEffect(() => {
     fetchUsers();
+    
+    // Auto refresh every 20 seconds for real-time status updates
+    const interval = setInterval(fetchUsers, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdatePlan = async (userId: string, newPlan: string) => {

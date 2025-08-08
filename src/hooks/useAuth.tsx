@@ -192,10 +192,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => subscription.unsubscribe();
   }, []);
 
-  // Update activity periodically for active users
+  // Update activity more frequently for active users
   useEffect(() => {
     if (user) {
-      const interval = setInterval(updateActivity, 5 * 60 * 1000); // Every 5 minutes
+      const interval = setInterval(updateActivity, 2 * 60 * 1000); // Every 2 minutes instead of 5
       return () => clearInterval(interval);
     }
   }, [user]);

@@ -47,8 +47,8 @@ export const ActiveUsersSection = () => {
   useEffect(() => {
     fetchActiveUsers();
     
-    // Auto refresh every 30 seconds
-    const interval = setInterval(fetchActiveUsers, 30000);
+    // Auto refresh every 15 seconds for more real-time updates
+    const interval = setInterval(fetchActiveUsers, 15000);
     return () => clearInterval(interval);
   }, []);
 
