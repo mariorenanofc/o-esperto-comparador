@@ -83,12 +83,15 @@ export const useNotifications = () => {
     console.log('useNotifications: Setting up real-time notification listeners for user:', user.id);
     console.log('useNotifications: User email:', user.email);
 
+    let userChannel: any = null;
+    let adminChannel: any = null;
+
     // Aguarda um pouco para garantir que tudo está carregado
     const timeout = setTimeout(() => {
       console.log('useNotifications: Starting subscription setup');
       
       // Listen for changes to daily_offers for user contributions
-      const userChannel = supabase
+      userChannel = supabase
         .channel(`user-notifications-${user.id}`)
         .on(
           'postgres_changes',
@@ -120,7 +123,6 @@ export const useNotifications = () => {
         });
 
       // Listen for new contributions if user is admin
-      let adminChannel: any = null;
       if (user.email && isAdmin(user.email)) {
         console.log('useNotifications: Setting up admin notifications for:', user.email);
         
@@ -155,17 +157,14 @@ export const useNotifications = () => {
             console.log('useNotifications: Admin channel subscription status:', status);
           });
       }
-
-      // Store channels for cleanup
-      return () => {
-        console.log('useNotifications: Cleaning up real-time listeners');
-        userChannel?.unsubscribe();
-        adminChannel?.unsubscribe();
-      };
     }, 1000);
 
+    // Cleanup function
     return () => {
+      console.log('useNotifications: Cleaning up real-time listeners');
       clearTimeout(timeout);
+      userChannel?.unsubscribe();
+      adminChannel?.unsubscribe();
     };
   }, [user?.id, user?.email]); // Dependências mais específicas
 
