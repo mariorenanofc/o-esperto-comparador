@@ -37,11 +37,11 @@ const Plans: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto justify-items-center">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto justify-items-center pt-8">
           {PLANS.map((plan) => (
             <Card
               key={plan.id}
-              className={`group relative w-full max-w-sm overflow-hidden transition-all duration-500 hover:scale-105 hover:-rotate-1 ${
+              className={`group relative w-full max-w-sm overflow-visible transition-all duration-500 hover:scale-105 hover:-rotate-1 ${
                 plan.popular
                   ? "border-emerald-400 border-2 shadow-2xl bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:from-emerald-900/20 dark:via-gray-800 dark:to-green-900/20 transform scale-110 z-10"
                   : "border-slate-200 dark:border-slate-700 bg-gradient-to-br from-white via-slate-50 to-gray-50 dark:from-gray-800 dark:via-gray-700 dark:to-slate-800"
@@ -50,14 +50,14 @@ const Plans: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-indigo-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               
               {plan.popular && (
-                <Badge className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-600 shadow-lg animate-pulse text-white font-bold px-4 py-1 text-sm z-20">
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-600 shadow-lg animate-pulse text-white font-bold px-4 py-1 text-sm z-30">
                   <Star className="w-4 h-4 mr-2" />
                   Mais Popular
                 </Badge>
               )}
 
               {currentPlan === plan.id && (
-                <Badge className="absolute -top-4 right-4 bg-gradient-to-r from-blue-500 to-cyan-600 shadow-lg text-white font-bold px-3 py-1 text-sm z-20">
+                <Badge className="absolute -top-3 right-4 bg-gradient-to-r from-blue-500 to-cyan-600 shadow-lg text-white font-bold px-3 py-1 text-sm z-30">
                   ✅ Seu Plano
                 </Badge>
               )}
