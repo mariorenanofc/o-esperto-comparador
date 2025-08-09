@@ -46,12 +46,25 @@ export const useNotifications = () => {
         
         oscillator.start(startTime);
         oscillator.stop(startTime + duration);
+        
+        return oscillator;
       };
       
       // Melodia suave: C5 -> E5 (notas agradáveis)
       const currentTime = audioContext.currentTime;
-      playNote(523.25, currentTime, 0.3, 0.12); // C5
-      playNote(659.25, currentTime + 0.15, 0.4, 0.1); // E5
+      const osc1 = playNote(523.25, currentTime, 0.3, 0.12); // C5
+      const osc2 = playNote(659.25, currentTime + 0.15, 0.4, 0.1); // E5
+      
+      // Garantir que o contexto seja fechado após o som
+      setTimeout(() => {
+        try {
+          if (audioContext.state !== 'closed') {
+            audioContext.close();
+          }
+        } catch (e) {
+          console.log('AudioContext already closed');
+        }
+      }, 1000);
       
       console.log('🔊 Notification sound played successfully');
     } catch (e) {
