@@ -19,12 +19,8 @@ export const useNotifications = () => {
   const channelsRef = useRef<any[]>([]);
   const isSetupRef = useRef(false);
 
-  // Only log once per user change
-  const logRef = useRef<string | undefined>(undefined);
-  if (logRef.current !== user?.id) {
-    console.log('useNotifications: Hook initialized, user:', user?.id);
-    logRef.current = user?.id;
-  }
+  // Track setup status to prevent multiple initializations
+  const setupStatusRef = useRef<{ userId?: string; isSetup: boolean }>({ isSetup: false });
 
   const playNotificationSound = () => {
     try {
@@ -88,29 +84,27 @@ export const useNotifications = () => {
 
   useEffect(() => {
     if (!user?.id) {
-      console.log('useNotifications: No user ID, skipping setup');
       cleanupChannels();
+      setupStatusRef.current = { isSetup: false };
       return;
     }
 
     // Prevent multiple setups for the same user
-    if (isSetupRef.current) {
-      console.log('useNotifications: Already setup for this user, skipping');
+    if (setupStatusRef.current.isSetup && setupStatusRef.current.userId === user.id) {
       return;
     }
 
-    console.log('useNotifications: Setting up notifications for user:', user.id);
-    isSetupRef.current = true;
+    console.log('🔔 Setting up notifications for user:', user.id);
+    setupStatusRef.current = { userId: user.id, isSetup: true };
 
     const setupNotifications = async () => {
       // Clean up any existing channels first
       cleanupChannels();
 
       try {
-        // Setup user notifications channel
-        console.log('useNotifications: Creating user channel');
+        // Setup user notifications channel for contribution updates
         const userChannel = supabase
-          .channel(`user-notifications-${user.id}-${Date.now()}`, {
+          .channel(`user-notifications-${user.id}`, {
             config: {
               broadcast: { self: false },
               presence: { key: user.id }
@@ -125,7 +119,11 @@ export const useNotifications = () => {
               filter: `user_id=eq.${user.id}`
             },
             (payload) => {
-              console.log('🔔 useNotifications: User contribution update received:', payload);
+              console.log('🔔 Contribution update received:', {
+                product: payload.new.product_name,
+                oldVerified: payload.old.verified,
+                newVerified: payload.new.verified
+              });
               
               if (payload.new.verified === true && payload.old.verified === false) {
                 const notification: Notification = {
@@ -138,13 +136,25 @@ export const useNotifications = () => {
                 };
                 
                 showNotification(notification);
+              } else if (payload.new.verified === false && payload.old.verified === null) {
+                const notification: Notification = {
+                  id: Date.now().toString(),
+                  title: 'Contribuição Rejeitada ❌',
+                  message: `Sua contribuição de ${payload.new.product_name} foi rejeitada`,
+                  type: 'error',
+                  timestamp: new Date(),
+                  read: false
+                };
+                
+                showNotification(notification);
               }
             }
           )
           .subscribe((status) => {
-            console.log('useNotifications: User channel status:', status);
-            if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-              console.error('useNotifications: User channel error, status:', status);
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ User notifications channel connected');
+            } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+              console.error('❌ User channel error:', status);
             }
           });
 
@@ -152,13 +162,12 @@ export const useNotifications = () => {
 
         // Check if user is admin and setup admin notifications
         const userIsAdmin = await isAdmin(user.id);
-        console.log('useNotifications: User is admin?', userIsAdmin);
         
         if (userIsAdmin) {
-          console.log('useNotifications: Setting up admin notifications');
+          console.log('👑 Setting up admin notifications');
           
           const adminChannel = supabase
-            .channel(`admin-notifications-${user.id}-${Date.now()}`, {
+            .channel(`admin-notifications-${user.id}`, {
               config: {
                 broadcast: { self: false },
                 presence: { key: user.id }
@@ -172,9 +181,13 @@ export const useNotifications = () => {
                 table: 'daily_offers'
               },
               (payload) => {
-                console.log('🔔 useNotifications: New contribution received (admin):', payload);
-                
                 if (payload.new.user_id !== user.id) {
+                  console.log('🔔 New contribution for admin:', {
+                    contributor: payload.new.contributor_name,
+                    product: payload.new.product_name,
+                    store: payload.new.store_name
+                  });
+                  
                   const notification: Notification = {
                     id: Date.now().toString(),
                     title: 'Nova Contribuição 📝',
@@ -189,24 +202,28 @@ export const useNotifications = () => {
               }
             )
             .subscribe((status) => {
-              console.log('useNotifications: Admin channel status:', status);
-              if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-                console.error('useNotifications: Admin channel error, status:', status);
+              if (status === 'SUBSCRIBED') {
+                console.log('✅ Admin notifications channel connected');
+              } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                console.error('❌ Admin channel error:', status);
               }
             });
 
           channelsRef.current.push(adminChannel);
         }
       } catch (error) {
-        console.error('useNotifications: Error setting up channels:', error);
-        isSetupRef.current = false;
+        console.error('❌ Error setting up notifications:', error);
+        setupStatusRef.current = { isSetup: false };
       }
     };
 
     setupNotifications();
 
     // Cleanup on unmount or user change
-    return cleanupChannels;
+    return () => {
+      cleanupChannels();
+      setupStatusRef.current = { isSetup: false };
+    };
   }, [user?.id, cleanupChannels]);
 
   const markAsRead = (id: string) => {
