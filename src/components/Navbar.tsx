@@ -62,6 +62,12 @@ const Navbar = () => {
               Relatórios
             </Link>
             <Link 
+              to="/economy" 
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
+            >
+              Economia
+            </Link>
+            <Link 
               to="/plans" 
               className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
@@ -149,6 +155,13 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Relatórios
+              </Link>
+              <Link 
+                to="/economy" 
+                className="text-muted-foreground hover:text-app-secondary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Economia
               </Link>
               <Link 
                 to="/plans" 

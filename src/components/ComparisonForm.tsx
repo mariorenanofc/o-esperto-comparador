@@ -446,6 +446,17 @@ const ComparisonForm: React.FC = () => {
                   placeholder="Ex: Mercado Bom Preço"
                 />
               </div>
+              <div className="flex-[0.8] min-w-[200px]">
+                <Label htmlFor="comparisonLocation">Local (Cidade/UF)</Label>
+                <Input
+                  id="comparisonLocation"
+                  value={comparisonData.location || ""}
+                  onChange={(e) =>
+                    setComparisonData({ ...comparisonData, location: e.target.value })
+                  }
+                  placeholder="Ex: Fortaleza/CE"
+                />
+              </div>
               <Button
                 onClick={handleAddStore}
                 className="bg-app-primary hover:bg-app-primary/90 text-white w-full sm:w-auto"

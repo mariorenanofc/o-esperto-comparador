@@ -119,6 +119,7 @@ export interface ComparisonData {
   stores: Store[];
   date?: Date;
   userId?: string;
+  location?: string; // Cidade/UF ou descrição livre do local da comparação
 }
 
 export interface ProductFormData {

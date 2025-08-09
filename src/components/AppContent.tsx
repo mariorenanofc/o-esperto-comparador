@@ -8,6 +8,7 @@ import Home from "@/pages/Index";
 import Comparison from "@/pages/Comparison";
 import Contribute from "@/pages/Contribute";
 import Reports from "@/pages/Reports";
+import Economy from "@/pages/Economy";
 import NotFound from "@/pages/NotFound";
 import Profile from "@/pages/Profile";
 import Terms from "@/pages/Terms";
@@ -32,6 +33,7 @@ export const AppContent: React.FC = () => {
           <Route path="/comparison" element={<ProtectedRoute><Comparison /></ProtectedRoute>} />
           <Route path="/contribute" element={<ProtectedRoute><Contribute /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+          <Route path="/economy" element={<ProtectedRoute><Economy /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />

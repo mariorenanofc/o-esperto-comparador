@@ -15,22 +15,33 @@ export async function exportComparisonPdf(
   const { products, stores } = comparison;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const marginX = 40;
-  let cursorY = 50;
+  let cursorY = 40;
+
+  // Logo no topo esquerdo
+  let titleX = marginX;
+  try {
+    const logo = await loadImageAsDataUrl("/og-image.jpg");
+    if (logo) {
+      doc.addImage(logo, "JPEG", marginX, cursorY - 10, 44, 44);
+      titleX = marginX + 54;
+    }
+  } catch (_) {}
 
   const title = "Relatório de Comparação de Preços";
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text(title, marginX, cursorY);
-  cursorY += 20;
+  doc.text(title, titleX, cursorY + 8);
+  cursorY += 28;
 
   // Company / client info
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const today = new Date();
   const headerLeft = [
-    "Comparador: Economize+",
+    "Comparador: O Esperto Comparador",
     "Descrição: Plataforma de comparação de preços",
     `Data do download: ${today.toLocaleDateString()} ${today.toLocaleTimeString()}`,
+    `Local da comparação: ${comparison.location || "-"}`,
   ];
   const headerRight = [
     `Cliente: ${opts.userName || "-"}`,
@@ -102,6 +113,18 @@ export async function exportComparisonPdf(
     }
   }
 
+  // Caixa de Total Geral (soma dos totais de cada mercado)
+  const grandTotal = Object.values(totals).reduce((acc, v) => acc + (v || 0), 0);
+  autoTable(doc, {
+    startY: cursorY,
+    head: [["Total Geral (soma dos totais de cada mercado)", "Valor"]],
+    body: [["", formatBRL(grandTotal)]],
+    styles: { fontSize: 11 },
+    theme: "grid",
+    margin: { left: marginX, right: marginX },
+  });
+  cursorY = (doc as any).lastAutoTable.finalY + 16;
+
   // Disclaimer
   doc.setFontSize(9);
   doc.setFont("helvetica", "italic");
@@ -153,4 +176,15 @@ function formatBRL(value: number) {
 function todayStr(d: Date) {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
+}
+
+async function loadImageAsDataUrl(url: string): Promise<string> {
+  const res = await fetch(url);
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
