@@ -29,22 +29,10 @@ export const adminService = {
         throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
       }
 
-      // Notify the user that their contribution was approved
-      try {
-        await supabase.functions.invoke('notify-user', {
-          body: {
-            userId: contribution.user_id,
-            type: 'contribution_approved',
-            title: 'Contribuição Aprovada!',
-            body: `Sua contribuição de ${contribution.product_name} em ${contribution.store_name} foi aprovada`,
-            url: '/'
-          }
-        });
-      } catch (e) {
-        console.warn('notify-user failed (contribution approved)', e);
-      }
-
       console.log('Contribution approved successfully');
+
+      // Real-time notification will be triggered automatically by database UPDATE
+      console.log('Real-time notification will be sent via Supabase realtime');
     } catch (error) {
       console.error('Error in approveContribution:', error);
       throw error;

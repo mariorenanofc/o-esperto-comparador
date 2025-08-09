@@ -10,6 +10,7 @@ import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ThemeProvider from "./components/ThemeProvider";
 import { AppContent } from "./components/AppContent";
 import PushInitializer from "./components/PushInitializer";
+import { NotificationSystem } from "./components/NotificationSystem";
 
 // Create QueryClient with proper configuration
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ function App() {
             <Router>
               <Toaster />
               <PushInitializer />
+              <NotificationSystem />
               <AppContent />
             </Router>
           </SubscriptionProvider>

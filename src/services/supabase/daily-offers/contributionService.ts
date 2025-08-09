@@ -52,25 +52,8 @@ export const contributionService = {
 
       console.log('Contribution submitted successfully');
 
-      try {
-        console.log('Sending notification to admins...');
-        const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-admins', {
-          body: {
-            type: 'contribution',
-            title: 'Nova contribuição de preço',
-            body: `${contribution.productName} em ${contribution.storeName}`,
-            url: '/admin'
-          }
-        });
-        
-        if (notifyError) {
-          console.error('Error notifying admins:', notifyError);
-        } else {
-          console.log('Admins notified successfully:', notifyResult);
-        }
-      } catch (e) {
-        console.warn('notify-admins failed (contribution)', e);
-      }
+      // Real-time notification will be triggered automatically by database changes
+      console.log('Real-time notification will be sent via Supabase realtime');
     } catch (error) {
       console.error('Error in submitPriceContribution:', error);
       throw error;
