@@ -72,44 +72,80 @@ export const useNotifications = () => {
   };
 
   useEffect(() => {
-    console.log('useNotifications: useEffect triggered, user:', user);
-    
-    // Aguarda o usuário estar carregado
     if (!user?.id) {
-      console.log('useNotifications: User not ready yet, user:', user);
       return;
     }
 
-    console.log('useNotifications: Setting up real-time notification listeners for user:', user.id);
+    console.log('useNotifications: Setting up notifications for user:', user.id);
     console.log('useNotifications: User email:', user.email);
 
     let userChannel: any = null;
     let adminChannel: any = null;
 
-    // Aguarda um pouco para garantir que tudo está carregado
-    const timeout = setTimeout(() => {
-      console.log('useNotifications: Starting subscription setup');
+    // Setup user notifications channel
+    userChannel = supabase
+      .channel(`user-notifications-${user.id}`, {
+        config: {
+          broadcast: { self: true },
+          presence: { key: user.id }
+        }
+      })
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'daily_offers',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('useNotifications: User contribution update received:', payload);
+          
+          if (payload.new.verified === true && payload.old.verified === false) {
+            const notification: Notification = {
+              id: Date.now().toString(),
+              title: 'Contribuição Aprovada! ✅',
+              message: `Sua contribuição de ${payload.new.product_name} foi aprovada`,
+              type: 'success',
+              timestamp: new Date(),
+              read: false
+            };
+            
+            showNotification(notification);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('useNotifications: User channel status:', status);
+      });
+
+    // Setup admin notifications if user is admin
+    if (user.email && isAdmin(user.email)) {
+      console.log('useNotifications: Setting up admin notifications');
       
-      // Listen for changes to daily_offers for user contributions
-      userChannel = supabase
-        .channel(`user-notifications-${user.id}`)
+      adminChannel = supabase
+        .channel(`admin-notifications-${user.id}`, {
+          config: {
+            broadcast: { self: true },
+            presence: { key: user.id }
+          }
+        })
         .on(
           'postgres_changes',
           {
-            event: 'UPDATE',
+            event: 'INSERT',
             schema: 'public',
-            table: 'daily_offers',
-            filter: `user_id=eq.${user.id}`
+            table: 'daily_offers'
           },
           (payload) => {
-            console.log('useNotifications: User contribution update received:', payload);
+            console.log('useNotifications: New contribution received (admin):', payload);
             
-            if (payload.new.verified === true && payload.old.verified === false) {
+            if (payload.new.user_id !== user.id) {
               const notification: Notification = {
                 id: Date.now().toString(),
-                title: 'Contribuição Aprovada! ✅',
-                message: `Sua contribuição de ${payload.new.product_name} foi aprovada`,
-                type: 'success',
+                title: 'Nova Contribuição 📝',
+                message: `${payload.new.contributor_name}: ${payload.new.product_name} em ${payload.new.store_name}`,
+                type: 'info',
                 timestamp: new Date(),
                 read: false
               };
@@ -119,54 +155,16 @@ export const useNotifications = () => {
           }
         )
         .subscribe((status) => {
-          console.log('useNotifications: User channel subscription status:', status);
+          console.log('useNotifications: Admin channel status:', status);
         });
+    }
 
-      // Listen for new contributions if user is admin
-      if (user.email && isAdmin(user.email)) {
-        console.log('useNotifications: Setting up admin notifications for:', user.email);
-        
-        adminChannel = supabase
-          .channel(`admin-notifications-${user.id}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'daily_offers'
-            },
-            (payload) => {
-              console.log('useNotifications: New contribution received (admin):', payload);
-              
-              // Don't notify admin of their own contributions
-              if (payload.new.user_id !== user.id) {
-                const notification: Notification = {
-                  id: Date.now().toString(),
-                  title: 'Nova Contribuição 📝',
-                  message: `${payload.new.contributor_name}: ${payload.new.product_name} em ${payload.new.store_name}`,
-                  type: 'info',
-                  timestamp: new Date(),
-                  read: false
-                };
-                
-                showNotification(notification);
-              }
-            }
-          )
-          .subscribe((status) => {
-            console.log('useNotifications: Admin channel subscription status:', status);
-          });
-      }
-    }, 1000);
-
-    // Cleanup function
     return () => {
-      console.log('useNotifications: Cleaning up real-time listeners');
-      clearTimeout(timeout);
+      console.log('useNotifications: Cleaning up channels');
       userChannel?.unsubscribe();
       adminChannel?.unsubscribe();
     };
-  }, [user?.id, user?.email]); // Dependências mais específicas
+  }, [user?.id, user?.email]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 

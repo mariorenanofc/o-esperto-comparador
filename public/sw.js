@@ -1,8 +1,6 @@
 const CACHE_NAME = 'o-esperto-comparador-v1';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/icon-192.png',
   '/icon-512.png'
 ];
