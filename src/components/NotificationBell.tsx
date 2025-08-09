@@ -29,7 +29,7 @@ export const NotificationBell: React.FC = () => {
 
       {/* Notifications Panel */}
       {showPanel && (
-        <div className="absolute top-12 right-0 w-80 max-h-96 bg-background/95 backdrop-blur-sm border border-border/50 rounded-lg shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-12 right-0 w-80 max-h-96 bg-background backdrop-blur-sm border border-border/50 rounded-lg shadow-xl z-[9999] overflow-hidden">
           <div className="p-4 border-b border-border/50 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Notificações</h3>
             <div className="flex items-center gap-2">
