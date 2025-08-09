@@ -14,6 +14,7 @@ import Profile from "@/pages/Profile";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Plans from "@/pages/Plans";
+import Success from "@/pages/Success";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
 import Admin from "@/pages/Admin";
@@ -36,6 +37,7 @@ export const AppContent: React.FC = () => {
           <Route path="/economy" element={<ProtectedRoute><Economy /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/plans" element={<ProtectedRoute><Plans /></ProtectedRoute>} />
+          <Route path="/success" element={<Success />} />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />

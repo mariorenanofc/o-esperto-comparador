@@ -1,7 +1,8 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { PlanTier } from "@/lib/plans";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SubscriptionContextType {
   currentPlan: PlanTier;
@@ -9,6 +10,7 @@ interface SubscriptionContextType {
   createCheckout: (planId: PlanTier) => Promise<void>;
   manageSubscription: () => Promise<void>;
   updateUserPlan: (planId: PlanTier) => Promise<void>;
+  checkSubscription: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
@@ -16,22 +18,88 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
 );
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { profile, updateProfile } = useAuth();
+  const { profile, updateProfile, user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Safely cast profile.plan to PlanTier with fallback
   const currentPlan: PlanTier = (profile?.plan as PlanTier) || "free";
-  const isLoading = false; // Será usado quando implementarmos Stripe
+
+  const checkSubscription = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return;
+      }
+
+      if (data?.subscription_tier && data.subscription_tier !== currentPlan) {
+        await updateProfile({ plan: data.subscription_tier });
+      }
+    } catch (error) {
+      console.error('Error in checkSubscription:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const createCheckout = async (planId: PlanTier) => {
-    // TODO: Implementar integração com Stripe
-    toast.info(`Checkout para o plano ${planId} será implementado em breve`);
-    console.log("Creating checkout for plan:", planId);
+    if (!user) {
+      toast.error("Você precisa estar logado para assinar um plano");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planId }
+      });
+
+      if (error) {
+        toast.error("Erro ao criar checkout");
+        console.error('Checkout error:', error);
+        return;
+      }
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      toast.error("Erro ao processar pagamento");
+      console.error('Error in createCheckout:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const manageSubscription = async () => {
-    // TODO: Implementar portal do cliente Stripe
-    toast.info("Portal de gerenciamento será implementado em breve");
-    console.log("Managing subscription");
+    if (!user) {
+      toast.error("Você precisa estar logado");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+
+      if (error) {
+        toast.error("Erro ao abrir portal de gerenciamento");
+        console.error('Portal error:', error);
+        return;
+      }
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      toast.error("Erro ao abrir portal");
+      console.error('Error in manageSubscription:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateUserPlan = async (planId: PlanTier) => {
@@ -44,12 +112,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Check subscription on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      checkSubscription();
+    }
+  }, [user]);
+
   const value = {
     currentPlan,
     isLoading,
     createCheckout,
     manageSubscription,
     updateUserPlan,
+    checkSubscription,
   };
 
   return (
