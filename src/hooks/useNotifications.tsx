@@ -94,7 +94,16 @@ export const useNotifications = () => {
       console.log('🔔 Setting up notifications for user:', userId);
       
       // Clean up any existing channels first
-      cleanupChannels();
+      channelsRef.current.forEach(channel => {
+        if (channel) {
+          try {
+            channel.unsubscribe();
+          } catch (e) {
+            console.log('Error unsubscribing channel:', e);
+          }
+        }
+      });
+      channelsRef.current = [];
 
       // Create unique channel names to avoid conflicts
       const timestamp = Date.now();
@@ -154,13 +163,6 @@ export const useNotifications = () => {
             console.log('✅ User notifications channel connected');
           } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
             console.error('❌ User channel error:', status);
-            // Retry setup after a delay if channel fails
-            setTimeout(() => {
-              if (currentUserIdRef.current === userId && !isSetupRef.current) {
-                console.log('🔄 Retrying user channel setup...');
-                setupNotifications(userId);
-              }
-            }, 3000);
           }
         });
 
@@ -212,13 +214,6 @@ export const useNotifications = () => {
               console.log('✅ Admin notifications channel connected');
             } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
               console.error('❌ Admin channel error:', status);
-              // Retry setup after a delay if channel fails
-              setTimeout(() => {
-                if (currentUserIdRef.current === userId && !isSetupRef.current) {
-                  console.log('🔄 Retrying admin channel setup...');
-                  setupNotifications(userId);
-                }
-              }, 3000);
             }
           });
 
@@ -230,7 +225,7 @@ export const useNotifications = () => {
       console.error('❌ Error setting up notifications:', error);
       isSetupRef.current = false;
     }
-  }, [cleanupChannels]);
+  }, []);
 
   useEffect(() => {
     if (!user?.id) {
@@ -254,7 +249,7 @@ export const useNotifications = () => {
 
     // Setup notifications immediately
     setupNotifications(user.id);
-  }, [user?.id, setupNotifications, cleanupChannels]);
+  }, [user?.id]);
 
   // Cleanup on unmount
   useEffect(() => {
