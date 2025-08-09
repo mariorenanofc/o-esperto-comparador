@@ -69,7 +69,10 @@ export const useNotifications = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('useNotifications: No user found');
+      return;
+    }
 
     console.log('Setting up real-time notification listeners for user:', user.id);
 

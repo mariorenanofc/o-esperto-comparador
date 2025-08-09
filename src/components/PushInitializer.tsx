@@ -11,7 +11,13 @@ const PushInitializer: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      initPushNotifications(user.id);
+      console.log("PushInitializer: Initializing for user", user.id);
+      // Add a small delay to ensure everything is loaded
+      setTimeout(() => {
+        initPushNotifications(user.id);
+      }, 1000);
+    } else {
+      console.log("PushInitializer: No user found");
     }
   }, [user?.id]);
 

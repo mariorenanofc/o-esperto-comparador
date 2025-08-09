@@ -28,9 +28,15 @@ export async function initPushNotifications(userId: string) {
   try {
     console.log("=== INITIALIZING PUSH NOTIFICATIONS ===");
     console.log("User ID:", userId);
+    console.log("Navigator supports:", {
+      Notification: "Notification" in window,
+      serviceWorker: "serviceWorker" in navigator,
+      PushManager: "PushManager" in window
+    });
     
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       console.log("Push notifications not supported");
+      toast.error("Notificações push não suportadas neste navegador");
       return;
     }
 
@@ -57,9 +63,10 @@ export async function initPushNotifications(userId: string) {
     // Get VAPID key from Edge Function
     console.log("Fetching VAPID key...");
     const { data, error } = await supabase.functions.invoke("get-vapid");
+    console.log("VAPID response:", { data, error });
     if (error || !data?.publicKey) {
       console.error("Failed to get VAPID public key", error);
-      toast.error("Falha ao obter chave VAPID");
+      toast.error("Falha ao obter chave VAPID: " + (error?.message || "Chave não encontrada"));
       return;
     }
 
