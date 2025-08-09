@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import LoadComparisonDrawer from "@/components/comparison/LoadComparisonDrawer";
 import { exportComparisonPdf } from "@/lib/pdf/exportComparisonPdf";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
@@ -50,7 +51,7 @@ const ComparisonForm: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(true);
   const [isLoadDrawerOpen, setIsLoadDrawerOpen] = useState(false);
-
+  const geo = useGeolocation();
   // Carregar do localStorage ao montar
   useEffect(() => {
     const data = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -73,6 +74,16 @@ const ComparisonForm: React.FC = () => {
       setIsEditingMode(true);
     }
   }, [comparisonData, showResults]);
+
+  // Preencher local automaticamente a partir da geolocalização
+  useEffect(() => {
+    if (!geo.loading && geo.city && geo.state) {
+      setComparisonData((prev) => {
+        if (prev.location && prev.location.trim() !== "") return prev;
+        return { ...prev, location: `${geo.city}/${geo.state}` };
+      });
+    }
+  }, [geo.loading, geo.city, geo.state]);
 
   const handleAddStore = () => {
     const planDetails = getPlanById(currentPlan);
@@ -456,6 +467,32 @@ const ComparisonForm: React.FC = () => {
                   }
                   placeholder="Ex: Fortaleza/CE"
                 />
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() =>
+                      setComparisonData((prev) => ({
+                        ...prev,
+                        location: geo.city && geo.state ? `${geo.city}/${geo.state}` : prev.location,
+                      }))
+                    }
+                    disabled={geo.loading || !!geo.error}
+                    title={geo.error || undefined}
+                  >
+                    {geo.loading ? "Detectando..." : "Usar minha localização"}
+                  </Button>
+                  {!geo.loading && !geo.error && (
+                    <span className="text-xs text-muted-foreground">
+                      Sugerido: {geo.city}/{geo.state}
+                    </span>
+                  )}
+                  {geo.error && (
+                    <span className="text-xs text-destructive">{geo.error}</span>
+                  )}
+                </div>
               </div>
               <Button
                 onClick={handleAddStore}

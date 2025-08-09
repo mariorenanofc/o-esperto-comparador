@@ -165,11 +165,17 @@ const Economy: React.FC = () => {
                       className="h-64"
                     >
                       <BarChart data={monthly}>
+                        <defs>
+                          <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--color-savings)" stopOpacity={0.9} />
+                            <stop offset="95%" stopColor="var(--color-savings)" stopOpacity={0.2} />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" />
                         <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                        <YAxis tickFormatter={(v) => `R$ ${v}`} width={60} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="savings" fill="var(--color-savings)" radius={[6, 6, 0, 0]} />
+                        <YAxis tickFormatter={(v) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} width={70} />
+                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => [`R$ ${(Number(value) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Economia']}/>} />
+                        <Bar dataKey="savings" fill="url(#savingsGradient)" radius={[8, 8, 0, 0]} barSize={32} />
                       </BarChart>
                     </ChartContainer>
                   </CardContent>
