@@ -16,6 +16,9 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  // Add debug log to see if hook is being executed
+  console.log('useNotifications: Hook initialized, user:', user?.id);
+
   const playNotificationSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -74,7 +77,7 @@ export const useNotifications = () => {
       return;
     }
 
-    console.log('Setting up real-time notification listeners for user:', user.id);
+    console.log('useNotifications: Setting up real-time notification listeners for user:', user.id);
 
     // Listen for changes to daily_offers for user contributions
     const userChannel = supabase
@@ -88,7 +91,7 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('User contribution update received:', payload);
+          console.log('useNotifications: User contribution update received:', payload);
           
           if (payload.new.verified === true && payload.old.verified === false) {
             const notification: Notification = {
@@ -121,7 +124,7 @@ export const useNotifications = () => {
             table: 'daily_offers'
           },
           (payload) => {
-            console.log('New contribution received (admin):', payload);
+            console.log('useNotifications: New contribution received (admin):', payload);
             
             // Don't notify admin of their own contributions
             if (payload.new.user_id !== user.id) {
