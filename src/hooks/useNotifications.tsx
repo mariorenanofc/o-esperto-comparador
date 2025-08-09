@@ -166,7 +166,76 @@ export const useNotifications = () => {
           }
         });
 
-      channelsRef.current.push(userChannel);
+      // Canal para feedback de sugestões do usuário
+      const userSuggestionsChannel = supabase
+        .channel(`user-suggestions-${userId}-${timestamp}`, {
+          config: {
+            broadcast: { self: false },
+            presence: { key: userId }
+          }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'suggestions',
+            filter: `user_id=eq.${userId}`
+          },
+          (payload) => {
+            console.log('🔔 Suggestion status update received:', {
+              title: payload.new.title,
+              oldStatus: payload.old.status,
+              newStatus: payload.new.status
+            });
+            
+            if (payload.new.status !== payload.old.status) {
+              let notificationTitle = '';
+              let notificationMessage = '';
+              let notificationType: 'info' | 'success' | 'warning' | 'error' = 'info';
+              
+              switch (payload.new.status) {
+                case 'in-review':
+                  notificationTitle = 'Sugestão em Análise 🔍';
+                  notificationMessage = `Sua sugestão "${payload.new.title}" está sendo analisada`;
+                  notificationType = 'info';
+                  break;
+                case 'implemented':
+                  notificationTitle = 'Sugestão Implementada! ✅';
+                  notificationMessage = `Sua sugestão "${payload.new.title}" foi implementada`;
+                  notificationType = 'success';
+                  break;
+                case 'closed':
+                  notificationTitle = 'Sugestão Finalizada 📋';
+                  notificationMessage = `Sua sugestão "${payload.new.title}" foi finalizada`;
+                  notificationType = 'info';
+                  break;
+              }
+              
+              if (notificationTitle) {
+                const notification: Notification = {
+                  id: Date.now().toString(),
+                  title: notificationTitle,
+                  message: notificationMessage,
+                  type: notificationType,
+                  timestamp: new Date(),
+                  read: false
+                };
+                
+                showNotification(notification);
+              }
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ User suggestions channel connected');
+          } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+            console.error('❌ User suggestions channel error:', status);
+          }
+        });
+
+      channelsRef.current.push(userChannel, userSuggestionsChannel);
 
       // Check if user is admin and setup admin notifications
       const userIsAdmin = await isAdmin(userId);
@@ -174,8 +243,9 @@ export const useNotifications = () => {
       if (userIsAdmin) {
         console.log('👑 Setting up admin notifications');
         
-        const adminChannel = supabase
-          .channel(`admin-notifications-${userId}-${timestamp}`, {
+        // Canal para novas contribuições de preços
+        const adminContributionsChannel = supabase
+          .channel(`admin-contributions-${userId}-${timestamp}`, {
             config: {
               broadcast: { self: false },
               presence: { key: userId }
@@ -211,13 +281,56 @@ export const useNotifications = () => {
           )
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Admin notifications channel connected');
+              console.log('✅ Admin contributions channel connected');
             } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-              console.error('❌ Admin channel error:', status);
+              console.error('❌ Admin contributions channel error:', status);
             }
           });
 
-        channelsRef.current.push(adminChannel);
+        // Canal para novas sugestões
+        const adminSuggestionsChannel = supabase
+          .channel(`admin-suggestions-${userId}-${timestamp}`, {
+            config: {
+              broadcast: { self: false },
+              presence: { key: userId }
+            }
+          })
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'suggestions'
+            },
+            (payload) => {
+              if (payload.new.user_id !== userId) {
+                console.log('🔔 New suggestion for admin:', {
+                  title: payload.new.title,
+                  category: payload.new.category
+                });
+                
+                const notification: Notification = {
+                  id: Date.now().toString(),
+                  title: 'Nova Sugestão 💡',
+                  message: `${payload.new.title} (${payload.new.category})`,
+                  type: 'info',
+                  timestamp: new Date(),
+                  read: false
+                };
+                
+                showNotification(notification);
+              }
+            }
+          )
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log('✅ Admin suggestions channel connected');
+            } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+              console.error('❌ Admin suggestions channel error:', status);
+            }
+          });
+
+        channelsRef.current.push(adminContributionsChannel, adminSuggestionsChannel);
       }
 
       isSetupRef.current = true;
