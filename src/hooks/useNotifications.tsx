@@ -25,21 +25,41 @@ export const useNotifications = () => {
     try {
       console.log('🔊 Playing notification sound...');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // Create a pleasant two-tone notification sound
+      const playTone = (frequency: number, startTime: number, duration: number, fadeOut: boolean = true) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        // Gentle volume envelope
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.12, startTime + 0.02); // Softer volume
+        
+        if (fadeOut) {
+          gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        } else {
+          gainNode.gain.setValueAtTime(0.12, startTime + duration);
+        }
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
       
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
+      // Play two gentle tones - C5 to G5 (pleasant musical interval)
+      const now = audioContext.currentTime;
+      playTone(523.25, now, 0.2, false); // C5
+      playTone(783.99, now + 0.15, 0.25, true); // G5
       
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.4);
+      // Close audio context after sound is done
+      setTimeout(() => {
+        audioContext.close().catch(() => {});
+      }, 500);
       
       console.log('🔊 Notification sound played successfully');
     } catch (e) {
