@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { ComparisonData, Product, Store } from "@/lib/types";
 import { calculateTotalsByStore, calculateOptimalTotal, summarizeTotals } from "@/lib/comparison/calc";
 import { comparisonExportsService } from "@/services/supabase/comparisonExportsService";
+import logoEC from "@/assets/logo-ec.png";
 
 export async function exportComparisonPdf(
   comparison: ComparisonData,
@@ -20,9 +21,9 @@ export async function exportComparisonPdf(
   // Logo no topo esquerdo
   let titleX = marginX;
   try {
-    const logo = await loadImageAsDataUrl("/og-image.jpg");
+    const logo = await loadImageAsDataUrl(logoEC);
     if (logo) {
-      doc.addImage(logo, "JPEG", marginX, cursorY - 10, 44, 44);
+      doc.addImage(logo, "PNG", marginX, cursorY - 10, 44, 44);
       titleX = marginX + 54;
     }
   } catch (_) {}
@@ -72,12 +73,18 @@ export async function exportComparisonPdf(
       ["Economia vs média", formatBRL(average - optimal)],
     ],
     theme: "striped",
+    pageBreak: "avoid",
     margin: { left: marginX, right: marginX },
   });
   cursorY = (doc as any).lastAutoTable.finalY + 20;
 
   // Per-store detailed tables
   for (const store of stores) {
+    // Avoid orphaned headings: if near the bottom, start a new page before the section
+    if (cursorY > 730) {
+      doc.addPage();
+      cursorY = 50;
+    }
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text(`Mercado: ${store.name}`, marginX, cursorY);
@@ -121,6 +128,7 @@ export async function exportComparisonPdf(
     body: [["", formatBRL(grandTotal)]],
     styles: { fontSize: 11 },
     theme: "grid",
+    pageBreak: "avoid",
     margin: { left: marginX, right: marginX },
   });
   cursorY = (doc as any).lastAutoTable.finalY + 16;
@@ -137,6 +145,7 @@ export async function exportComparisonPdf(
     body: disclaimerLines.map((l: string) => [l]),
     styles: { fontSize: 8 },
     theme: "plain",
+    pageBreak: "avoid",
     margin: { left: marginX, right: marginX },
   });
   cursorY = (doc as any).lastAutoTable.finalY;
