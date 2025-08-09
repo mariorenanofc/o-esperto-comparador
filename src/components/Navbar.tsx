@@ -10,7 +10,7 @@ import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isLoaded } = useAdminAuth();
+  const { isAdmin, isLoaded, refreshAdminStatus } = useAdminAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -83,6 +83,18 @@ const Navbar = () => {
                 <Settings className="w-4 h-4" />
                 Admin
               </Link>
+            )}
+
+            {/* Debug button for admin users to refresh status */}
+            {user && isLoaded && !isAdmin && (
+              <Button
+                onClick={refreshAdminStatus}
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-app-secondary"
+              >
+                Verificar Admin
+              </Button>
             )}
 
             {/* Theme Toggle */}

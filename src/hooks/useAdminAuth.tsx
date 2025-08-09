@@ -20,7 +20,7 @@ export const useAdminAuth = () => {
       console.log('useAdminAuth: Checking admin status for user:', user.id);
 
       try {
-        // Check if user profile exists and has admin plan
+        // Force a fresh fetch without cache
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('plan')
@@ -48,12 +48,37 @@ export const useAdminAuth = () => {
       checkAdminStatus();
     }
   }, [user, loading]);
+
+  // Add a refresh function to force re-check admin status
+  const refreshAdminStatus = async () => {
+    if (!user) return;
+    
+    setIsLoaded(false);
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profileError && profile) {
+        const userIsAdmin = profile.plan === 'admin';
+        console.log('useAdminAuth: Refreshed admin status:', userIsAdmin);
+        setIsAdmin(userIsAdmin);
+      }
+    } catch (error) {
+      console.error('useAdminAuth: Error refreshing admin status:', error);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
   
   console.log('useAdminAuth: Current state - isAdmin:', isAdmin, 'isLoaded:', isLoaded, 'loading:', loading);
   
   return {
     isAdmin,
     isLoaded: isLoaded && !loading,
-    user
+    user,
+    refreshAdminStatus
   };
 };
