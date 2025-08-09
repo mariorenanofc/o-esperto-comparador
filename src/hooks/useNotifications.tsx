@@ -72,12 +72,14 @@ export const useNotifications = () => {
   };
 
   useEffect(() => {
+    console.log('useNotifications: useEffect triggered, user:', user);
     if (!user) {
       console.log('useNotifications: No user found');
       return;
     }
 
     console.log('useNotifications: Setting up real-time notification listeners for user:', user.id);
+    console.log('useNotifications: User email:', user.email);
 
     // Listen for changes to daily_offers for user contributions
     const userChannel = supabase
