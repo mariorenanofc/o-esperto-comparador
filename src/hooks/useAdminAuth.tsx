@@ -27,6 +27,9 @@ export const useAdminAuth = () => {
           .eq('id', user.id)
           .maybeSingle();
 
+        console.log('useAdminAuth: Raw profile data:', profile);
+        console.log('useAdminAuth: Profile error:', profileError);
+
         if (profileError) {
           console.error('useAdminAuth: Error fetching profile:', profileError);
           setIsAdmin(false);
