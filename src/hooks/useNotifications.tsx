@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -16,9 +16,15 @@ interface Notification {
 export const useNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const channelsRef = useRef<any[]>([]);
+  const isSetupRef = useRef(false);
 
-  // Add debug log to see if hook is being executed
-  console.log('useNotifications: Hook initialized, user:', user?.id);
+  // Only log once per user change
+  const logRef = useRef<string | undefined>(undefined);
+  if (logRef.current !== user?.id) {
+    console.log('useNotifications: Hook initialized, user:', user?.id);
+    logRef.current = user?.id;
+  }
 
   const playNotificationSound = () => {
     try {
@@ -68,86 +74,65 @@ export const useNotifications = () => {
     }
   };
 
+  // Cleanup function for channels
+  const cleanupChannels = useCallback(() => {
+    console.log('useNotifications: Cleaning up channels, count:', channelsRef.current.length);
+    channelsRef.current.forEach(channel => {
+      if (channel) {
+        channel.unsubscribe();
+      }
+    });
+    channelsRef.current = [];
+    isSetupRef.current = false;
+  }, []);
+
   useEffect(() => {
     if (!user?.id) {
       console.log('useNotifications: No user ID, skipping setup');
+      cleanupChannels();
+      return;
+    }
+
+    // Prevent multiple setups for the same user
+    if (isSetupRef.current) {
+      console.log('useNotifications: Already setup for this user, skipping');
       return;
     }
 
     console.log('useNotifications: Setting up notifications for user:', user.id);
+    isSetupRef.current = true;
 
     const setupNotifications = async () => {
-      let userChannel: any = null;
-      let adminChannel: any = null;
+      // Clean up any existing channels first
+      cleanupChannels();
 
-      // Setup user notifications channel
-      console.log('useNotifications: Creating user channel');
-      userChannel = supabase
-        .channel(`user-notifications-${user.id}`, {
-          config: {
-            broadcast: { self: true },
-            presence: { key: user.id }
-          }
-        })
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'daily_offers',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('🔔 useNotifications: User contribution update received:', payload);
-            
-            if (payload.new.verified === true && payload.old.verified === false) {
-              const notification: Notification = {
-                id: Date.now().toString(),
-                title: 'Contribuição Aprovada! ✅',
-                message: `Sua contribuição de ${payload.new.product_name} foi aprovada`,
-                type: 'success',
-                timestamp: new Date(),
-                read: false
-              };
-              
-              showNotification(notification);
-            }
-          }
-        )
-        .subscribe((status) => {
-          console.log('useNotifications: User channel status:', status);
-        });
-
-      // Check if user is admin and setup admin notifications
-      const userIsAdmin = await isAdmin(user.id);
-      console.log('useNotifications: User is admin?', userIsAdmin);
-      
-      if (userIsAdmin) {
-        console.log('useNotifications: Setting up admin notifications');
-        
-        adminChannel = supabase
-          .channel(`admin-notifications-${user.id}`, {
+      try {
+        // Setup user notifications channel
+        console.log('useNotifications: Creating user channel');
+        const userChannel = supabase
+          .channel(`user-notifications-${user.id}-${Date.now()}`, {
             config: {
-              broadcast: { self: true },
+              broadcast: { self: false },
               presence: { key: user.id }
             }
           })
           .on(
             'postgres_changes',
             {
-              event: 'INSERT',
+              event: 'UPDATE',
               schema: 'public',
-              table: 'daily_offers'
+              table: 'daily_offers',
+              filter: `user_id=eq.${user.id}`
             },
             (payload) => {
-              console.log('🔔 useNotifications: New contribution received (admin):', payload);
+              console.log('🔔 useNotifications: User contribution update received:', payload);
               
-              if (payload.new.user_id !== user.id) {
+              if (payload.new.verified === true && payload.old.verified === false) {
                 const notification: Notification = {
                   id: Date.now().toString(),
-                  title: 'Nova Contribuição 📝',
-                  message: `${payload.new.contributor_name}: ${payload.new.product_name} em ${payload.new.store_name}`,
-                  type: 'info',
+                  title: 'Contribuição Aprovada! ✅',
+                  message: `Sua contribuição de ${payload.new.product_name} foi aprovada`,
+                  type: 'success',
                   timestamp: new Date(),
                   read: false
                 };
@@ -157,20 +142,72 @@ export const useNotifications = () => {
             }
           )
           .subscribe((status) => {
-            console.log('useNotifications: Admin channel status:', status);
+            console.log('useNotifications: User channel status:', status);
+            if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+              console.error('useNotifications: User channel error, status:', status);
+            }
           });
-      }
 
-      // Cleanup function
-      return () => {
-        console.log('useNotifications: Cleaning up channels');
-        userChannel?.unsubscribe();
-        adminChannel?.unsubscribe();
-      };
+        channelsRef.current.push(userChannel);
+
+        // Check if user is admin and setup admin notifications
+        const userIsAdmin = await isAdmin(user.id);
+        console.log('useNotifications: User is admin?', userIsAdmin);
+        
+        if (userIsAdmin) {
+          console.log('useNotifications: Setting up admin notifications');
+          
+          const adminChannel = supabase
+            .channel(`admin-notifications-${user.id}-${Date.now()}`, {
+              config: {
+                broadcast: { self: false },
+                presence: { key: user.id }
+              }
+            })
+            .on(
+              'postgres_changes',
+              {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'daily_offers'
+              },
+              (payload) => {
+                console.log('🔔 useNotifications: New contribution received (admin):', payload);
+                
+                if (payload.new.user_id !== user.id) {
+                  const notification: Notification = {
+                    id: Date.now().toString(),
+                    title: 'Nova Contribuição 📝',
+                    message: `${payload.new.contributor_name}: ${payload.new.product_name} em ${payload.new.store_name}`,
+                    type: 'info',
+                    timestamp: new Date(),
+                    read: false
+                  };
+                  
+                  showNotification(notification);
+                }
+              }
+            )
+            .subscribe((status) => {
+              console.log('useNotifications: Admin channel status:', status);
+              if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                console.error('useNotifications: Admin channel error, status:', status);
+              }
+            });
+
+          channelsRef.current.push(adminChannel);
+        }
+      } catch (error) {
+        console.error('useNotifications: Error setting up channels:', error);
+        isSetupRef.current = false;
+      }
     };
 
     setupNotifications();
-  }, [user?.id]);
+
+    // Cleanup on unmount or user change
+    return cleanupChannels;
+  }, [user?.id, cleanupChannels]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 
