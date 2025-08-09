@@ -79,7 +79,7 @@ export const PLANS: Plan[] = [
       "Pode salvar 12 comparações no banco de dados",
       "Acesso a todos os alertas do dia",
       "Histórico completo de relatórios",
-      "Exportação de dados (CSV/PDF)",
+      "Exportação em PDF das comparações (Pro/Admin)",
       "Dashboard de economia",
       "Suporte dedicado",
     ],

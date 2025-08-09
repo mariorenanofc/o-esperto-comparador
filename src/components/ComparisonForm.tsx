@@ -666,6 +666,16 @@ const ComparisonForm: React.FC = () => {
           </div>
         </>
       )}
+      {/* Drawer para reaproveitar comparações salvas */}
+      <LoadComparisonDrawer
+        open={isLoadDrawerOpen}
+        onOpenChange={setIsLoadDrawerOpen}
+        onSelect={(data) => {
+          setComparisonData(data);
+          setIsEditingMode(true);
+          setShowResults(false);
+        }}
+      />
     </div>
   );
 };
