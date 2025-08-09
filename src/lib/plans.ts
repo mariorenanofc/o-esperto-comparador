@@ -47,7 +47,7 @@ export const PLANS: Plan[] = [
     id: "premium",
     name: "Premium",
     price: 14.99,
-    priceId: "price_premium_monthly", // Substituir pelo ID real do Stripe
+    priceId: "price_1RuDjBJxMPLn2TAntsbriZie",
     description: "Para quem quer economizar e gerenciar mais",
     features: [
       "Até 10 estabelecimentos e 20 produtos por comparação",
@@ -71,7 +71,7 @@ export const PLANS: Plan[] = [
     id: "pro",
     name: "Pro",
     price: 29.9,
-    priceId: "price_pro_monthly", // Substituir pelo ID real do Stripe
+    priceId: "price_1RuDphJxMPLn2TAn2SrsAoyv",
     description: "Para mais controle e pensamento ao longo prazo.",
     features: [
       "Estabelecimentos e produtos ilimitados por comparação",

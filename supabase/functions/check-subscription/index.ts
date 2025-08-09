@@ -88,10 +88,15 @@ serve(async (req) => {
       
       // Determine subscription tier from price ID
       const priceId = subscription.items.data[0].price.id;
+      logStep("Checking price ID", { priceId });
+      
       if (priceId === "price_1RuDjBJxMPLn2TAntsbriZie") {
         subscriptionTier = "premium";
       } else if (priceId === "price_1RuDphJxMPLn2TAn2SrsAoyv") {
         subscriptionTier = "pro";
+      } else {
+        logStep("Unknown price ID, defaulting to free", { priceId });
+        subscriptionTier = "free";
       }
       logStep("Determined subscription tier", { priceId, subscriptionTier });
     } else {

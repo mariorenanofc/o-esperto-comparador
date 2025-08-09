@@ -457,6 +457,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_feature_access: {
+        Args: { feature_name: string; current_usage?: number }
+        Returns: boolean
+      }
       is_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -464,6 +468,10 @@ export type Database = {
       mark_inactive_users_offline: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      user_plan_access: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
     }
     Enums: {
