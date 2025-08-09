@@ -47,8 +47,8 @@ function App() {
           <SubscriptionProvider>
             <Router>
               <Toaster />
-              <PushInitializer />
-              <NotificationSystem />
+        <PushInitializer />
+        <NotificationSystem />
               <AppContent />
             </Router>
           </SubscriptionProvider>

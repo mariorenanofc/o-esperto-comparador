@@ -34,19 +34,32 @@ export async function initPushNotifications(userId: string) {
       return;
     }
 
-    const permission = await Notification.requestPermission();
+    // Request permission first
+    let permission = Notification.permission;
+    if (permission === "default") {
+      permission = await Notification.requestPermission();
+    }
+    
     console.log("Notification permission:", permission);
-    if (permission !== "granted") return;
+    if (permission !== "granted") {
+      toast.error("Permissão de notificação negada");
+      return;
+    }
 
     const reg = await registerServiceWorker();
-    if (!reg) return;
+    if (!reg) {
+      toast.error("Falha ao registrar service worker");
+      return;
+    }
 
     console.log("Service worker registered successfully");
 
     // Get VAPID key from Edge Function
+    console.log("Fetching VAPID key...");
     const { data, error } = await supabase.functions.invoke("get-vapid");
     if (error || !data?.publicKey) {
       console.error("Failed to get VAPID public key", error);
+      toast.error("Falha ao obter chave VAPID");
       return;
     }
 
@@ -56,18 +69,26 @@ export async function initPushNotifications(userId: string) {
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
       console.log("Creating new push subscription...");
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(data.publicKey),
-      });
+      try {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+        });
+        console.log("New push subscription created");
+      } catch (subError) {
+        console.error("Failed to create subscription:", subError);
+        toast.error("Falha ao criar subscription de push");
+        return;
+      }
     } else {
       console.log("Using existing push subscription");
     }
 
     const json = sub.toJSON() as any;
-    console.log("Push subscription created/retrieved:", !!json.endpoint);
+    console.log("Push subscription JSON:", json);
 
     // Save in Supabase (upsert by endpoint)
+    console.log("Saving subscription to Supabase...");
     const { error: upsertError } = await supabase
       .from("push_subscriptions")
       .upsert(
@@ -83,11 +104,14 @@ export async function initPushNotifications(userId: string) {
 
     if (upsertError) {
       console.error("Failed to save push subscription", upsertError);
+      toast.error("Falha ao salvar subscription");
     } else {
       console.log("Push subscription saved successfully");
+      toast.success("Notificações ativadas com sucesso!");
     }
   } catch (e) {
     console.error("initPushNotifications error", e);
+    toast.error("Erro ao inicializar notificações");
   }
 }
 
