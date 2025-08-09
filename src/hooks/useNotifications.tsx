@@ -233,15 +233,10 @@ export const useNotifications = () => {
   }, [cleanupChannels]);
 
   useEffect(() => {
-    // Clear any existing timeout
-    if (setupTimeoutRef.current) {
-      clearTimeout(setupTimeoutRef.current);
-      setupTimeoutRef.current = null;
-    }
-
     if (!user?.id) {
       cleanupChannels();
       currentUserIdRef.current = undefined;
+      isSetupRef.current = false;
       return;
     }
 
@@ -257,20 +252,8 @@ export const useNotifications = () => {
       return;
     }
 
-    // Debounce setup to avoid rapid re-executions
-    setupTimeoutRef.current = setTimeout(() => {
-      if (currentUserIdRef.current === user.id && !isSetupRef.current) {
-        setupNotifications(user.id);
-      }
-    }, 1000); // 1 second delay to allow auth to stabilize
-
-    // Cleanup function
-    return () => {
-      if (setupTimeoutRef.current) {
-        clearTimeout(setupTimeoutRef.current);
-        setupTimeoutRef.current = null;
-      }
-    };
+    // Setup notifications immediately
+    setupNotifications(user.id);
   }, [user?.id, setupNotifications, cleanupChannels]);
 
   // Cleanup on unmount
