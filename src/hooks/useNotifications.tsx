@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { isAdmin } from '@/lib/admin';
 
 interface Notification {
   id: string;
@@ -67,64 +68,22 @@ export const useNotifications = () => {
     }
   };
 
-  const isAdmin = (email: string) => {
-    return email.includes('admin') || email === 'mariovendasonline10K@gmail.com';
-  };
-
   useEffect(() => {
     if (!user?.id) {
+      console.log('useNotifications: No user ID, skipping setup');
       return;
     }
 
     console.log('useNotifications: Setting up notifications for user:', user.id);
-    console.log('useNotifications: User email:', user.email);
 
-    let userChannel: any = null;
-    let adminChannel: any = null;
+    const setupNotifications = async () => {
+      let userChannel: any = null;
+      let adminChannel: any = null;
 
-    // Setup user notifications channel
-    userChannel = supabase
-      .channel(`user-notifications-${user.id}`, {
-        config: {
-          broadcast: { self: true },
-          presence: { key: user.id }
-        }
-      })
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'daily_offers',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('useNotifications: User contribution update received:', payload);
-          
-          if (payload.new.verified === true && payload.old.verified === false) {
-            const notification: Notification = {
-              id: Date.now().toString(),
-              title: 'Contribuição Aprovada! ✅',
-              message: `Sua contribuição de ${payload.new.product_name} foi aprovada`,
-              type: 'success',
-              timestamp: new Date(),
-              read: false
-            };
-            
-            showNotification(notification);
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('useNotifications: User channel status:', status);
-      });
-
-    // Setup admin notifications if user is admin
-    if (user.email && isAdmin(user.email)) {
-      console.log('useNotifications: Setting up admin notifications');
-      
-      adminChannel = supabase
-        .channel(`admin-notifications-${user.id}`, {
+      // Setup user notifications channel
+      console.log('useNotifications: Creating user channel');
+      userChannel = supabase
+        .channel(`user-notifications-${user.id}`, {
           config: {
             broadcast: { self: true },
             presence: { key: user.id }
@@ -133,19 +92,20 @@ export const useNotifications = () => {
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: 'UPDATE',
             schema: 'public',
-            table: 'daily_offers'
+            table: 'daily_offers',
+            filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('useNotifications: New contribution received (admin):', payload);
+            console.log('🔔 useNotifications: User contribution update received:', payload);
             
-            if (payload.new.user_id !== user.id) {
+            if (payload.new.verified === true && payload.old.verified === false) {
               const notification: Notification = {
                 id: Date.now().toString(),
-                title: 'Nova Contribuição 📝',
-                message: `${payload.new.contributor_name}: ${payload.new.product_name} em ${payload.new.store_name}`,
-                type: 'info',
+                title: 'Contribuição Aprovada! ✅',
+                message: `Sua contribuição de ${payload.new.product_name} foi aprovada`,
+                type: 'success',
                 timestamp: new Date(),
                 read: false
               };
@@ -155,16 +115,62 @@ export const useNotifications = () => {
           }
         )
         .subscribe((status) => {
-          console.log('useNotifications: Admin channel status:', status);
+          console.log('useNotifications: User channel status:', status);
         });
-    }
 
-    return () => {
-      console.log('useNotifications: Cleaning up channels');
-      userChannel?.unsubscribe();
-      adminChannel?.unsubscribe();
+      // Check if user is admin and setup admin notifications
+      const userIsAdmin = await isAdmin(user.id);
+      console.log('useNotifications: User is admin?', userIsAdmin);
+      
+      if (userIsAdmin) {
+        console.log('useNotifications: Setting up admin notifications');
+        
+        adminChannel = supabase
+          .channel(`admin-notifications-${user.id}`, {
+            config: {
+              broadcast: { self: true },
+              presence: { key: user.id }
+            }
+          })
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'daily_offers'
+            },
+            (payload) => {
+              console.log('🔔 useNotifications: New contribution received (admin):', payload);
+              
+              if (payload.new.user_id !== user.id) {
+                const notification: Notification = {
+                  id: Date.now().toString(),
+                  title: 'Nova Contribuição 📝',
+                  message: `${payload.new.contributor_name}: ${payload.new.product_name} em ${payload.new.store_name}`,
+                  type: 'info',
+                  timestamp: new Date(),
+                  read: false
+                };
+                
+                showNotification(notification);
+              }
+            }
+          )
+          .subscribe((status) => {
+            console.log('useNotifications: Admin channel status:', status);
+          });
+      }
+
+      // Cleanup function
+      return () => {
+        console.log('useNotifications: Cleaning up channels');
+        userChannel?.unsubscribe();
+        adminChannel?.unsubscribe();
+      };
     };
-  }, [user?.id, user?.email]);
+
+    setupNotifications();
+  }, [user?.id]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 
