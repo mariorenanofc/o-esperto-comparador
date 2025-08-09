@@ -1,4 +1,4 @@
-const CACHE_NAME = 'o-esperto-comparador-v1';
+const CACHE_NAME = 'o-esperto-comparador-v2';
 const urlsToCache = [
   '/',
   '/icon-192.png',
@@ -6,9 +6,26 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+      await self.clients.claim();
+    })()
   );
 });
 
