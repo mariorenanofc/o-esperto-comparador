@@ -341,7 +341,10 @@ export const useNotifications = () => {
   }, []);
 
   useEffect(() => {
+    console.log('🔔 useNotifications effect triggered, user:', user?.id);
+    
     if (!user?.id) {
+      console.log('🔔 No user, cleaning up channels');
       cleanupChannels();
       currentUserIdRef.current = undefined;
       isSetupRef.current = false;
@@ -350,6 +353,7 @@ export const useNotifications = () => {
 
     // If user changed, cleanup and reset
     if (currentUserIdRef.current !== user.id) {
+      console.log('🔔 User changed, cleaning up and resetting');
       cleanupChannels();
       currentUserIdRef.current = user.id;
       isSetupRef.current = false;
@@ -357,12 +361,14 @@ export const useNotifications = () => {
 
     // Skip if already setup for this user
     if (isSetupRef.current) {
+      console.log('🔔 Already setup for this user, skipping');
       return;
     }
 
     // Setup notifications immediately
+    console.log('🔔 Setting up notifications for user:', user.id);
     setupNotifications(user.id);
-  }, [user?.id]);
+  }, [user?.id, setupNotifications]);
 
   // Cleanup on unmount
   useEffect(() => {
