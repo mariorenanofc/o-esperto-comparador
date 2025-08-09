@@ -1,1 +1,7 @@
 project_id = "diqdsmrlhldanxxrtozl"
+
+[functions.get-vapid]
+verify_jwt = false
+
+[functions.notify-admins]
+verify_jwt = true

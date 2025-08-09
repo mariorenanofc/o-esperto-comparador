@@ -19,6 +19,18 @@ export const supabaseContributionService = {
       console.error("Error submitting suggestion:", error);
       throw error;
     }
+    try {
+      await supabase.functions.invoke('notify-admins', {
+        body: {
+          type: 'suggestion',
+          title: 'Nova sugestão enviada',
+          body: data.title,
+          url: '/admin'
+        }
+      });
+    } catch (e) {
+      console.warn('notify-admins failed (suggestion)', e);
+    }
 
     return suggestion;
   },

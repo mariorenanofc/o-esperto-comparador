@@ -51,6 +51,19 @@ export const contributionService = {
       }
 
       console.log('Contribution submitted successfully');
+
+      try {
+        await supabase.functions.invoke('notify-admins', {
+          body: {
+            type: 'contribution',
+            title: 'Nova contribuição de preço',
+            body: `${contribution.productName} em ${contribution.storeName}`,
+            url: '/admin'
+          }
+        });
+      } catch (e) {
+        console.warn('notify-admins failed (contribution)', e);
+      }
     } catch (error) {
       console.error('Error in submitPriceContribution:', error);
       throw error;
