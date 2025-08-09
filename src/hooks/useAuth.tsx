@@ -97,22 +97,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           .eq("id", user.id);
       }
 
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error signing out:", error);
-      }
-
-      // Clear local state
-      setUser(null);
-      setSession(null);
-      setProfile(null);
+      // Import and use robust sign out
+      const { robustSignOut } = await import('@/lib/authCleanup');
+      await robustSignOut();
     } catch (error) {
       console.error("Error in signOut:", error);
+      // Force reload even if there's an error
+      window.location.href = '/';
     }
   };
 
   const signInWithGoogle = async () => {
     try {
+      // Prepare for sign in by cleaning up existing state
+      const { prepareForSignIn } = await import('@/lib/authCleanup');
+      await prepareForSignIn();
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setTimeout(() => {
           updateActivity();
           fetchProfile(session.user.id);
-        }, 100);
+        }, 0);
       }
 
       if (event === "SIGNED_OUT") {

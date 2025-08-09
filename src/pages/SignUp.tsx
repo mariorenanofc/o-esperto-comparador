@@ -24,13 +24,21 @@ const SignUp: React.FC = () => {
   }, [user, navigate]);
 
   const handleGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle();
+    try {
+      toast.loading("Preparando cadastro...");
+      const { error } = await signInWithGoogle();
 
-    if (error) {
-      console.error("Google sign in error:", error);
-      toast.error("Erro ao fazer login com Google. Tente novamente.");
-    } else {
-      toast.success("Redirecionando para o Google...");
+      if (error) {
+        console.error("Google sign in error:", error);
+        toast.dismiss();
+        toast.error("Erro ao criar conta com Google. Tente novamente.");
+      } else {
+        toast.dismiss();
+        toast.success("Redirecionando para o Google...");
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Erro inesperado. Tente novamente.");
     }
   };
 
