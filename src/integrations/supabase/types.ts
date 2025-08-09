@@ -457,6 +457,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_user_admin_status: {
+        Args: { user_uuid?: string }
+        Returns: boolean
+      }
       check_user_feature_access: {
         Args: { feature_name: string; current_usage?: number }
         Returns: boolean
