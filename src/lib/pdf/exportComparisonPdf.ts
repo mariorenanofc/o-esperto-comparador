@@ -20,11 +20,13 @@ export async function exportComparisonPdf(
 
   // Logo no topo esquerdo
   let titleX = marginX;
+  let logoBottom = 0;
   try {
     const logo = await loadImageAsDataUrl(logoEC);
     if (logo) {
       doc.addImage(logo, "PNG", marginX, cursorY - 10, 44, 44);
       titleX = marginX + 54;
+      logoBottom = cursorY - 10 + 44; // base da logo
     }
   } catch (_) {}
 
@@ -32,7 +34,8 @@ export async function exportComparisonPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.text(title, titleX, cursorY + 8);
-  cursorY += 28;
+  const afterTitleY = cursorY + 28;
+  cursorY = Math.max(afterTitleY, logoBottom + 6); // garante espaço abaixo da logo
 
   // Company / client info
   doc.setFontSize(10);
