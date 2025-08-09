@@ -7,6 +7,7 @@ import logoEC from "@/assets/logo-ec.png";
 
 export async function exportComparisonPdf(
   comparison: ComparisonData,
+  location?: { city: string; state: string },
   opts: {
     userName?: string | null;
     userEmail?: string | null;
@@ -41,11 +42,15 @@ export async function exportComparisonPdf(
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   const today = new Date();
+  const locationText = location?.city && location?.state 
+    ? `${location.city}/${location.state}` 
+    : (comparison.location || "-");
+    
   const headerLeft = [
     "Comparador: O Esperto Comparador",
     "Descrição: Plataforma de comparação de preços",
     `Data do download: ${today.toLocaleDateString()} ${today.toLocaleTimeString()}`,
-    `Local da comparação: ${comparison.location || "-"}`,
+    `Local da comparação: ${locationText}`,
   ];
   const headerRight = [
     `Cliente: ${opts.userName || "-"}`,

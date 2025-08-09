@@ -429,11 +429,14 @@ const ComparisonForm: React.FC = () => {
       return;
     }
     try {
-      await exportComparisonPdf(comparisonData, {
-        userName: profile?.name,
-        userEmail: profile?.email || undefined,
-        userPlan: currentPlan,
-      });
+      await exportComparisonPdf(comparisonData, 
+        { city: geo.city, state: geo.state },
+        {
+          userName: profile?.name,
+          userEmail: profile?.email || undefined,
+          userPlan: currentPlan,
+        }
+      );
     } catch (e) {
       console.error(e);
       toast.error("Falha ao gerar o PDF. Tente novamente.");
@@ -456,43 +459,6 @@ const ComparisonForm: React.FC = () => {
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder="Ex: Mercado Bom Preço"
                 />
-              </div>
-              <div className="flex-[0.8] min-w-[200px]">
-                <Label htmlFor="comparisonLocation">Local (Cidade/UF)</Label>
-                <Input
-                  id="comparisonLocation"
-                  value={comparisonData.location || ""}
-                  onChange={(e) =>
-                    setComparisonData({ ...comparisonData, location: e.target.value })
-                  }
-                  placeholder="Ex: Fortaleza/CE"
-                />
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="w-full sm:w-auto"
-                    onClick={() =>
-                      setComparisonData((prev) => ({
-                        ...prev,
-                        location: geo.city && geo.state ? `${geo.city}/${geo.state}` : prev.location,
-                      }))
-                    }
-                    disabled={geo.loading || !!geo.error}
-                    title={geo.error || undefined}
-                  >
-                    {geo.loading ? "Detectando..." : "Usar minha localização"}
-                  </Button>
-                  {!geo.loading && !geo.error && (
-                    <span className="text-xs text-muted-foreground">
-                      Sugerido: {geo.city}/{geo.state}
-                    </span>
-                  )}
-                  {geo.error && (
-                    <span className="text-xs text-destructive">{geo.error}</span>
-                  )}
-                </div>
               </div>
               <Button
                 onClick={handleAddStore}
