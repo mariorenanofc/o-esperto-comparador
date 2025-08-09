@@ -23,6 +23,7 @@ export const useNotifications = () => {
 
   const playNotificationSound = () => {
     try {
+      console.log('🔊 Playing notification sound...');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -39,8 +40,10 @@ export const useNotifications = () => {
       
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.4);
+      
+      console.log('🔊 Notification sound played successfully');
     } catch (e) {
-      console.log('Could not play notification sound');
+      console.error('❌ Could not play notification sound:', e);
     }
   };
 
@@ -120,6 +123,7 @@ export const useNotifications = () => {
             });
             
             if (payload.new.verified === true && payload.old.verified === false) {
+              console.log('🔔 User contribution approved, showing notification');
               const notification: Notification = {
                 id: Date.now().toString(),
                 title: 'Contribuição Aprovada! ✅',
@@ -131,6 +135,7 @@ export const useNotifications = () => {
               
               showNotification(notification);
             } else if (payload.new.verified === false && payload.old.verified === null) {
+              console.log('🔔 User contribution rejected, showing notification');
               const notification: Notification = {
                 id: Date.now().toString(),
                 title: 'Contribuição Rejeitada ❌',
