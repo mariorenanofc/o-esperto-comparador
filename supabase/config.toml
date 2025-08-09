@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.notify-admins]
 verify_jwt = true
+
+[functions.notify-user]
+verify_jwt = true

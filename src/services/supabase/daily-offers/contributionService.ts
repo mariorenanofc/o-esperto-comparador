@@ -53,7 +53,8 @@ export const contributionService = {
       console.log('Contribution submitted successfully');
 
       try {
-        await supabase.functions.invoke('notify-admins', {
+        console.log('Sending notification to admins...');
+        const { data: notifyResult, error: notifyError } = await supabase.functions.invoke('notify-admins', {
           body: {
             type: 'contribution',
             title: 'Nova contribuição de preço',
@@ -61,6 +62,12 @@ export const contributionService = {
             url: '/admin'
           }
         });
+        
+        if (notifyError) {
+          console.error('Error notifying admins:', notifyError);
+        } else {
+          console.log('Admins notified successfully:', notifyResult);
+        }
       } catch (e) {
         console.warn('notify-admins failed (contribution)', e);
       }

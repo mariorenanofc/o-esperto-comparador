@@ -26,15 +26,22 @@ async function registerServiceWorker() {
 
 export async function initPushNotifications(userId: string) {
   try {
+    console.log("=== INITIALIZING PUSH NOTIFICATIONS ===");
+    console.log("User ID:", userId);
+    
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      console.log("Push notifications not supported");
       return;
     }
 
     const permission = await Notification.requestPermission();
+    console.log("Notification permission:", permission);
     if (permission !== "granted") return;
 
     const reg = await registerServiceWorker();
     if (!reg) return;
+
+    console.log("Service worker registered successfully");
 
     // Get VAPID key from Edge Function
     const { data, error } = await supabase.functions.invoke("get-vapid");
@@ -43,16 +50,22 @@ export async function initPushNotifications(userId: string) {
       return;
     }
 
+    console.log("VAPID public key retrieved successfully");
+
     // Check existing subscription
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
+      console.log("Creating new push subscription...");
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(data.publicKey),
       });
+    } else {
+      console.log("Using existing push subscription");
     }
 
     const json = sub.toJSON() as any;
+    console.log("Push subscription created/retrieved:", !!json.endpoint);
 
     // Save in Supabase (upsert by endpoint)
     const { error: upsertError } = await supabase
@@ -64,13 +77,14 @@ export async function initPushNotifications(userId: string) {
           p256dh: json.keys?.p256dh,
           auth: json.keys?.auth,
           user_agent: navigator.userAgent,
-          device_type: "web",
         }],
-        { onConflict: "endpoint" as any }
+        { onConflict: "endpoint" }
       );
 
     if (upsertError) {
       console.error("Failed to save push subscription", upsertError);
+    } else {
+      console.log("Push subscription saved successfully");
     }
   } catch (e) {
     console.error("initPushNotifications error", e);
