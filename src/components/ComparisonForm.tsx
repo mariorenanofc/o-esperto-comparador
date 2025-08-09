@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit } from "lucide-react";
+import { Plus, Trash2, Edit, Download, History } from "lucide-react";
 import ProductModal from "./ProductModal";
 import PriceTable from "./PriceTable"; // Mantenha o import
 import BestPricesByStore from "./BestPricesByStore";
@@ -24,6 +24,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import LoadComparisonDrawer from "@/components/comparison/LoadComparisonDrawer";
+import { exportComparisonPdf } from "@/lib/pdf/exportComparisonPdf";
 
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
@@ -47,6 +49,7 @@ const ComparisonForm: React.FC = () => {
   const [isSavingComparison, setIsSavingComparison] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(true);
+  const [isLoadDrawerOpen, setIsLoadDrawerOpen] = useState(false);
 
   // Carregar do localStorage ao montar
   useEffect(() => {
@@ -402,6 +405,30 @@ const ComparisonForm: React.FC = () => {
     }
   };
 
+  const handleExportPdf = async () => {
+    if (!isSignedIn) {
+      toast.error("Faça login para baixar o PDF.");
+      return;
+    }
+    if (!(currentPlan === "pro" || currentPlan === "admin")) {
+      toast.error("Recurso do plano Pro", {
+        description: "Exportação em PDF disponível apenas para Pro e Admin.",
+        action: { label: "Upgrade", onClick: () => (window.location.href = "/plans") },
+      });
+      return;
+    }
+    try {
+      await exportComparisonPdf(comparisonData, {
+        userName: profile?.name,
+        userEmail: profile?.email || undefined,
+        userPlan: currentPlan,
+      });
+    } catch (e) {
+      console.error(e);
+      toast.error("Falha ao gerar o PDF. Tente novamente.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Seção de Adicionar Mercados e Produtos - Visível apenas em modo de edição */}
@@ -424,6 +451,15 @@ const ComparisonForm: React.FC = () => {
                 className="bg-app-primary hover:bg-app-primary/90 text-white"
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Mercado
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsLoadDrawerOpen(true)}
+                disabled={!isSignedIn}
+                className=""
+                title={!isSignedIn ? "Faça login para carregar comparações salvas" : undefined}
+              >
+                <History className="mr-2 h-4 w-4" /> Reaproveitar Salvas
               </Button>
             </div>
 
@@ -581,7 +617,7 @@ const ComparisonForm: React.FC = () => {
             {/* <-- MOVIDO AQUI */}
             <Button
               onClick={saveComparisonData}
-              className="bg-app-primary hover:bg-app-primary/90 text-white"
+              className="bg-app-primary hover:bg-app-primary/90 text-white mr-3"
               disabled={
                 isSavingComparison ||
                 !isSignedIn ||
@@ -590,9 +626,17 @@ const ComparisonForm: React.FC = () => {
             >
               {isSavingComparison ? "Salvando..." : "Salvar Comparação"}
             </Button>
+            <Button
+              onClick={handleExportPdf}
+              variant="outline"
+              disabled={!isSignedIn}
+              title={!isSignedIn ? "Faça login para baixar o PDF" : undefined}
+            >
+              <Download className="mr-2 h-4 w-4" /> Baixar PDF
+            </Button>
             {!isSignedIn && (
               <p className="text-sm text-muted-foreground mt-2">
-                Faça login para salvar suas comparações.
+                Faça login para salvar ou exportar suas comparações.
               </p>
             )}
           </div>

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      comparison_exports: {
+        Row: {
+          comparison_id: string | null
+          created_at: string
+          exported_at: string
+          file_size_bytes: number | null
+          format: string
+          id: string
+          meta: Json | null
+          plan: string | null
+          user_id: string
+        }
+        Insert: {
+          comparison_id?: string | null
+          created_at?: string
+          exported_at?: string
+          file_size_bytes?: number | null
+          format?: string
+          id?: string
+          meta?: Json | null
+          plan?: string | null
+          user_id: string
+        }
+        Update: {
+          comparison_id?: string | null
+          created_at?: string
+          exported_at?: string
+          file_size_bytes?: number | null
+          format?: string
+          id?: string
+          meta?: Json | null
+          plan?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       comparison_products: {
         Row: {
           comparison_id: string
