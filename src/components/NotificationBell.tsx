@@ -8,8 +8,6 @@ export const NotificationBell: React.FC = () => {
   const { notifications, unreadCount, markAsRead, clearAllNotifications } = useNotifications();
   const [showPanel, setShowPanel] = useState(false);
 
-  if (notifications.length === 0) return null;
-
   return (
     <div className="relative">
       {/* Notification Bell Button */}
@@ -56,33 +54,39 @@ export const NotificationBell: React.FC = () => {
           </div>
           
           <div className="max-h-80 overflow-y-auto">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-4 border-b border-border/30 hover:bg-muted/50 transition-colors cursor-pointer ${
-                  !notification.read ? 'bg-muted/30' : ''
-                }`}
-                onClick={() => markAsRead(notification.id)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-foreground">
-                      {notification.title}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {notification.timestamp.toLocaleTimeString()}
-                    </p>
-                  </div>
-                  
-                  {!notification.read && (
-                    <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
-                  )}
-                </div>
+            {notifications.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                <p className="text-sm">Nenhuma notificação</p>
               </div>
-            ))}
+            ) : (
+              notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 border-b border-border/30 hover:bg-muted/50 transition-colors cursor-pointer ${
+                    !notification.read ? 'bg-muted/30' : ''
+                  }`}
+                  onClick={() => markAsRead(notification.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground">
+                        {notification.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {notification.timestamp.toLocaleTimeString()}
+                      </p>
+                    </div>
+                    
+                    {!notification.read && (
+                      <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
