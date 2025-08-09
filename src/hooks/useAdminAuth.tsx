@@ -21,6 +21,7 @@ export const useAdminAuth = () => {
 
       try {
         // Force a fresh fetch without cache
+        console.log('useAdminAuth: Making query to profiles table for user:', user.id);
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('plan')
@@ -35,6 +36,8 @@ export const useAdminAuth = () => {
           setIsAdmin(false);
         } else {
           console.log('useAdminAuth: User profile:', profile);
+          console.log('useAdminAuth: Profile plan value:', profile?.plan);
+          console.log('useAdminAuth: Plan comparison (plan === "admin"):', profile?.plan === 'admin');
           const userIsAdmin = profile?.plan === 'admin';
           console.log('useAdminAuth: Is admin?', userIsAdmin);
           setIsAdmin(userIsAdmin);
@@ -56,6 +59,7 @@ export const useAdminAuth = () => {
   const refreshAdminStatus = async () => {
     if (!user) return;
     
+    console.log('useAdminAuth: Manual refresh for user:', user.id);
     setIsLoaded(false);
     try {
       const { data: profile, error: profileError } = await supabase
@@ -64,13 +68,21 @@ export const useAdminAuth = () => {
         .eq('id', user.id)
         .maybeSingle();
 
+      console.log('useAdminAuth: Manual refresh - Raw profile data:', profile);
+      console.log('useAdminAuth: Manual refresh - Profile error:', profileError);
+
       if (!profileError && profile) {
+        console.log('useAdminAuth: Manual refresh - Profile plan value:', profile.plan);
         const userIsAdmin = profile.plan === 'admin';
         console.log('useAdminAuth: Refreshed admin status:', userIsAdmin);
         setIsAdmin(userIsAdmin);
+      } else {
+        console.log('useAdminAuth: Manual refresh - Setting admin to false due to error or no profile');
+        setIsAdmin(false);
       }
     } catch (error) {
       console.error('useAdminAuth: Error refreshing admin status:', error);
+      setIsAdmin(false);
     } finally {
       setIsLoaded(true);
     }
