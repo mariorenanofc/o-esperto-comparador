@@ -436,8 +436,8 @@ const ComparisonForm: React.FC = () => {
         <>
           <div className="bg-card p-6 rounded-lg shadow border">
             <h2 className="text-xl font-semibold mb-4">Adicionar Mercados</h2>
-            <div className="flex items-end space-x-4">
-              <div className="flex-1">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[220px]">
                 <Label htmlFor="storeName">Nome do Mercado</Label>
                 <Input
                   id="storeName"
@@ -448,7 +448,7 @@ const ComparisonForm: React.FC = () => {
               </div>
               <Button
                 onClick={handleAddStore}
-                className="bg-app-primary hover:bg-app-primary/90 text-white"
+                className="bg-app-primary hover:bg-app-primary/90 text-white w-full sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Mercado
               </Button>
@@ -456,7 +456,7 @@ const ComparisonForm: React.FC = () => {
                 variant="outline"
                 onClick={() => setIsLoadDrawerOpen(true)}
                 disabled={!isSignedIn}
-                className=""
+                className="w-full sm:w-auto"
                 title={!isSignedIn ? "Faça login para carregar comparações salvas" : undefined}
               >
                 <History className="mr-2 h-4 w-4" /> Reaproveitar Salvas
