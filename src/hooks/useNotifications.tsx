@@ -25,21 +25,33 @@ export const useNotifications = () => {
     try {
       console.log('🔊 Playing notification sound...');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
       
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // Criar uma melodia suave de duas notas
+      const playNote = (frequency: number, startTime: number, duration: number, volume: number = 0.15) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Som mais suave - sine wave
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        // Envelope suave para evitar cliques
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(volume, startTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration - 0.05);
+        gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
       
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.4);
+      // Melodia suave: C5 -> E5 (notas agradáveis)
+      const currentTime = audioContext.currentTime;
+      playNote(523.25, currentTime, 0.3, 0.12); // C5
+      playNote(659.25, currentTime + 0.15, 0.4, 0.1); // E5
       
       console.log('🔊 Notification sound played successfully');
     } catch (e) {
