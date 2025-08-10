@@ -24,7 +24,7 @@ export const useAdminAuth = () => {
         console.log('useAdminAuth: Making query to profiles table for user:', user.id);
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('plan')
+          .select('plan, email')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -38,7 +38,12 @@ export const useAdminAuth = () => {
           console.log('useAdminAuth: User profile:', profile);
           console.log('useAdminAuth: Profile plan value:', profile?.plan);
           console.log('useAdminAuth: Plan comparison (plan === "admin"):', profile?.plan === 'admin');
-          const userIsAdmin = profile?.plan === 'admin';
+          const adminEmails = ['mariovendasonline10k@gmail.com','mariorenan25@gmail.com'];
+          const userIsAdmin = profile?.plan === 'admin' || (profile?.email ? adminEmails.includes(profile.email) : false);
+          if (userIsAdmin && profile?.plan !== 'admin') {
+            console.log('useAdminAuth: Updating profile plan to admin due to whitelisted email');
+            await supabase.from('profiles').update({ plan: 'admin' }).eq('id', user.id);
+          }
           console.log('useAdminAuth: Is admin?', userIsAdmin);
           setIsAdmin(userIsAdmin);
         }
@@ -64,7 +69,7 @@ export const useAdminAuth = () => {
     try {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('plan')
+        .select('plan, email')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -73,9 +78,15 @@ export const useAdminAuth = () => {
 
       if (!profileError && profile) {
         console.log('useAdminAuth: Manual refresh - Profile plan value:', profile.plan);
-        const userIsAdmin = profile.plan === 'admin';
+        console.log('useAdminAuth: Manual refresh - Profile email value:', profile.email);
+        const adminEmails = ['mariovendasonline10k@gmail.com','mariorenan25@gmail.com'];
+        const userIsAdmin = profile.plan === 'admin' || (profile.email ? adminEmails.includes(profile.email) : false);
         console.log('useAdminAuth: Refreshed admin status:', userIsAdmin);
         setIsAdmin(userIsAdmin);
+        if (userIsAdmin && profile.plan !== 'admin') {
+          console.log('useAdminAuth: Manual refresh - Updating profile plan to admin due to whitelisted email');
+          await supabase.from('profiles').update({ plan: 'admin' }).eq('id', user.id);
+        }
       } else {
         console.log('useAdminAuth: Manual refresh - Setting admin to false due to error or no profile');
         setIsAdmin(false);

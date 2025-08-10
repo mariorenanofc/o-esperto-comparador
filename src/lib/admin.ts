@@ -13,7 +13,7 @@ export const isAdmin = async (userId?: string): Promise<boolean> => {
     // Check user profile directly from profiles table
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('plan')
+      .select('plan, email')
       .eq('id', userId)
       .maybeSingle();
     
@@ -22,8 +22,9 @@ export const isAdmin = async (userId?: string): Promise<boolean> => {
       return false;
     }
     
-    const result = profile?.plan === 'admin';
-    console.log('isAdmin: Result:', result, 'Profile plan:', profile?.plan);
+    const adminEmails = ['mariovendasonline10k@gmail.com','mariorenan25@gmail.com'];
+    const result = profile?.plan === 'admin' || (profile?.email ? adminEmails.includes(profile.email) : false);
+    console.log('isAdmin: Result:', result, 'Profile plan:', profile?.plan, 'Email:', profile?.email);
     return result;
   } catch (error) {
     console.error('isAdmin: Error in isAdmin function:', error);
