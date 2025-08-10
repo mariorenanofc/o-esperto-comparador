@@ -465,6 +465,10 @@ export type Database = {
         Args: { feature_name: string; current_usage?: number }
         Returns: boolean
       }
+      get_db_usage: {
+        Args: { limit_bytes?: number }
+        Returns: Json
+      }
       is_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean

@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Users, CheckCircle, MessageSquare, RefreshCw } from 'lucide-react';
-import { supabaseAdminService } from '@/services/supabase/adminService';
 import { toast } from 'sonner';
+import { supabaseAdminService } from '@/services/supabase/adminService';
+import { DbUsageCard } from '@/components/admin/DbUsageCard';
 
 interface AnalyticsData {
   totalContributions: number;
@@ -79,6 +80,7 @@ export const AnalyticsSection = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <DbUsageCard />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
