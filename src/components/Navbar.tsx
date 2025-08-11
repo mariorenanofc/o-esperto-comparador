@@ -10,12 +10,10 @@ import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isLoaded, refreshAdminStatus } = useAdminAuth();
+  const { isAdmin, isLoaded } = useAdminAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  console.log('Navbar: user:', user?.id, 'isAdmin:', isAdmin, 'isLoaded:', isLoaded);
-  console.log('Navbar: Should show admin button?', user && isLoaded && isAdmin);
 
   const handleSignOut = async () => {
     await signOut();
@@ -85,17 +83,6 @@ const Navbar = () => {
               </Link>
             )}
 
-            {/* Debug button for admin users to refresh status */}
-            {user && isLoaded && !isAdmin && (
-              <Button
-                onClick={refreshAdminStatus}
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-app-secondary"
-              >
-                Verificar Admin
-              </Button>
-            )}
 
             {/* Theme Toggle */}
             <ThemeToggle />
