@@ -11,16 +11,6 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const { isAdmin, isLoaded } = useAdminAuth();
 
-  console.log(
-    "AdminRoute: user:",
-    user?.id,
-    "isAdmin:",
-    isAdmin,
-    "isLoaded:",
-    isLoaded,
-    "loading:",
-    loading
-  );
 
   if (loading || !isLoaded) {
     return (
@@ -34,12 +24,10 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    console.log("AdminRoute: No user, redirecting to sign-in");
     return <Navigate to="/sign-in" replace />;
   }
 
   if (!isAdmin) {
-    console.log("AdminRoute: User is not admin, redirecting to home");
     return <Navigate to="/" replace />;
   }
 

@@ -477,6 +477,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      mask_sensitive_admin_data: {
+        Args: { email_input: string }
+        Returns: string
+      }
       user_plan_access: {
         Args: Record<PropertyKey, never>
         Returns: string
