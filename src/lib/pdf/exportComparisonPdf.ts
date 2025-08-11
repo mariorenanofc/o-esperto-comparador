@@ -86,8 +86,73 @@ export async function exportComparisonPdf(
   });
   cursorY = (doc as any).lastAutoTable.finalY + 20;
 
-  // Per-store detailed tables
-  for (const store of stores) {
+  // Calculate best prices by store (same logic as BestPricesByStore component)
+  const getBestPricesByStore = () => {
+    // First, determine which store has the lowest price for each product
+    const bestPriceMap = new Map();
+    
+    products.forEach((product) => {
+      let bestPrice = Infinity;
+      let bestStoreId = "";
+      
+      Object.entries(product.prices).forEach(([storeId, price]) => {
+        if (typeof price === "number" && price < bestPrice) {
+          bestPrice = price;
+          bestStoreId = storeId;
+        }
+      });
+      
+      if (bestStoreId) {
+        bestPriceMap.set(product.id, {
+          storeId: bestStoreId,
+          price: bestPrice,
+        });
+      }
+    });
+    
+    // Group products by store
+    const storeItemsMap = new Map();
+    
+    products.forEach((product) => {
+      const bestPriceInfo = bestPriceMap.get(product.id);
+      if (bestPriceInfo) {
+        const { storeId, price } = bestPriceInfo;
+        
+        const storeItems = storeItemsMap.get(storeId) || [];
+        storeItems.push({
+          product,
+          unitPrice: price,
+          totalPrice: price * (product.quantity ?? 1),
+        });
+        
+        storeItemsMap.set(storeId, storeItems);
+      }
+    });
+    
+    // Convert map to array and calculate totals
+    const result = [];
+    
+    stores.forEach((store) => {
+      const items = storeItemsMap.get(store.id) || [];
+      if (items.length > 0) {
+        const total = items.reduce((sum, item) => sum + item.totalPrice, 0);
+        
+        result.push({
+          store,
+          items,
+          total,
+        });
+      }
+    });
+    
+    // Sort by number of items (descending)
+    return result.sort((a, b) => b.items.length - a.items.length);
+  };
+
+  const storesWithBestPrices = getBestPricesByStore();
+
+  // Display only stores with best prices for products
+  for (const { store, items, total } of storesWithBestPrices) {
     // Avoid orphaned headings: if near the bottom, start a new page before the section
     if (cursorY > 730) {
       doc.addPage();
@@ -95,23 +160,19 @@ export async function exportComparisonPdf(
     }
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text(`Mercado: ${store.name}`, marginX, cursorY);
+    doc.text(`${store.name} - ${items.length} ${items.length === 1 ? "item" : "itens"} mais barato${items.length === 1 ? "" : "s"}`, marginX, cursorY);
     cursorY += 10;
 
-    const rows = products.map((p) => {
-      const price = p.prices[store.id];
-      const subtotal = typeof price === "number" ? price * (p.quantity ?? 1) : 0;
-      return [
-        p.name,
-        `${p.quantity} ${p.unit}`,
-        typeof price === "number" ? formatBRL(price) : "-",
-        formatBRL(subtotal),
-      ];
-    });
+    const rows = items.map((item) => [
+      item.product.name,
+      `${item.product.quantity} ${item.product.unit}`,
+      formatBRL(item.unitPrice),
+      formatBRL(item.totalPrice),
+    ]);
 
     autoTable(doc, {
       startY: cursorY,
-      head: [["Produto", "Qtde", "Preço", "Subtotal"]],
+      head: [["Produto", "Qtde", "Preço Unitário", "Total"]],
       body: rows,
       styles: { fontSize: 9 },
       theme: "grid",
@@ -119,7 +180,7 @@ export async function exportComparisonPdf(
     });
     cursorY = (doc as any).lastAutoTable.finalY + 4;
     doc.setFont("helvetica", "normal");
-    doc.text(`Total neste mercado: ${formatBRL(totals[store.id] || 0)}`, marginX, cursorY + 12);
+    doc.text(`Total neste mercado: ${formatBRL(total)}`, marginX, cursorY + 12);
     cursorY += 26;
 
     if (cursorY > 760) {
