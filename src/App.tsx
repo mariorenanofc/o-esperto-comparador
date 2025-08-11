@@ -9,8 +9,9 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ThemeProvider from "./components/ThemeProvider";
 import { AppContent } from "./components/AppContent";
-import PushInitializer from "./components/PushInitializer";
-import { NotificationSystem } from "./components/NotificationSystem";
+// Lazy-loaded non-critical features for better mobile performance
+const PushInitializerLazy = React.lazy(() => import("./components/PushInitializer"));
+const NotificationSystemLazy = React.lazy(() => import("./components/NotificationSystem").then(m => ({ default: m.NotificationSystem })));
 
 
 // Create QueryClient with proper configuration
@@ -40,6 +41,23 @@ function App() {
       </div>
     );
   }
+  // Defer non-critical features for faster first paint on mobile
+  const [deferReady, setDeferReady] = React.useState(false);
+  React.useEffect(() => {
+    const hasRIC = "requestIdleCallback" in window;
+    let idleId: any;
+    let timeoutId: any;
+    const onReady = () => setDeferReady(true);
+    if (hasRIC) {
+      idleId = (window as any).requestIdleCallback(onReady, { timeout: 1500 });
+    } else {
+      timeoutId = window.setTimeout(onReady, 800);
+    }
+    return () => {
+      if (hasRIC && idleId) (window as any).cancelIdleCallback?.(idleId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   return (
     <ThemeProvider>
@@ -48,8 +66,12 @@ function App() {
           <SubscriptionProvider>
             <Router>
               <Toaster />
-        <PushInitializer />
-        <NotificationSystem />
+              {deferReady && (
+                <React.Suspense fallback={null}>
+                  <PushInitializerLazy />
+                  <NotificationSystemLazy />
+                </React.Suspense>
+              )}
         
               <AppContent />
             </Router>
