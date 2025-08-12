@@ -140,50 +140,67 @@ const Economy: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-8">
-              <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-6">
+              <div className="grid gap-4 lg:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5 text-app-green" /> Economia Total Estimada
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                      <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-app-green" /> Economia Total Estimada
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">R$ {totalSavings.toFixed(2).replace(".", ",")}</div>
-                    <p className="text-sm text-muted-foreground">Soma da economia calculada em todas as comparações salvas.</p>
+                    <div className="text-2xl sm:text-3xl font-bold">R$ {totalSavings.toFixed(2).replace(".", ",")}</div>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Soma da economia calculada em todas as comparações salvas.</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-app-secondary" /> Tendência Mensal
+                    <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-app-secondary" /> Tendência Mensal
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ChartContainer
-                      config={{ savings: { label: "Economia (R$)", color: "hsl(var(--primary))" } }}
-                      className="h-64"
-                    >
-                      <BarChart data={monthly}>
-                        <defs>
-                          <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="var(--color-savings)" stopOpacity={0.9} />
-                            <stop offset="95%" stopColor="var(--color-savings)" stopOpacity={0.2} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                        <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                        <YAxis tickFormatter={(v) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} width={70} />
-                        <ChartTooltip content={<ChartTooltipContent formatter={(value) => [`R$ ${(Number(value) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Economia']}/>} />
-                        <Bar dataKey="savings" fill="url(#savingsGradient)" radius={[8, 8, 0, 0]} barSize={32} />
-                      </BarChart>
-                    </ChartContainer>
+                  <CardContent className="p-2 sm:p-6">
+                    <div className="w-full overflow-x-auto">
+                      <ChartContainer
+                        config={{ savings: { label: "Economia (R$)", color: "hsl(var(--primary))" } }}
+                        className="h-48 sm:h-64 min-w-[300px]"
+                      >
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={monthly} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                            <defs>
+                              <linearGradient id="savingsGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="var(--color-savings)" stopOpacity={0.9} />
+                                <stop offset="95%" stopColor="var(--color-savings)" stopOpacity={0.2} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                            <XAxis 
+                              dataKey="label" 
+                              tickLine={false} 
+                              axisLine={false}
+                              fontSize={12}
+                              interval={0}
+                              angle={-45}
+                              textAnchor="end"
+                              height={60}
+                            />
+                            <YAxis 
+                              tickFormatter={(v) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`} 
+                              width={50}
+                              fontSize={10}
+                            />
+                            <ChartTooltip content={<ChartTooltipContent formatter={(value) => [`R$ ${(Number(value) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Economia']}/>} />
+                            <Bar dataKey="savings" fill="url(#savingsGradient)" radius={[4, 4, 0, 0]} barSize={24} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
               {monthly.length === 0 && !loading && (
-                <p className="text-center text-muted-foreground">Sem dados ainda. Salve suas comparações para ver sua economia aqui.</p>
+                <p className="text-center text-muted-foreground text-sm">Sem dados ainda. Salve suas comparações para ver sua economia aqui.</p>
               )}
             </div>
           )}

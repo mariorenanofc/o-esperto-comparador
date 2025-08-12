@@ -7,7 +7,7 @@ export const NotificationSystem: React.FC = () => {
   useNotifications();
 
   return (
-    <div className="fixed top-16 right-4 z-[9999] md:top-4 md:right-4">
+    <div className="fixed top-20 right-4 z-[9999] md:top-6 md:right-4">
       <NotificationBell />
     </div>
   );
