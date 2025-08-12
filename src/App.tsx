@@ -9,17 +9,63 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import ThemeProvider from "./components/ThemeProvider";
 import { AppContent } from "./components/AppContent";
+import { useDataPreloader } from "./hooks/useOptimizedData";
+
 // Lazy-loaded non-critical features for better mobile performance
 const PushInitializerLazy = React.lazy(() => import("./components/PushInitializer"));
 const NotificationSystemLazy = React.lazy(() => import("./components/NotificationSystem").then(m => ({ default: m.NotificationSystem })));
 
+// Component interno para usar hooks
+const AppWithHooks: React.FC = () => {
+  useDataPreloader(); // Preload de dados críticos
+  
+  // Defer non-critical features for faster first paint on mobile
+  const [deferReady, setDeferReady] = React.useState(false);
+  React.useEffect(() => {
+    const hasRIC = "requestIdleCallback" in window;
+    let idleId: any;
+    let timeoutId: any;
+    const onReady = () => setDeferReady(true);
+    if (hasRIC) {
+      idleId = (window as any).requestIdleCallback(onReady, { timeout: 1500 });
+    } else {
+      timeoutId = window.setTimeout(onReady, 800);
+    }
+    return () => {
+      if (hasRIC && idleId) (window as any).cancelIdleCallback?.(idleId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, []);
 
-// Create QueryClient with proper configuration
+  return (
+    <>
+      <Toaster />
+      {deferReady && (
+        <React.Suspense fallback={null}>
+          <PushInitializerLazy />
+          <NotificationSystemLazy />
+        </React.Suspense>
+      )}
+      <AppContent />
+    </>
+  );
+};
+
+
+// Create QueryClient with optimized configuration for performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutos - dados considerados frescos
+      gcTime: 10 * 60 * 1000, // 10 minutos - tempo que dados ficam em cache
+      networkMode: 'offlineFirst', // Prioriza cache para melhor performance
+    },
+    mutations: {
+      retry: 1,
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -41,39 +87,13 @@ function App() {
       </div>
     );
   }
-  // Defer non-critical features for faster first paint on mobile
-  const [deferReady, setDeferReady] = React.useState(false);
-  React.useEffect(() => {
-    const hasRIC = "requestIdleCallback" in window;
-    let idleId: any;
-    let timeoutId: any;
-    const onReady = () => setDeferReady(true);
-    if (hasRIC) {
-      idleId = (window as any).requestIdleCallback(onReady, { timeout: 1500 });
-    } else {
-      timeoutId = window.setTimeout(onReady, 800);
-    }
-    return () => {
-      if (hasRIC && idleId) (window as any).cancelIdleCallback?.(idleId);
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, []);
-
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <SubscriptionProvider>
             <Router>
-              <Toaster />
-              {deferReady && (
-                <React.Suspense fallback={null}>
-                  <PushInitializerLazy />
-                  <NotificationSystemLazy />
-                </React.Suspense>
-              )}
-        
-              <AppContent />
+              <AppWithHooks />
             </Router>
           </SubscriptionProvider>
         </AuthProvider>
