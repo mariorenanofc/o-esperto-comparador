@@ -10,6 +10,9 @@ import { Link } from "react-router-dom";
 import { DollarSign, TrendingUp } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EconomyInsights from "@/components/economy/EconomyInsights";
+import HistoricalComparison from "@/components/economy/HistoricalComparison";
 
 interface ComparisonPriceDetail {
   price: number;
@@ -140,8 +143,15 @@ const Economy: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6">
-              <div className="grid gap-4 lg:grid-cols-2">
+            <Tabs defaultValue="overview" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto">
+                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                <TabsTrigger value="insights">Insights</TabsTrigger>
+                <TabsTrigger value="history">Histórico</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-6">
+                <div className="grid gap-4 lg:grid-cols-2">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -199,10 +209,24 @@ const Economy: React.FC = () => {
                 </Card>
               </div>
 
-              {monthly.length === 0 && !loading && (
-                <p className="text-center text-muted-foreground text-sm">Sem dados ainda. Salve suas comparações para ver sua economia aqui.</p>
-              )}
-            </div>
+                {monthly.length === 0 && !loading && (
+                  <p className="text-center text-muted-foreground text-sm">Sem dados ainda. Salve suas comparações para ver sua economia aqui.</p>
+                )}
+              </TabsContent>
+
+              <TabsContent value="insights">
+                <EconomyInsights
+                  totalSavings={totalSavings}
+                  monthlyData={monthly}
+                  comparisonCount={comparisons.length}
+                  avgSavingsPerComparison={comparisons.length > 0 ? totalSavings / comparisons.length : 0}
+                />
+              </TabsContent>
+
+              <TabsContent value="history">
+                <HistoricalComparison monthlyData={monthly} />
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </div>

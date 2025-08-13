@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { reportsService } from "@/services/reportsService";
 import { comparisonService } from "@/services/comparisonService";
 import PriceTable from "./PriceTable";
-import { ComparisonData, Product, Store } from "@/lib/types"; // Adicione Product e Store
+import ReportFilters, { ReportFilters as ReportFiltersType } from "./reports/ReportFilters";
+import ReportMetrics from "./reports/ReportMetrics";
+import { ComparisonData, Product, Store } from "@/lib/types";
 
 // Definição da estrutura de um produto retornado junto com a comparação
 interface ComparisonProductDetails {
@@ -53,13 +55,18 @@ interface MonthlyReportData {
 const MonthlyReport: React.FC = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<MonthlyReportData[]>([]);
-  const [userComparisons, setUserComparisons] = useState<UserComparison[]>([]); // Tipo específico aqui
-  const [selectedReport, setSelectedReport] =
-    useState<MonthlyReportData | null>(null);
-  const [selectedComparisonIndex, setSelectedComparisonIndex] = useState<
-    number | null
-  >(null); // Renomeado
+  const [filteredReports, setFilteredReports] = useState<MonthlyReportData[]>([]);
+  const [userComparisons, setUserComparisons] = useState<UserComparison[]>([]);
+  const [selectedReport, setSelectedReport] = useState<MonthlyReportData | null>(null);
+  const [selectedComparisonIndex, setSelectedComparisonIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<ReportFiltersType>({
+    period: "all",
+    sortBy: "date",
+    sortOrder: "desc",
+    showEmpty: false,
+    minComparisons: 1
+  });
 
   // Envolva loadUserData em useCallback para otimização e para ser uma dependência estável do useEffect
   const loadUserData = useCallback(async () => {
@@ -125,22 +132,79 @@ const MonthlyReport: React.FC = () => {
         {}
       );
 
-      const monthlyReports = Object.values(
-        groupedByMonth
-      ) as MonthlyReportData[];
+      const monthlyReports = Object.values(groupedByMonth) as MonthlyReportData[];
       setReports(monthlyReports);
+      setFilteredReports(monthlyReports);
     } catch (error) {
       console.error("Error loading user data:", error);
     } finally {
       setLoading(false);
     }
-  }, [user]); // loadUserData agora depende apenas de 'user'
+  }, [user]);
 
   useEffect(() => {
     if (user) {
       loadUserData();
     }
-  }, [user, loadUserData]); // loadUserData adicionado às dependências
+  }, [user, loadUserData]);
+
+  // Aplicar filtros
+  useEffect(() => {
+    let filtered = [...reports];
+
+    // Filtro por período
+    if (filters.period !== "all") {
+      const now = new Date();
+      const monthsBack = {
+        last3months: 3,
+        last6months: 6,
+        lastyear: 12
+      }[filters.period] || 0;
+
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - monthsBack);
+
+      filtered = filtered.filter(report => {
+        const reportDate = new Date(report.year, report.month - 1);
+        return reportDate >= cutoffDate;
+      });
+    }
+
+    // Filtro de comparações mínimas
+    if (!filters.showEmpty) {
+      filtered = filtered.filter(report => report.comparison_count >= filters.minComparisons);
+    }
+
+    // Ordenação
+    filtered.sort((a, b) => {
+      let aVal, bVal;
+      
+      switch (filters.sortBy) {
+        case "savings":
+          // Calcular economia estimada
+          aVal = a.total_spent;
+          bVal = b.total_spent;
+          break;
+        case "spending":
+          aVal = a.total_spent;
+          bVal = b.total_spent;
+          break;
+        case "comparisons":
+          aVal = a.comparison_count;
+          bVal = b.comparison_count;
+          break;
+        case "date":
+        default:
+          aVal = new Date(a.year, a.month - 1).getTime();
+          bVal = new Date(b.year, b.month - 1).getTime();
+          break;
+      }
+
+      return filters.sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+    });
+
+    setFilteredReports(filtered);
+  }, [reports, filters]);
 
   const getMonthName = (month: number) => {
     const months = [
@@ -201,6 +265,27 @@ const MonthlyReport: React.FC = () => {
     };
   };
 
+  const handleExport = () => {
+    // Implementar exportação de relatórios
+    const dataStr = JSON.stringify(filteredReports, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorios-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+  };
+
+  const calculateTotals = () => {
+    return {
+      totalReports: filteredReports.length,
+      totalComparisons: filteredReports.reduce((sum, r) => sum + r.comparison_count, 0),
+      totalSavings: filteredReports.reduce((sum, r) => sum + r.total_spent, 0)
+    };
+  };
+
+  const totals = calculateTotals();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -219,25 +304,64 @@ const MonthlyReport: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <ReportFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        onExport={handleExport}
+        totalReports={totals.totalReports}
+        totalComparisons={totals.totalComparisons}
+        totalSavings={totals.totalSavings}
+      />
+      
       <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Relatórios Mensais</h2>
 
         {selectedReport ? (
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-medium">
-                {getMonthName(selectedReport.month)} {selectedReport.year}
+                Detalhes - {getMonthName(selectedReport.month)} {selectedReport.year}
               </h3>
               <Button
                 variant="outline"
                 onClick={() => {
                   setSelectedReport(null);
-                  setSelectedComparisonIndex(null); // Renomeado
+                  setSelectedComparisonIndex(null);
                 }}
               >
                 Voltar para Lista
               </Button>
             </div>
+
+            <ReportMetrics
+              currentMetrics={{
+                month: selectedReport.month,
+                year: selectedReport.year,
+                totalSpent: selectedReport.total_spent,
+                totalSavings: selectedReport.total_spent * 0.15, // Estimativa de economia
+                comparisonCount: selectedReport.comparison_count,
+                avgSavingsPerComparison: selectedReport.comparison_count > 0 
+                  ? (selectedReport.total_spent * 0.15) / selectedReport.comparison_count 
+                  : 0,
+                topStore: "Supermercado Local", // Dados mockados
+                topProduct: "Arroz"
+              }}
+              previousMetrics={
+                reports.find(r => 
+                  (r.month === selectedReport.month - 1 && r.year === selectedReport.year) ||
+                  (selectedReport.month === 1 && r.month === 12 && r.year === selectedReport.year - 1)
+                ) ? {
+                  month: selectedReport.month === 1 ? 12 : selectedReport.month - 1,
+                  year: selectedReport.month === 1 ? selectedReport.year - 1 : selectedReport.year,
+                  totalSpent: 0,
+                  totalSavings: 0,
+                  comparisonCount: 0,
+                  avgSavingsPerComparison: 0,
+                  topStore: "",
+                  topProduct: ""
+                } : undefined
+              }
+            />
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
               <Card>
@@ -321,7 +445,7 @@ const MonthlyReport: React.FC = () => {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {reports.length === 0 ? (
+            {filteredReports.length === 0 ? (
               <div className="col-span-full text-center p-8">
                 <p className="text-gray-500 dark:text-gray-400">
                   Nenhuma comparação encontrada ainda.
@@ -332,7 +456,7 @@ const MonthlyReport: React.FC = () => {
                 </p>
               </div>
             ) : (
-              reports.map((report) => (
+              filteredReports.map((report) => (
                 <Card
                   key={`${report.month}-${report.year}`}
                   className="cursor-pointer hover:shadow-md transition-shadow dark:bg-gray-800 dark:hover:bg-gray-700"
