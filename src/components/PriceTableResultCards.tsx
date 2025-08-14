@@ -9,9 +9,10 @@ interface PriceTableResultCardsProps {
   stores: ComparisonData["stores"];
   totals: { [storeId: string]: number };
   cheapestStoreId: string | undefined;
-  optimalTotal: number; // <-- NOVO: Total se comprar tudo no mais barato
-  highestTotal: number; // <-- NOVO: Total do mercado mais caro
-  averageTotal: number; // <-- NOVO: Média dos totais dos mercados
+  optimalTotal: number; // Total se comprar tudo no mais barato
+  highestTotal: number; // Total do mercado mais caro
+  smartSavings: number; // Economia inteligente: diferença entre comprar no mais barato vs estratégia ótima
+  cheapestStoreTotal: number; // Total do mercado com menor valor total
 }
 
 const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
@@ -19,9 +20,10 @@ const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
   stores,
   totals,
   cheapestStoreId,
-  optimalTotal, // NOVO
-  highestTotal, // NOVO
-  averageTotal, // NOVO
+  optimalTotal,
+  highestTotal,
+  smartSavings,
+  cheapestStoreTotal,
 }) => {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -73,25 +75,23 @@ const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">
-            Economia (Comparado à Média)
+            Estratégia Inteligente
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {(() => {
-            const savings = averageTotal - optimalTotal;
-            return (
-              <>
-                <p className={`text-2xl font-bold ${savings >= 0 ? 'text-app-success' : 'text-app-error'}`}>
-                  R$ {Math.abs(savings).toFixed(2).replace(".", ",")}
-                </p>
-                <p className="text-muted-foreground">
-                  {savings >= 0 
-                    ? "Economia comparado à média dos mercados" 
-                    : "Diferença a mais comparado à média"}
-                </p>
-              </>
-            );
-          })()}
+          <p className={`text-2xl font-bold ${smartSavings >= 0 ? 'text-app-warning' : 'text-app-success'}`}>
+            R$ {Math.abs(smartSavings).toFixed(2).replace(".", ",")}
+          </p>
+          <p className="text-muted-foreground">
+            {smartSavings >= 0 
+              ? "Economia adicional comprando estrategicamente"
+              : "Economia comprando tudo em um só lugar"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {smartSavings >= 0 
+              ? `vs comprar tudo no mercado mais barato (R$ ${cheapestStoreTotal.toFixed(2)})`
+              : "Mais conveniente que ir em vários mercados"}
+          </p>
         </CardContent>
       </Card>
       <Card>

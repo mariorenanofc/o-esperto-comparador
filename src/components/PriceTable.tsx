@@ -18,13 +18,20 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
 
     stores.forEach((store) => {
       let storeTotal = 0;
+      let hasValidProducts = false;
+      
       products.forEach((product) => {
         const price = product.prices[store.id];
-        if (typeof price === "number") {
+        if (typeof price === "number" && price > 0) {
           storeTotal += price * product.quantity;
+          hasValidProducts = true;
         }
       });
-      totals[store.id] = storeTotal;
+      
+      // Só inclui o mercado se tiver pelo menos um produto com preço válido
+      if (hasValidProducts) {
+        totals[store.id] = storeTotal;
+      }
     });
 
     return totals;
@@ -63,10 +70,12 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   const totals = calculateTotalByStore(); // Totais por mercado
   const optimalTotal = calculateOptimalTotal(); // Total se comprado no mais barato
 
-  const highestTotal = Math.max(...Object.values(totals)); // Maior total entre os mercados
-  const averageTotal = Object.values(totals).length > 0 
-    ? Object.values(totals).reduce((sum, current) => sum + current, 0) / Object.values(totals).length
-    : 0; // Média dos totais dos mercados
+  const validTotals = Object.values(totals).filter(total => total > 0);
+  const highestTotal = validTotals.length > 0 ? Math.max(...validTotals) : 0;
+  
+  // Calcular economia inteligente: diferença entre comprar tudo no mercado mais barato vs no mercado com menor total
+  const cheapestStoreTotal = validTotals.length > 0 ? Math.min(...validTotals) : 0;
+  const smartSavings = cheapestStoreTotal - optimalTotal;
 
   const cheapestStoreId = stores.reduce((acc: string | undefined, store) => {
     if (Object.keys(totals).length === 0) return undefined; // Nenhuma loja com produtos
@@ -84,7 +93,8 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
         cheapestStoreId={cheapestStoreId}
         optimalTotal={optimalTotal}
         highestTotal={highestTotal}
-        averageTotal={averageTotal}
+        smartSavings={smartSavings}
+        cheapestStoreTotal={cheapestStoreTotal}
       />
       <ProductPriceTable
         products={products}
