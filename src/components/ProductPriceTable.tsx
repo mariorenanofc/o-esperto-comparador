@@ -53,7 +53,7 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
                           : "dark:bg-gray-950"
                       }`}
                     >
-                      {product.prices[store.id] ? (
+                      {product.prices[store.id] && product.prices[store.id] > 0 ? (
                         <span
                           className={
                             isLowestPrice ? "font-semibold text-app-green" : ""
