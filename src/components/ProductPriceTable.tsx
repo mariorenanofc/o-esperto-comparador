@@ -48,8 +48,10 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
                     <td
                       key={store.id}
                       className={`py-2 px-4 border ${
-                        isLowestPrice ? "bg-green-50" : ""
-                      } dark:bg-gray-950`}
+                        isLowestPrice 
+                          ? "bg-green-50 dark:bg-green-950/20" 
+                          : "dark:bg-gray-950"
+                      }`}
                     >
                       {product.prices[store.id] ? (
                         <span
@@ -68,7 +70,7 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
                     </td>
                   );
                 })}
-                <td className="py-2 px-4 border dark:bg-gray-950 bg-green-50 font-medium text-app-green">
+                <td className="py-2 px-4 border bg-green-50 dark:bg-green-950/20 font-medium text-app-success">
                   {bestStore ? bestStore.name : "N/A"}
                 </td>
               </tr>
@@ -88,9 +90,9 @@ const ProductPriceTable: React.FC<ProductPriceTableProps> = ({
                 key={store.id}
                 className={`py-2 px-4 border font-semibold ${
                   store.id === cheapestStoreId
-                    ? "bg-green-100 text-app-green"
-                    : ""
-                } dark:bg-gray-950`}
+                    ? "bg-green-100 dark:bg-green-950/30 text-app-success"
+                    : "dark:bg-gray-950"
+                }`}
               >
                 R$ {totals[store.id].toFixed(2)}
               </td>

@@ -53,12 +53,21 @@ const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-app-success">
-            R$ {(highestTotal - optimalTotal).toFixed(2).replace(".", ",")}
-          </p>
-          <p className="text-muted-foreground">
-            Comprando cada produto no mercado mais barato
-          </p>
+          {(() => {
+            const savings = highestTotal - optimalTotal;
+            return (
+              <>
+                <p className={`text-2xl font-bold ${savings >= 0 ? 'text-app-success' : 'text-app-error'}`}>
+                  R$ {Math.abs(savings).toFixed(2).replace(".", ",")}
+                </p>
+                <p className="text-muted-foreground">
+                  {savings >= 0 
+                    ? "Economia comparado ao mercado mais caro" 
+                    : "Diferença a mais comparado ao mais caro"}
+                </p>
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
       <Card>
@@ -68,12 +77,21 @@ const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-2xl font-bold text-app-success">
-            R$ {(averageTotal - optimalTotal).toFixed(2).replace(".", ",")}
-          </p>
-          <p className="text-muted-foreground">
-            Se você comprasse tudo em um mercado com preço médio
-          </p>
+          {(() => {
+            const savings = averageTotal - optimalTotal;
+            return (
+              <>
+                <p className={`text-2xl font-bold ${savings >= 0 ? 'text-app-success' : 'text-app-error'}`}>
+                  R$ {Math.abs(savings).toFixed(2).replace(".", ",")}
+                </p>
+                <p className="text-muted-foreground">
+                  {savings >= 0 
+                    ? "Economia comparado à média dos mercados" 
+                    : "Diferença a mais comparado à média"}
+                </p>
+              </>
+            );
+          })()}
         </CardContent>
       </Card>
       <Card>

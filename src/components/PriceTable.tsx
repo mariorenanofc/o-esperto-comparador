@@ -64,9 +64,9 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   const optimalTotal = calculateOptimalTotal(); // Total se comprado no mais barato
 
   const highestTotal = Math.max(...Object.values(totals)); // Maior total entre os mercados
-  const averageTotal =
-    Object.values(totals).reduce((sum, current) => sum + current, 0) /
-    Object.values(totals).length; // Média dos totais dos mercados
+  const averageTotal = Object.values(totals).length > 0 
+    ? Object.values(totals).reduce((sum, current) => sum + current, 0) / Object.values(totals).length
+    : 0; // Média dos totais dos mercados
 
   const cheapestStoreId = stores.reduce((acc: string | undefined, store) => {
     if (Object.keys(totals).length === 0) return undefined; // Nenhuma loja com produtos
