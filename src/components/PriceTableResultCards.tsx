@@ -75,22 +75,18 @@ const PriceTableResultCards: React.FC<PriceTableResultCardsProps> = ({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">
-            Estratégia Inteligente
+            Total Comprando no Melhor Preço
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className={`text-2xl font-bold ${smartSavings >= 0 ? 'text-app-warning' : 'text-app-success'}`}>
-            R$ {Math.abs(smartSavings).toFixed(2).replace(".", ",")}
+          <p className="text-2xl font-bold text-app-primary">
+            R$ {optimalTotal.toFixed(2).replace(".", ",")}
           </p>
           <p className="text-muted-foreground">
-            {smartSavings >= 0 
-              ? "Economia adicional comprando estrategicamente"
-              : "Economia comprando tudo em um só lugar"}
+            Comprando cada produto onde está mais barato
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {smartSavings >= 0 
-              ? `vs comprar tudo no mercado mais barato (R$ ${cheapestStoreTotal.toFixed(2)})`
-              : "Mais conveniente que ir em vários mercados"}
+            Economia máxima possível para sua lista
           </p>
         </CardContent>
       </Card>
