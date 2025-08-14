@@ -45,7 +45,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
 
     stores.forEach((store) => {
       const price = product.prices[store.id];
-      if (typeof price === "number" && price < bestPrice) {
+      if (typeof price === "number" && price > 0 && price < bestPrice) {
         bestPrice = price;
         bestStoreId = store.id;
       }
@@ -60,7 +60,7 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
     let optimalTotal = 0;
     products.forEach((product) => {
       const bestStoreId = findBestPriceStore(products.indexOf(product));
-      if (bestStoreId && typeof product.prices[bestStoreId] === "number") {
+      if (bestStoreId && typeof product.prices[bestStoreId] === "number" && product.prices[bestStoreId] > 0) {
         optimalTotal += product.prices[bestStoreId]! * product.quantity;
       }
     });
