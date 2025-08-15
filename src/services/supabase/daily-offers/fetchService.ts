@@ -3,6 +3,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { DailyOffer } from '@/lib/types';
 
 export const fetchService = {
+  mapOffersData(data: any[]): DailyOffer[] {
+    return data.map(item => ({
+      id: item.id,
+      productName: item.product_name,
+      price: Number(item.price),
+      storeName: item.store_name,
+      city: item.city,
+      state: item.state,
+      contributorName: item.contributor_name,
+      userId: item.user_id,
+      timestamp: new Date(item.created_at || ''),
+      verified: item.verified || false,
+      quantity: item.quantity || 1,
+      unit: item.unit || 'unidade'
+    }));
+  },
+
   async getTodaysOffers(): Promise<DailyOffer[]> {
     console.log('Fetching today\'s offers...');
     
@@ -62,23 +79,6 @@ export const fetchService = {
       console.error('Error in getTodaysOffers:', error);
       return [];
     }
-  },
-
-  mapOffersData(data: any[]): DailyOffer[] {
-    return data.map(item => ({
-      id: item.id,
-      productName: item.product_name,
-      price: Number(item.price),
-      storeName: item.store_name,
-      city: item.city,
-      state: item.state,
-      contributorName: item.contributor_name,
-      userId: item.user_id,
-      timestamp: new Date(item.created_at || ''),
-      verified: item.verified || false,
-      quantity: item.quantity || 1,
-      unit: item.unit || 'unidade'
-    }));
   },
 
   async getAllContributions(): Promise<any[]> {
