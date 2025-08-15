@@ -16,6 +16,38 @@ export const usePlanValidation = (): PlanValidationHook => {
   const { currentPlan } = useSubscription();
 
   const validateFeatureAccess = useCallback(async (feature: string, currentUsage: number = 0): Promise<boolean> => {
+    // Admin tem acesso ilimitado
+    if (profile?.plan === "admin") {
+      return true;
+    }
+
+    // Verificar se o plano está expirado (exceto free e admin)
+    if (currentPlan !== "free") {
+      try {
+        const { data: subscriber, error } = await supabase
+          .from('subscribers')
+          .select('subscription_end, subscribed')
+          .eq('user_id', profile?.id)
+          .single();
+
+        if (error || !subscriber) {
+          console.error('Erro ao verificar status da assinatura:', error);
+          // Se não conseguir verificar, bloquear acesso por segurança
+          return canUseFeature("free", feature as any, currentUsage);
+        }
+
+        // Se a assinatura expirou ou não está ativa, usar limites do plano gratuito
+        if (!subscriber.subscribed || 
+            (subscriber.subscription_end && new Date(subscriber.subscription_end) < new Date())) {
+          console.log('Assinatura expirada ou inativa, aplicando limites do plano gratuito');
+          return canUseFeature("free", feature as any, currentUsage);
+        }
+      } catch (error) {
+        console.error('Erro na verificação de expiração:', error);
+        return canUseFeature("free", feature as any, currentUsage);
+      }
+    }
+
     // Verificação no banco de dados via função segura
     try {
       const { data, error } = await supabase.rpc('check_user_feature_access', {
@@ -35,7 +67,7 @@ export const usePlanValidation = (): PlanValidationHook => {
       // Fallback para validação local
       return canUseFeature(currentPlan, feature as any, currentUsage);
     }
-  }, [currentPlan]);
+  }, [currentPlan, profile]);
 
   const incrementUsageCounter = useCallback(async (feature: string): Promise<void> => {
     if (!profile) return;
@@ -56,6 +88,13 @@ export const usePlanValidation = (): PlanValidationHook => {
   }, [profile]);
 
   const checkFeatureAccess = useCallback((feature: string, currentUsage: number = 0): boolean => {
+    // Admin tem acesso ilimitado
+    if (profile?.plan === "admin") {
+      return true;
+    }
+    
+    // Para validação local simples, usar o plano atual
+    // A validação de expiração será feita na função validateFeatureAccess
     return canUseFeature(currentPlan, feature as any, currentUsage);
   }, [currentPlan]);
 

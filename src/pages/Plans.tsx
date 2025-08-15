@@ -13,13 +13,58 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Star } from "lucide-react";
 import { PLANS } from "@/lib/plans";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
+import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
 
 const Plans: React.FC = () => {
   const { currentPlan, createCheckout, isLoading } = useSubscription();
+  const { profile } = useAuth();
 
+  const isAdmin = profile?.plan === "admin";
+  
   const handleSelectPlan = (planId: any) => {
     if (planId === "free") return;
+    
+    // Prevenir downgrade para usuários PRO
+    if (currentPlan === "pro" && (planId === "premium" || planId === "free")) {
+      return;
+    }
+    
     createCheckout(planId);
+  };
+
+  const getButtonText = (plan: any) => {
+    if (isAdmin) {
+      return "👑 Acesso Admin";
+    }
+    
+    if (currentPlan === plan.id) {
+      return "✅ Plano Atual";
+    }
+    
+    // Prevenir downgrade para usuários PRO
+    if (currentPlan === "pro" && (plan.id === "premium" || plan.id === "free")) {
+      return "🔒 Downgrade Bloqueado";
+    }
+    
+    if (plan.id === "free") {
+      return "🆓 Gratuito";
+    }
+    
+    return `🚀 Escolher ${plan.name}`;
+  };
+
+  const isButtonDisabled = (plan: any) => {
+    if (isAdmin) return true;
+    if (isLoading) return true;
+    if (currentPlan === plan.id) return true;
+    
+    // Bloquear downgrade para usuários PRO
+    if (currentPlan === "pro" && (plan.id === "premium" || plan.id === "free")) {
+      return true;
+    }
+    
+    return false;
   };
 
   return (
@@ -27,6 +72,9 @@ const Plans: React.FC = () => {
       <Navbar />
 
       <div className="container mx-auto py-12 px-6">
+        {/* Alerta de Expiração */}
+        <SubscriptionExpiryAlert />
+        
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
             ✨ Escolha o Plano Ideal ✨
@@ -107,14 +155,10 @@ const Plans: React.FC = () => {
                       ? "default"
                       : "outline"
                   }
-                  disabled={isLoading || currentPlan === plan.id}
+                  disabled={isButtonDisabled(plan)}
                   onClick={() => handleSelectPlan(plan.id)}
                 >
-                  {currentPlan === plan.id
-                    ? "✅ Plano Atual"
-                    : plan.id === "free"
-                    ? "🆓 Gratuito"
-                    : `🚀 Escolher ${plan.name}`}
+                  {getButtonText(plan)}
                 </Button>
               </CardFooter>
             </Card>

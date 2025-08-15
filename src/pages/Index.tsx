@@ -27,6 +27,7 @@ import {
   PlusCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
 
 // Componente para itens com barra de progresso (uso limitado para manter padrão)
 const ProgressItem = ({
@@ -240,6 +241,9 @@ const Index: React.FC = () => {
       <DailyOffersSection />
 
       <div className="container mx-auto py-8 sm:py-16 px-4 sm:px-6">
+        {/* Alerta de Expiração */}
+        {user && <SubscriptionExpiryAlert />}
+        
         {/* Seção Meu Plano e Uso */}
         {user && (
           <div className="mb-12">
