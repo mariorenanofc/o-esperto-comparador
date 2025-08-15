@@ -150,13 +150,41 @@ const DailyOffersSection: React.FC = () => {
         <OffersGrid
           visibleOffers={offersToDisplayInGrid}
           displayOffers={offers}
-          isSignedIn={currentUserIsSignedIn} // Passa o novo nome como prop
-          isFreePlanLoggedIn={currentUserIsSignedIn && currentPlan === "free"} // Usa o novo nome aqui
+          isSignedIn={currentUserIsSignedIn}
+          isFreePlanLoggedIn={currentUserIsSignedIn && currentPlan === "free"}
           maxDailyOffersVisible={maxDailyOffersVisibleByPlan}
           showAllForGuest={showAllForGuest}
         />
       ) : (
-        <ContributeCallToAction />
+        <div className="space-y-6">
+          <Card className="w-full p-8 text-center bg-gradient-to-br from-blue-50 to-green-50 border-dashed border-2">
+            <CardContent className="space-y-4">
+              <div className="text-4xl mb-4">🏪</div>
+              <h3 className="text-xl font-semibold text-gray-800">
+                Nenhuma oferta encontrada para {city || "sua região"}
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                Seja o primeiro a compartilhar preços em sua cidade! Sua contribuição 
+                ajuda outros consumidores a economizar.
+              </p>
+              <div className="mt-6 space-y-3">
+                <Button 
+                  onClick={handleRefresh}
+                  variant="outline" 
+                  className="mr-3"
+                >
+                  🔄 Verificar Novamente
+                </Button>
+                {currentUserIsSignedIn && (
+                  <p className="text-sm text-gray-500">
+                    💡 Contribua com preços e ganhe pontos na comunidade!
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <ContributeCallToAction />
+        </div>
       )}
 
       {showLoginOverlayForGuests && (

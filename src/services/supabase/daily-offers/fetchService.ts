@@ -22,30 +22,63 @@ export const fetchService = {
 
       if (error) {
         console.error('Error fetching verified offers:', error);
+        // Em caso de erro, tentar buscar sem filtro de verificação como fallback
+        const { data: fallbackData } = await supabase
+          .from('daily_offers')
+          .select('*, quantity, unit')
+          .gte('created_at', twentyFourHoursAgo.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (fallbackData && fallbackData.length > 0) {
+          console.log('Using fallback data with unverified offers');
+          return this.mapOffersData(fallbackData);
+        }
         throw error;
       }
 
-      const offers = data?.map(item => ({
-        id: item.id,
-        productName: item.product_name,
-        price: Number(item.price),
-        storeName: item.store_name,
-        city: item.city,
-        state: item.state,
-        contributorName: item.contributor_name,
-        userId: item.user_id,
-        timestamp: new Date(item.created_at || ''),
-        verified: item.verified || false,
-        quantity: item.quantity || 1,
-        unit: item.unit || 'unidade'
-      })) || [];
-
+      const offers = this.mapOffersData(data || []);
       console.log('Fetched today\'s offers (last 24h):', offers.length);
+      
+      // Se não há ofertas verificadas, buscar algumas não verificadas como fallback
+      if (offers.length === 0) {
+        console.log('No verified offers found, checking for unverified ones...');
+        const { data: unverifiedData } = await supabase
+          .from('daily_offers')
+          .select('*, quantity, unit')
+          .eq('verified', false)
+          .gte('created_at', twentyFourHoursAgo.toISOString())
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (unverifiedData && unverifiedData.length > 0) {
+          console.log('Found unverified offers as fallback:', unverifiedData.length);
+          return this.mapOffersData(unverifiedData);
+        }
+      }
+      
       return offers;
     } catch (error) {
       console.error('Error in getTodaysOffers:', error);
       return [];
     }
+  },
+
+  mapOffersData(data: any[]): DailyOffer[] {
+    return data.map(item => ({
+      id: item.id,
+      productName: item.product_name,
+      price: Number(item.price),
+      storeName: item.store_name,
+      city: item.city,
+      state: item.state,
+      contributorName: item.contributor_name,
+      userId: item.user_id,
+      timestamp: new Date(item.created_at || ''),
+      verified: item.verified || false,
+      quantity: item.quantity || 1,
+      unit: item.unit || 'unidade'
+    }));
   },
 
   async getAllContributions(): Promise<any[]> {
