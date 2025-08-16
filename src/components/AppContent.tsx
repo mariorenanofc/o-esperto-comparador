@@ -43,6 +43,7 @@ const Admin = React.lazy(() =>
 const UserDetailPage = React.lazy(() => import("@/pages/admin/UserDetailPage"));
 
 import PWAInstallBanner from "./PWAInstallBanner";
+import { PWAInstallPromotion } from "./PWAInstallPromotion";
 import { OfflineIndicator } from "./OfflineIndicator";
 
 export const AppContent: React.FC = () => {
@@ -147,6 +148,7 @@ export const AppContent: React.FC = () => {
           </Routes>
         </OptimizedSuspense>
         <PWAInstallBanner />
+        <PWAInstallPromotion />
         <OfflineIndicator />
       </div>
     </>

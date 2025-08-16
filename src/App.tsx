@@ -13,7 +13,7 @@ import { useDataPreloader } from "./hooks/useOptimizedData";
 
 // Lazy-loaded non-critical features for better mobile performance
 const PushInitializerLazy = React.lazy(() => import("./components/PushInitializer"));
-const NotificationSystemLazy = React.lazy(() => import("./components/NotificationSystem").then(m => ({ default: m.NotificationSystem })));
+const NotificationSystemLazy = React.lazy(() => import("./components/NotificationSystemEnhanced").then(m => ({ default: m.NotificationSystemEnhanced })));
 
 // Component interno para usar hooks
 const AppWithHooks: React.FC = () => {

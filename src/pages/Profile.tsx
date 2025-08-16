@@ -152,57 +152,63 @@ export default function Profile() {
         <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-gradient-to-br from-secondary/5 to-accent/5 rounded-full blur-2xl animate-pulse delay-2000" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+      <div className="relative z-10 container mx-auto px-4 py-4 md:py-8 max-w-7xl">
         {/* Header */}
-        <div className="mb-8 animate-fade-in">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 md:mb-8 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
                 ✨ Meu Perfil
               </h1>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-sm md:text-lg text-muted-foreground">
                 Gerencie suas informações e configurações da conta
               </p>
             </div>
-            {/* NOVO: Botão Voltar para a Home */}
-            <Link to="/">
-              <Button variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-              </Button>
-            </Link>
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-blue-500/20 rounded-full blur-lg animate-pulse" />
-              <Badge
-                variant={profile.is_online ? "default" : "secondary"}
-                className={`relative flex items-center gap-2 px-4 py-2 text-sm font-semibold shadow-lg ${
-                  profile.is_online 
-                    ? "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-green-500/25" 
-                    : "bg-gradient-to-r from-gray-500/10 to-gray-600/10 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    profile.is_online ? "bg-white animate-pulse" : "bg-gray-400"
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Botão Voltar */}
+              <Link to="/" className="flex-1 sm:flex-none">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <ArrowLeft className="h-4 w-4 mr-2" /> 
+                  <span className="hidden sm:inline">Voltar</span>
+                  <span className="sm:hidden">🏠</span>
+                </Button>
+              </Link>
+              {/* Status Badge */}
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-blue-500/20 rounded-full blur-lg animate-pulse" />
+                <Badge
+                  variant={profile.is_online ? "default" : "secondary"}
+                  className={`relative flex items-center gap-2 px-3 md:px-4 py-2 text-xs md:text-sm font-semibold shadow-lg ${
+                    profile.is_online 
+                      ? "bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-green-500/25" 
+                      : "bg-gradient-to-r from-gray-500/10 to-gray-600/10 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600"
                   }`}
-                />
-                {profile.is_online ? (
-                  <div className="flex items-center gap-1">
-                    <Zap className="w-3 h-3" />
-                    Online
-                  </div>
-                ) : (
-                  "Offline"
-                )}
-              </Badge>
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      profile.is_online ? "bg-white animate-pulse" : "bg-gray-400"
+                    }`}
+                  />
+                  {profile.is_online ? (
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
+                      <span className="hidden sm:inline">Online</span>
+                      <span className="sm:hidden">🟢</span>
+                    </div>
+                  ) : (
+                    <span className="hidden sm:inline">Offline</span>
+                  )}
+                </Badge>
+              </div>
             </div>
           </div>
           <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         </div>
 
-          {/* Layout principal */}
-        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Layout principal - Responsivo */}
+        <div className="grid gap-6 md:gap-8 lg:grid-cols-3">
           {/* Coluna Principal */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6 md:space-y-8">
             {/* Informações Básicas */}
             <Card className="relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.01] group animate-scale-in">
               {/* Background Effects */}
