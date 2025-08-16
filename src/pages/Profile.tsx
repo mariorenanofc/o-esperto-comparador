@@ -31,16 +31,20 @@ import {
   Star,
   Zap,
   ArrowLeft,
+  CreditCard,
+  CheckCircle,
+  Crown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { getPlanById } from "@/lib/plans";
 
 export default function Profile() {
   const { user, profile, signOut } = useAuth();
-  const { currentPlan } = useSubscription();
+  const { currentPlan, manageSubscription, createCheckout, isLoading: subscriptionLoading } = useSubscription();
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(profile?.name || "");
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +87,32 @@ export default function Profile() {
       });
     } catch (error) {
       console.error("Error signing out:", error);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      await manageSubscription();
+    } catch (error) {
+      console.error('Error managing subscription:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível abrir o gerenciamento de assinatura.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpgrade = async (planId: string) => {
+    try {
+      await createCheckout(planId as any);
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível iniciar o processo de upgrade.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -169,10 +199,10 @@ export default function Profile() {
           <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
         </div>
 
-        {/* MUDANÇA PRINCIPAL: De `lg:grid-cols-3` para `md:grid-cols-2` e ajuste de layout */}
-        <div className="grid gap-8 md:grid-cols-2">
-          {/* Main Content */}
-          <div className="space-y-8">
+          {/* Layout principal */}
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Coluna Principal */}
+          <div className="lg:col-span-2 space-y-8">
             {/* Informações Básicas */}
             <Card className="relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.01] group animate-scale-in">
               {/* Background Effects */}
@@ -439,11 +469,137 @@ export default function Profile() {
             </Card>
           </div>
 
-          {/* Sidebar - Status do Plano */}
-          <div className="md:pr-4">
+          {/* Sidebar - Gerenciamento de Plano */}
+          <div className="space-y-6">
+            {/* Status do Plano */}
             <div className="sticky top-8 animate-fade-in">
               <PlanStatus />
             </div>
+
+            {/* Gerenciamento de Assinatura */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.01] group animate-scale-in">
+              {/* Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-yellow-400/10 to-orange-400/10 rounded-full blur-xl animate-pulse" />
+              
+              <CardHeader className="relative z-10 pb-4">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg blur-sm animate-pulse" />
+                    <div className="relative p-2 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 text-white shadow-lg">
+                      <Crown className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                      Gerenciar Plano
+                    </span>
+                    <p className="text-xs text-muted-foreground font-normal mt-1">
+                      {currentPlan === 'admin' ? 'Acesso Total' : 'Controle sua assinatura'}
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="relative z-10 space-y-4">
+                {/* Plano Atual */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50/50 to-blue-100/30 dark:from-blue-950/20 dark:to-blue-900/10 border border-blue-200/30 dark:border-blue-800/30">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CheckCircle className="w-4 h-4 text-blue-600" />
+                    <span className="font-semibold text-foreground">Plano Atual</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {getPlanById(currentPlan || 'free').name}
+                    </span>
+                    <Badge 
+                      variant={currentPlan === 'admin' ? 'default' : currentPlan === 'free' ? 'secondary' : 'outline'}
+                      className={
+                        currentPlan === 'admin' 
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0' 
+                          : currentPlan === 'free' 
+                          ? 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700' 
+                          : 'bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700'
+                      }
+                    >
+                      {currentPlan === 'admin' && '👑 Admin'}
+                      {currentPlan === 'free' && '💝 Gratuito'}
+                      {currentPlan === 'premium' && '⭐ Premium'}
+                      {currentPlan === 'pro' && '🚀 Pro'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Ações baseadas no plano */}
+                <div className="space-y-3">
+                  {currentPlan === 'admin' ? (
+                    <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50/50 to-purple-100/30 dark:from-purple-950/20 dark:to-purple-900/10 border border-purple-200/30 dark:border-purple-800/30 text-center">
+                      <Crown className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                        Acesso Total de Administrador
+                      </p>
+                      <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-1">
+                        Você tem acesso a todos os recursos
+                      </p>
+                    </div>
+                  ) : currentPlan === 'free' ? (
+                    <>
+                      <Button
+                        onClick={() => handleUpgrade('premium')}
+                        disabled={subscriptionLoading}
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        {subscriptionLoading ? 'Processando...' : 'Upgrade para Premium'}
+                      </Button>
+                      <Button
+                        onClick={() => handleUpgrade('pro')}
+                        disabled={subscriptionLoading}
+                        variant="outline"
+                        className="w-full border-2 border-orange-300 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        {subscriptionLoading ? 'Processando...' : 'Upgrade para Pro'}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={handleManageSubscription}
+                        disabled={subscriptionLoading}
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        {subscriptionLoading ? 'Carregando...' : 'Gerenciar Assinatura'}
+                      </Button>
+                      {currentPlan === 'premium' && (
+                        <Button
+                          onClick={() => handleUpgrade('pro')}
+                          disabled={subscriptionLoading}
+                          variant="outline"
+                          className="w-full border-2 border-orange-300 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          {subscriptionLoading ? 'Processando...' : 'Upgrade para Pro'}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Link para página de planos */}
+                <div className="pt-2 border-t border-border/50">
+                  <Link to="/plans">
+                    <Button 
+                      variant="ghost" 
+                      className="w-full text-muted-foreground hover:text-foreground transition-colors duration-300"
+                    >
+                      Ver todos os planos disponíveis
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
