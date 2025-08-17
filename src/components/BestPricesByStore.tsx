@@ -43,7 +43,7 @@ const BestPricesByStore: React.FC<BestPricesByStoreProps> = ({
       let bestStoreId = "";
 
       Object.entries(product.prices).forEach(([storeId, price]) => {
-        if (typeof price === "number" && price < bestPrice) {
+        if (typeof price === "number" && price > 0 && price < bestPrice) {
           bestPrice = price;
           bestStoreId = storeId;
         }

@@ -8,7 +8,7 @@ export function calculateTotalsByStore(products: Product[], stores: Store[]): To
     let total = 0;
     for (const p of products) {
       const price = p.prices[store.id];
-      if (typeof price === "number" && !Number.isNaN(price)) {
+      if (typeof price === "number" && !Number.isNaN(price) && price > 0) {
         total += price * (p.quantity ?? 1);
       }
     }
