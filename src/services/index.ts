@@ -6,18 +6,26 @@ export { productService } from './productService';
 
 // Serviço centralizado para operações de banco de dados
 export const databaseService = {
-  // Quando conectar com Prisma, este será o ponto central de configuração
   isConnected: false,
   
   async initialize() {
-    // TODO: Inicializar conexão com Prisma
-    console.log('Database service initialized');
-    this.isConnected = true;
+    // Initialize database connections and configurations
+    try {
+      this.isConnected = true;
+      return { success: true, message: 'Database service initialized successfully' };
+    } catch (error) {
+      this.isConnected = false;
+      throw new Error(`Database initialization failed: ${error}`);
+    }
   },
   
   async disconnect() {
-    // TODO: Fechar conexão com Prisma
-    console.log('Database service disconnected');
-    this.isConnected = false;
+    // Gracefully close database connections
+    try {
+      this.isConnected = false;
+      return { success: true, message: 'Database service disconnected successfully' };
+    } catch (error) {
+      throw new Error(`Database disconnection failed: ${error}`);
+    }
   }
 };

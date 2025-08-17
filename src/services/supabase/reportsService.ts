@@ -86,4 +86,23 @@ export const supabaseReportsService = {
 
     return data || [];
   },
+
+  async updateMonthlyReportById(reportId: string, totalSpent: number) {
+    const { data, error } = await supabase
+      .from("monthly_reports")
+      .update({ 
+        total_spent: totalSpent,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", reportId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating monthly report:", error);
+      throw error;
+    }
+
+    return data;
+  },
 };

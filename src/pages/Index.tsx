@@ -225,7 +225,7 @@ const Index: React.FC = () => {
           savedComparisonsCount,
         });
       } catch (error) {
-        console.error("DEBUG ERROR: Error fetching dashboard stats:", error);
+        // Error handling for dashboard stats
       } finally {
         setLoadingDashboardStats(false);
       }

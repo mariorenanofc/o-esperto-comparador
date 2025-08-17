@@ -408,20 +408,31 @@ const UserDetailPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Seção de Status de Consumo (TODO) */}
+          {/* Status de Consumo do Plano */}
           <Card className="mt-6 bg-white dark:bg-gray-800">
             <CardHeader>
               <CardTitle>Status de Consumo do Plano</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 dark:text-gray-400">
-                Esta seção será implementada para exibir o consumo detalhado do
-                plano do usuário, como número de comparações realizadas/salvas e
-                alertas de preço.
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                (Funcionalidade em desenvolvimento)
-              </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold text-primary">Comparações</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Uso de comparações no período atual
+                    </p>
+                  </div>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold text-primary">Alertas</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Alertas de preço configurados
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  (Funcionalidade em desenvolvimento)
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

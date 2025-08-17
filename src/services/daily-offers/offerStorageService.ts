@@ -5,11 +5,11 @@ import { DailyOffer } from "@/lib/types";
 // Em produção, isso será substituído pela API do banco de dados
 let todaysOffers: DailyOffer[] = [];
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 export const offerStorageService = {
   // Obter ofertas do dia atual
   async getTodaysOffers(): Promise<DailyOffer[]> {
-    console.log('Getting today\'s offers...');
-    
     // Limpar ofertas antigas automaticamente a cada consulta
     await this.clearOldOffers();
     
@@ -19,38 +19,28 @@ export const offerStorageService = {
         const response = await fetch('/api/contributions/daily-offers');
         if (response.ok) {
           const apiOffers = await response.json();
-          console.log('Offers fetched from API:', apiOffers);
           return apiOffers;
         }
       }
     } catch (error) {
-      console.log('API not available, using local storage:', error);
+      // Fallback silencioso para armazenamento local
     }
     
     // Fallback para armazenamento local
-    console.log('Total offers in memory:', todaysOffers.length);
-    
-    // Filtrar apenas ofertas do dia atual (últimas 24 horas)
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     
     const filteredOffers = todaysOffers.filter(offer => {
       const offerTime = offer.timestamp.getTime();
-      const isWithin24Hours = offerTime > twentyFourHoursAgo.getTime();
-      console.log('Checking offer:', offer.id, 'timestamp:', offer.timestamp, 'within 24h:', isWithin24Hours);
-      return isWithin24Hours;
+      return offerTime > twentyFourHoursAgo.getTime();
     });
     
-    console.log('Filtered offers for last 24 hours:', filteredOffers);
     return filteredOffers;
   },
 
   // Adicionar nova oferta
   addOffer(newOffer: DailyOffer): void {
     todaysOffers.push(newOffer);
-    console.log('New offer added:', newOffer);
-    console.log('Total offers now:', todaysOffers.length);
-    console.log('All offers in memory:', todaysOffers);
   },
 
   // Atualizar ofertas existentes
@@ -60,7 +50,6 @@ export const offerStorageService = {
 
   // Limpar ofertas antigas (executar automaticamente - agora remove após 24h)
   async clearOldOffers(): Promise<void> {
-    console.log('Clearing old offers (older than 24 hours)...');
     const now = new Date();
     const twentyFourHoursAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     
@@ -72,14 +61,18 @@ export const offerStorageService = {
       return offerTime > twentyFourHoursAgo.getTime();
     });
     
-    console.log(`Offers cleanup: ${initialCount} -> ${todaysOffers.length}`);
+    if (isDevelopment) {
+      console.log(`Offers cleanup: ${initialCount} -> ${todaysOffers.length}`);
+    }
   },
 
-  // Função para debug - listar todas as ofertas
-  debugGetAllOffers(): DailyOffer[] {
-    console.log('DEBUG: All offers in memory:', todaysOffers);
-    return [...todaysOffers];
-  }
+  // Função para debug - apenas em desenvolvimento
+  ...(isDevelopment && {
+    debugGetAllOffers(): DailyOffer[] {
+      console.log('DEBUG: All offers in memory:', todaysOffers);
+      return [...todaysOffers];
+    }
+  })
 };
 
 // Executar limpeza automática a cada 30 minutos para manter o sistema limpo

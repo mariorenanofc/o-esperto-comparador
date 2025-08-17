@@ -14,10 +14,12 @@ export const comparisonService = {
   // Keep original supabase service for direct access if needed
   _supabase: supabaseComparisonService,
 
-  // Manter compatibilidade com API antiga como fallback
+  // Update comparison functionality
   async updateComparison(comparisonId: string, comparisonData: Partial<ComparisonData>) {
-    console.log('updateComparison called with id:', comparisonId, 'data:', comparisonData);
-    // TODO: Implementar update no Supabase se necessário
-    return {} as any;
+    try {
+      return await this._supabase.updateComparison(comparisonId, comparisonData);
+    } catch (error) {
+      throw new Error(`Failed to update comparison: ${error}`);
+    }
   },
 };

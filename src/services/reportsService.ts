@@ -19,9 +19,11 @@ export const reportsService = {
   },
 
   async updateMonthlyReport(reportId: string, reportData: { totalSpent: number }) {
-    console.log('updateMonthlyReport called with id:', reportId, 'data:', reportData);
-    // TODO: Implementar update específico por ID se necessário
-    return {} as any;
+    try {
+      return await supabaseReportsService.updateMonthlyReportById(reportId, reportData.totalSpent);
+    } catch (error) {
+      throw new Error(`Failed to update monthly report: ${error}`);
+    }
   },
 
   getComparisonsByMonth: supabaseReportsService.getComparisonsByMonth,

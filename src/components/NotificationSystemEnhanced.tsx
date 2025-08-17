@@ -2,11 +2,11 @@ import React from 'react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/hooks/useAuth';
-import { useMobileDetection } from '@/hooks/useMobileDetection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const NotificationSystemEnhanced: React.FC = () => {
   const { user } = useAuth();
-  const { isMobile } = useMobileDetection();
+  const isMobile = useIsMobile();
   
   // Initialize notifications hook to set up real-time listeners
   useNotifications();

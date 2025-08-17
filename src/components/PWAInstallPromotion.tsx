@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { useMobileDetection } from '@/hooks/useMobileDetection';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Smartphone, 
   Download, 
@@ -16,7 +16,7 @@ import {
 
 export const PWAInstallPromotion: React.FC = () => {
   const { isInstallable, isInstalled, installPWA } = usePWAInstall();
-  const { isMobile } = useMobileDetection();
+  const isMobile = useIsMobile();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {

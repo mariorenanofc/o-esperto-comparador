@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Download, X, Smartphone } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { useMobileDetection } from '@/hooks/useMobileDetection';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const PWAInstallBanner = () => {
   const { isInstallable, installPWA } = usePWAInstall();
-  const { isMobile } = useMobileDetection();
+  const isMobile = useIsMobile();
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Only show on mobile devices and if installable

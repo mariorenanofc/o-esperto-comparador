@@ -199,4 +199,23 @@ export const supabaseComparisonService = {
 
     console.log('Comparison deleted successfully');
   },
+
+  async updateComparison(comparisonId: string, comparisonData: Partial<ComparisonData>) {
+    const { data, error } = await supabase
+      .from('comparisons')
+      .update({
+        location: comparisonData.location,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', comparisonId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating comparison:', error);
+      throw error;
+    }
+
+    return data;
+  },
 };
