@@ -22,7 +22,7 @@ export function calculateOptimalTotal(products: Product[], stores: Store[]): num
   for (const p of products) {
     const prices = stores
       .map((s) => p.prices[s.id])
-      .filter((v): v is number => typeof v === "number" && !Number.isNaN(v));
+      .filter((v): v is number => typeof v === "number" && !Number.isNaN(v) && v > 0);
     if (prices.length > 0) {
       const min = Math.min(...prices);
       total += min * (p.quantity ?? 1);
