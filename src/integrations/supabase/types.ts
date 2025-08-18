@@ -7,13 +7,43 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comparison_exports: {
         Row: {
           comparison_id: string | null
@@ -263,6 +293,7 @@ export type Database = {
       }
       products: {
         Row: {
+          category: string
           created_at: string | null
           id: string
           name: string
@@ -270,6 +301,7 @@ export type Database = {
           unit: string
         }
         Insert: {
+          category?: string
           created_at?: string | null
           id?: string
           name: string
@@ -277,6 +309,7 @@ export type Database = {
           unit?: string
         }
         Update: {
+          category?: string
           created_at?: string | null
           id?: string
           name?: string
@@ -462,7 +495,7 @@ export type Database = {
         Returns: boolean
       }
       check_user_feature_access: {
-        Args: { feature_name: string; current_usage?: number }
+        Args: { current_usage?: number; feature_name: string }
         Returns: boolean
       }
       get_db_usage: {

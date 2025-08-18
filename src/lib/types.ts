@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   quantity: number;
   unit: string;
+  category: string;
   prices: { [storeId: string]: number };
   created_at?: string;
   updated_at?: string;
@@ -126,6 +127,7 @@ export interface ProductFormData {
   name: string;
   quantity: number;
   unit: string;
+  category: string;
   prices: { [storeId: string]: number };
 }
 
@@ -159,4 +161,23 @@ export interface UserFeedback {
   userEmail?: string;
   userPhone?: string;
   createdAt?: string;
+}
+
+// Nova interface para categorias de produtos
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Interface para filtros e busca
+export interface ProductFilters {
+  category?: string;
+  search?: string;
+  sortBy?: 'name' | 'category' | 'created_at';
+  sortOrder?: 'asc' | 'desc';
 }

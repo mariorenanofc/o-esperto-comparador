@@ -15,6 +15,7 @@ interface ComparisonProductDetails {
   name: string;
   quantity: number;
   unit: string;
+  category?: string;
 }
 
 // Definição da estrutura de um preço associado a um produto e loja
@@ -238,6 +239,7 @@ const MonthlyReport: React.FC = () => {
         name: cp.product.name,
         quantity: cp.product.quantity,
         unit: cp.product.unit,
+        category: cp.product.category || 'outros',
         prices: {}, // Será preenchido abaixo
       });
     });

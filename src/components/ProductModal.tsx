@@ -37,6 +37,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
       name: "",
       quantity: 1,
       unit: "unid",
+      category: "outros",
       prices: {},
     }
   );
@@ -56,6 +57,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
           name: "",
           quantity: 1,
           unit: "unid",
+          category: "outros",
           prices: {},
         }
       );

@@ -120,6 +120,7 @@ function toComparisonData(item: any): ComparisonData {
         name: prod.name,
         quantity: prod.quantity || 1,
         unit: prod.unit || "unidade",
+        category: prod.category || "outros",
         prices: {},
       });
     }
@@ -144,6 +145,7 @@ function normalizeProducts(products: any[], stores: Store[]): Product[] {
     name: p.name,
     quantity: p.quantity ?? 1,
     unit: p.unit || "unidade",
+    category: p.category || "outros",
     prices: p.prices || {},
   }));
 }

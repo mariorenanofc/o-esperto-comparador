@@ -4,6 +4,7 @@ export interface ProductData {
   name: string;
   quantity: number;
   unit: string;
+  category: string;
 }
 
 export const productService = {

@@ -206,6 +206,7 @@ const ComparisonForm: React.FC = () => {
       name: product.name,
       quantity: product.quantity,
       unit: product.unit,
+      category: product.category || 'outros',
       prices: { ...product.prices },
     });
     setEditingProductIndex(index);
