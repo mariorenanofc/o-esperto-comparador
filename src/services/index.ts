@@ -3,6 +3,7 @@ export { comparisonService } from './comparisonService';
 export { reportsService } from './reportsService';
 export { storeService } from './storeService';
 export { productService } from './productService';
+export { categoryService } from './categoryService';
 
 // Serviço centralizado para operações de banco de dados
 export const databaseService = {

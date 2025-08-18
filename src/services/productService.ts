@@ -22,6 +22,36 @@ export const productService = {
     return data || [];
   },
 
+  async getProductsByCategory(category: string) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("category", category)
+      .order("name");
+
+    if (error) {
+      console.error("Error fetching products by category:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async searchProducts(searchTerm: string) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .ilike("name", `%${searchTerm}%`)
+      .order("name");
+
+    if (error) {
+      console.error("Error searching products:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
   async createProduct(productData: ProductData) {
     const { data, error } = await supabase
       .from("products")
