@@ -3,6 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Edit, Download, History } from "lucide-react";
+import { ProductSearch } from "@/components/ui/product-search";
+import { CategoryFilter } from "@/components/ui/category-filter";
+import { useCategories } from "@/hooks/useCategories";
+import { useProductFilters } from "@/hooks/useProductFilters";
 import ProductModal from "./ProductModal";
 import PriceTable from "./PriceTable"; // Mantenha o import
 import BestPricesByStore from "./BestPricesByStore";
@@ -31,13 +35,22 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
 const ComparisonForm: React.FC = () => {
-  const { user, profile } = useAuth();
-  const { currentPlan } = useSubscription();
-  const isSignedIn = !!user;
   const [comparisonData, setComparisonData] = useState<ComparisonData>({
     products: [],
     stores: [],
   });
+  const { user, profile } = useAuth();
+  const { currentPlan } = useSubscription();
+  const isSignedIn = !!user;
+  const { categories } = useCategories();
+  const {
+    filters,
+    filteredProducts,
+    setSearch,
+    setCategory,
+    clearFilters,
+    filterStats
+  } = useProductFilters(comparisonData.products);
   const [storeName, setStoreName] = useState("");
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<
@@ -519,6 +532,41 @@ const ComparisonForm: React.FC = () => {
               </Button>
             </div>
 
+            {comparisonData.products.length > 0 && (
+              <div className="mb-4 space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <ProductSearch
+                    value={filters.search}
+                    onChange={setSearch}
+                    placeholder="Buscar produtos..."
+                    className="flex-1"
+                  />
+                  <CategoryFilter
+                    categories={categories}
+                    selectedCategory={filters.category}
+                    onCategoryChange={setCategory}
+                    className="md:w-64"
+                  />
+                </div>
+                
+                {filterStats.hasActiveFilters && (
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>
+                      {filteredProducts.length} de {filterStats.totalProducts} produtos
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="h-8"
+                    >
+                      Limpar filtros
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             {comparisonData.stores.length === 0 && (
               <p className="text-muted-foreground italic">
                 Adicione pelo menos um mercado antes de cadastrar produtos.
@@ -545,42 +593,45 @@ const ComparisonForm: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {comparisonData.products.map((product, index) => (
-                      <tr key={product.id}>
-                        <td className="py-2 px-4 border">{product.name}</td>
-                        <td className="py-2 px-4 border">{product.quantity}</td>
-                        <td className="py-2 px-4 border">{product.unit}</td>
-                        {comparisonData.stores.map((store) => (
-                          <td key={store.id} className="py-2 px-4 border">
-                            {product.prices[store.id] ? (
-                              `R$ ${product.prices[store.id].toFixed(2)}`
-                            ) : (
-                              <span className="text-muted-foreground">N/A</span>
-                            )}
+                    {filteredProducts.map((product, index) => {
+                      const originalIndex = comparisonData.products.findIndex(p => p.id === product.id);
+                      return (
+                        <tr key={product.id}>
+                          <td className="py-2 px-4 border">{product.name}</td>
+                          <td className="py-2 px-4 border">{product.quantity}</td>
+                          <td className="py-2 px-4 border">{product.unit}</td>
+                          {comparisonData.stores.map((store) => (
+                            <td key={store.id} className="py-2 px-4 border">
+                              {product.prices[store.id] ? (
+                                `R$ ${product.prices[store.id].toFixed(2)}`
+                              ) : (
+                                <span className="text-muted-foreground">N/A</span>
+                              )}
+                            </td>
+                          ))}
+                          <td className="py-2 px-4 border text-center">
+                            <div className="flex justify-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditProduct(originalIndex)}
+                                className="h-8 w-8 text-app-primary hover:text-app-primary/80 hover:bg-primary/10"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteProduct(originalIndex)}
+                                className="h-8 w-8 text-app-error hover:text-app-error/80 hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
-                        ))}
-                        <td className="py-2 px-4 border text-center">
-                          <div className="flex justify-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditProduct(index)}
-                              className="h-8 w-8 text-app-primary hover:text-app-primary/80 hover:bg-primary/10"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteProduct(index)}
-                              className="h-8 w-8 text-app-error hover:text-app-error/80 hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
