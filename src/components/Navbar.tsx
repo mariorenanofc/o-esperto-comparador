@@ -48,6 +48,12 @@ const Navbar = () => {
               Comparar Preços
             </Link>
             <Link 
+              to="/products" 
+              className="text-muted-foreground hover:text-app-secondary transition-colors"
+            >
+              Produtos
+            </Link>
+            <Link 
               to="/contribute" 
               className="text-muted-foreground hover:text-app-secondary transition-colors"
             >
@@ -140,6 +146,13 @@ const Navbar = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Comparar Preços
+              </Link>
+              <Link 
+                to="/products" 
+                className="text-muted-foreground hover:text-app-secondary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Produtos
               </Link>
               <Link 
                 to="/contribute" 

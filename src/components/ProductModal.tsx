@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ProductFormData, Store, Product } from "@/lib/types";
 import { useProductValidation } from "@/hooks/useProductValidation";
+import { CategoryFilter } from "@/components/ui/category-filter";
+import { useCategories } from "@/hooks/useCategories";
 import DuplicateProductDialog from "./DuplicateProductDialog";
 
 interface ProductModalProps {
@@ -32,6 +34,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   editProduct,
   existingProducts,
 }) => {
+  const { categories } = useCategories();
   const [product, setProduct] = useState<ProductFormData>(
     editProduct || {
       name: "",
@@ -162,6 +165,20 @@ const ProductModal: React.FC<ProductModalProps> = ({
                   placeholder="Ex: kg, L, unid"
                   required
                 />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">
+                  Categoria
+                </Label>
+                <div className="col-span-3">
+                  <CategoryFilter
+                    categories={categories}
+                    selectedCategory={product.category}
+                    onCategoryChange={(category) => setProduct({ ...product, category })}
+                    showAllOption={false}
+                    variant="select"
+                  />
+                </div>
               </div>
 
               <div className="mt-4">

@@ -19,6 +19,7 @@ const Comparison = React.lazy(() =>
     return module;
   })
 );
+const ProductCatalog = React.lazy(() => import("@/pages/ProductCatalog"));
 const Contribute = React.lazy(() => import("@/pages/Contribute"));
 const Reports = React.lazy(() => import("@/pages/Reports"));
 const Economy = React.lazy(() => import("@/pages/Economy"));
@@ -70,6 +71,14 @@ export const AppContent: React.FC = () => {
               } 
             />
             <Route 
+              path="/products" 
+              element={
+                <OptimizedSuspense message="Carregando catálogo de produtos...">
+                  <ProductCatalog />
+                </OptimizedSuspense>
+              } 
+            />
+            <Route 
               path="/contribute" 
               element={
                 <ProtectedRoute>
@@ -77,7 +86,7 @@ export const AppContent: React.FC = () => {
                     <Contribute />
                   </OptimizedSuspense>
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route 
               path="/reports" 
