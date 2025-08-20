@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Edit, Download, History } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Edit, Download, History, TrendingUp } from "lucide-react";
 import { ProductSearch } from "@/components/ui/product-search";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { useCategories } from "@/hooks/useCategories";
-import { useProductFilters } from "@/hooks/useProductFilters";
+import { useProductFilters, useSearchHistory } from "@/hooks/useProductFilters";
 import ProductModal from "./ProductModal";
 import PriceTable from "./PriceTable"; // Mantenha o import
 import BestPricesByStore from "./BestPricesByStore";
@@ -43,6 +44,7 @@ const ComparisonForm: React.FC = () => {
   const { currentPlan } = useSubscription();
   const isSignedIn = !!user;
   const { categories } = useCategories();
+  const { searchHistory } = useSearchHistory();
   const {
     filters,
     filteredProducts,
