@@ -45,11 +45,14 @@ const ComparisonForm: React.FC = () => {
   const isSignedIn = !!user;
   const { categories } = useCategories();
   const { searchHistory } = useSearchHistory();
+  // Para ComparisonForm, use apenas produtos da comparação atual
   const {
     filters,
     filteredProducts,
+    availableCategories,
     setSearch,
     setCategory,
+    setSorting,
     clearFilters,
     filterStats
   } = useProductFilters(comparisonData.products);
