@@ -26,6 +26,9 @@ export const useProductSearch = (searchTerm: string, debounceMs: number = 300) =
       const results = await productService.searchProducts(debouncedSearch);
       return results.map(product => ({
         ...product,
+        category: product.category || 'outros',
+        quantity: product.quantity ?? 1,
+        unit: product.unit || 'unidade',
         prices: {} // Initialize empty prices object
       }));
     },
@@ -54,6 +57,9 @@ export const useProductsByCategory = (category: string) => {
       const results = await productService.getProductsByCategory(category);
       return results.map(product => ({
         ...product,
+        category: product.category || 'outros',
+        quantity: product.quantity ?? 1,
+        unit: product.unit || 'unidade',
         prices: {} // Initialize empty prices object
       }));
     },
@@ -86,6 +92,9 @@ export const useOptimizedProductFilters = () => {
       const products = await productService.getProducts();
       return products.map(product => ({
         ...product,
+        category: product.category || 'outros',
+        quantity: product.quantity ?? 1,
+        unit: product.unit || 'unidade',
         prices: {} // Initialize empty prices object
       }));
     },
@@ -124,7 +133,7 @@ export const useOptimizedProductFilters = () => {
           comparison = a.name.localeCompare(b.name);
           break;
         case 'category':
-          comparison = a.category.localeCompare(b.category);
+          comparison = (a.category || '').localeCompare(b.category || '');
           break;
         case 'created_at':
           const dateA = new Date(a.created_at || 0).getTime();

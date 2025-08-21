@@ -48,7 +48,8 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   };
 
   const getCategoryDisplayName = (categoryName: string) => {
-    return categoryName
+    const name = categoryName || 'outros';
+    return name
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
@@ -147,8 +148,8 @@ export const CategoryBadge: React.FC<{ category: string; size?: 'sm' | 'default'
 
   return (
     <Badge variant="secondary" className={size === 'sm' ? 'text-xs' : ''}>
-      <span className="mr-1">{getCategoryIcon(category)}</span>
-      {getCategoryDisplayName(category)}
+      <span className="mr-1">{getCategoryIcon(category || 'outros')}</span>
+      {getCategoryDisplayName(category || 'outros')}
     </Badge>
   );
 };

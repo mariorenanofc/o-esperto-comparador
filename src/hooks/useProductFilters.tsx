@@ -37,7 +37,7 @@ export const useProductFilters = (products: Product[]) => {
           comparison = a.name.localeCompare(b.name);
           break;
         case 'category':
-          comparison = a.category.localeCompare(b.category);
+          comparison = (a.category || '').localeCompare(b.category || '');
           break;
         case 'created_at':
           const dateA = new Date(a.created_at || 0).getTime();

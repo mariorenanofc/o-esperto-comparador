@@ -15,7 +15,8 @@ export const supabaseComparisonService = {
             id,
             name,
             quantity,
-            unit
+            unit,
+            category
           )
         )
       `)
@@ -97,6 +98,7 @@ export const supabaseComparisonService = {
             name: product.name,
             quantity: product.quantity,
             unit: product.unit,
+            category: product.category || 'outros',
           })
           .select()
           .single();

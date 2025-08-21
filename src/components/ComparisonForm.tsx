@@ -8,6 +8,7 @@ import { ProductSearch } from "@/components/ui/product-search";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { useCategories } from "@/hooks/useCategories";
 import { useProductFilters, useSearchHistory } from "@/hooks/useProductFilters";
+import { useProductSearch } from "@/hooks/useProductSearch";
 import ProductModal from "./ProductModal";
 import PriceTable from "./PriceTable"; // Mantenha o import
 import BestPricesByStore from "./BestPricesByStore";
@@ -56,6 +57,8 @@ const ComparisonForm: React.FC = () => {
     clearFilters,
     filterStats
   } = useProductFilters(comparisonData.products);
+  // Standardize search: warm up React Query cache with debounce
+  useProductSearch(filters.search);
   const [storeName, setStoreName] = useState("");
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<
