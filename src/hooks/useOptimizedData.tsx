@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { useCachedQuery, QUERY_KEYS } from './useQueryCache';
-import { OptimizedSupabaseService } from '@/services/optimizedSupabaseService';
+import { productService } from '@/services/productService';
+import { storeService } from '@/services/storeService';
 import { useAuth } from './useAuth';
 
 // Hook para buscar stores com cache otimizado
 export const useOptimizedStores = () => {
   return useCachedQuery(
-    ['stores'],
-    () => OptimizedSupabaseService.getStores(),
+    QUERY_KEYS.stores,
+    () => storeService.getStores(),
     {
       staleTime: 10 * 60 * 1000, // 10 minutos
       enabled: true,
@@ -19,7 +20,7 @@ export const useOptimizedStores = () => {
 export const useOptimizedProducts = (searchTerm?: string) => {
   return useCachedQuery(
     searchTerm ? ['products', 'search', searchTerm] : QUERY_KEYS.products,
-    () => OptimizedSupabaseService.getProducts(searchTerm),
+    () => searchTerm ? productService.searchProducts(searchTerm) : productService.getProducts(),
     {
       staleTime: 15 * 60 * 1000, // 15 minutos
       enabled: true,
@@ -66,7 +67,10 @@ export const useDataPreloader = () => {
   useEffect(() => {
   // Preload após 1 segundo para não bloquear a renderização inicial
     const timeoutId = setTimeout(() => {
-      OptimizedSupabaseService.preloadCriticalData();
+      Promise.allSettled([
+        productService.getProducts(),
+        storeService.getStores()
+      ]);
     }, 1000);
 
     return () => clearTimeout(timeoutId);
@@ -76,7 +80,10 @@ export const useDataPreloader = () => {
   useEffect(() => {
     if ('requestIdleCallback' in window) {
       const idleId = (window as any).requestIdleCallback(() => {
-        OptimizedSupabaseService.preloadCriticalData();
+        Promise.allSettled([
+          productService.getProducts(),
+          storeService.getStores()
+        ]);
       }, { timeout: 5000 });
 
       return () => {

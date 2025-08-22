@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Edit, Download, History, TrendingUp } from "lucide-react";
+import { ProductSearchSuggestions } from "@/components/ui/product-search-suggestions";
 import { ProductSearch } from "@/components/ui/product-search";
 import { CategoryFilter } from "@/components/ui/category-filter";
 import { useCategories } from "@/hooks/useCategories";
@@ -57,8 +58,8 @@ const ComparisonForm: React.FC = () => {
     clearFilters,
     filterStats
   } = useProductFilters(comparisonData.products);
-  // Standardize search: warm up React Query cache with debounce
-  useProductSearch(filters.search);
+  // Enhanced search with suggestions
+  const [globalSearchTerm, setGlobalSearchTerm] = useState("");
   const [storeName, setStoreName] = useState("");
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<
@@ -232,6 +233,55 @@ const ComparisonForm: React.FC = () => {
     });
     setEditingProductIndex(index);
     setIsProductModalOpen(true);
+  };
+
+  // Handle adding product from search suggestions
+  const handleAddProductFromSearch = (product: Product) => {
+    // Check if product already exists
+    const existingProduct = comparisonData.products.find(p => 
+      p.name.toLowerCase() === product.name.toLowerCase()
+    );
+    
+    if (existingProduct) {
+      toast.info("Produto já está na comparação");
+      return;
+    }
+
+    // Check limits
+    const planDetails = getPlanById(currentPlan);
+    const maxProducts = planDetails?.limitations?.maxProductsPerComparison || 8;
+    if (comparisonData.products.length >= maxProducts) {
+      if (!isSignedIn) {
+        toast.error("Limite atingido", {
+          description: `Você pode adicionar no máximo ${maxProducts} produtos. Faça login para mais!`,
+          duration: 3000,
+        });
+      } else {
+        toast.error("Limite do plano atingido", {
+          description: `Seu plano permite adicionar no máximo ${maxProducts} produtos.`,
+          duration: 3000,
+          action: {
+            label: "Upgrade",
+            onClick: () => (window.location.href = "/plans"),
+          },
+        });
+      }
+      return;
+    }
+
+    // Add product with empty prices
+    const newProduct: Product = {
+      ...product,
+      id: `product-${Date.now()}`,
+      prices: {}
+    };
+
+    setComparisonData({
+      ...comparisonData,
+      products: [...comparisonData.products, newProduct]
+    });
+
+    toast.success(`"${product.name}" adicionado à comparação!`);
   };
 
   const handleSaveProduct = (productFormData: ProductFormData) => {
@@ -543,12 +593,23 @@ const ComparisonForm: React.FC = () => {
             {comparisonData.products.length > 0 && (
               <div className="mb-4 space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
-                  <ProductSearch
-                    value={filters.search}
-                    onChange={setSearch}
-                    placeholder="Buscar produtos..."
-                    className="flex-1"
-                  />
+                  <div className="flex-1 space-y-2">
+                    <ProductSearchSuggestions
+                      value={globalSearchTerm}
+                      onChange={setGlobalSearchTerm}
+                      onSelectProduct={handleAddProductFromSearch}
+                      placeholder="Buscar e adicionar produtos da base de dados..."
+                      className="w-full"
+                      showSuggestions={true}
+                    />
+                    <ProductSearch
+                      value={filters.search}
+                      onChange={setSearch}
+                      placeholder="Filtrar produtos na sua comparação..."
+                      className="w-full"
+                      showHistory={false}
+                    />
+                  </div>
                   <CategoryFilter
                     categories={categories}
                     selectedCategory={filters.category}
