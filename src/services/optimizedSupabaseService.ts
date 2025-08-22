@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 // Service otimizado para queries do Supabase com cache estratégico
 export class OptimizedSupabaseService {
   private static cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -24,33 +26,23 @@ export class OptimizedSupabaseService {
   }
 
   // Buscar stores com cache otimizado
-  static async getStores(city?: string, state?: string): Promise<any[]> {
-    const cacheKey = `stores_${city || 'all'}_${state || 'all'}`;
+  static async getStores(): Promise<any[]> {
+    const cacheKey = `stores_all`;
     const cached = this.getCache(cacheKey);
     if (cached) return cached;
 
     try {
-      // Usar fetch direto para evitar problemas de tipos
-      const url = new URL('/rest/v1/stores', 'https://diqdsmrlhldanxxrtozl.supabase.co');
-      url.searchParams.set('select', '*');
-      url.searchParams.set('is_active', 'eq.true');
-      url.searchParams.set('order', 'name');
-      
-      if (city && state) {
-        url.searchParams.set('city', `eq.${city}`);
-        url.searchParams.set('state', `eq.${state}`);
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        console.error('Erro ao buscar stores:', error);
+        return [];
       }
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpcWRzbXJsaGxkYW54eHJ0b3psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMzg2NzYsImV4cCI6MjA2NDYxNDY3Nn0.5btkbuhvf0CLye5pQh7bp8cmihJcMTChMlclBKRaNmY',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpcWRzbXJsaGxkYW54eHJ0b3psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMzg2NzYsImV4cCI6MjA2NDYxNDY3Nn0.5btkbuhvf0CLye5pQh7bp8cmihJcMTChMlclBKRaNmY',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-      const result = Array.isArray(data) ? data : [];
+      const result = data || [];
       
       // Cache por 10 minutos para stores
       this.setCache(cacheKey, result, 10);
@@ -68,25 +60,23 @@ export class OptimizedSupabaseService {
     if (cached) return cached;
 
     try {
-      const url = new URL('/rest/v1/products', 'https://diqdsmrlhldanxxrtozl.supabase.co');
-      url.searchParams.set('select', '*');
-      url.searchParams.set('is_active', 'eq.true');
-      url.searchParams.set('order', 'name');
+      let query = supabase
+        .from('products')
+        .select('*')
+        .order('name');
       
       if (searchTerm) {
-        url.searchParams.set('name', `ilike.%${searchTerm}%`);
+        query = query.ilike('name', `%${searchTerm}%`);
       }
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpcWRzbXJsaGxkYW54eHJ0b3psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMzg2NzYsImV4cCI6MjA2NDYxNDY3Nn0.5btkbuhvf0CLye5pQh7bp8cmihJcMTChMlclBKRaNmY',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRpcWRzbXJsaGxkYW54eHJ0b3psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMzg2NzYsImV4cCI6MjA2NDYxNDY3Nn0.5btkbuhvf0CLye5pQh7bp8cmihJcMTChMlclBKRaNmY',
-          'Content-Type': 'application/json',
-        },
-      });
+      const { data, error } = await query;
 
-      const data = await response.json();
-      const result = Array.isArray(data) ? data : [];
+      if (error) {
+        console.error('Erro ao buscar produtos:', error);
+        return [];
+      }
+
+      const result = data || [];
       
       // Cache por 15 minutos para produtos
       this.setCache(cacheKey, result, 15);
@@ -112,7 +102,7 @@ export class OptimizedSupabaseService {
   }
 
   // Preload de dados críticos
-  static async preloadCriticalData(userId?: string) {
+  static async preloadCriticalData() {
     const promises = [
       this.getStores(), // Carrega todos os stores
       this.getProducts(), // Carrega produtos populares

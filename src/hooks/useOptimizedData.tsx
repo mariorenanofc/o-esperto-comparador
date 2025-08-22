@@ -4,10 +4,10 @@ import { OptimizedSupabaseService } from '@/services/optimizedSupabaseService';
 import { useAuth } from './useAuth';
 
 // Hook para buscar stores com cache otimizado
-export const useOptimizedStores = (city?: string, state?: string) => {
+export const useOptimizedStores = () => {
   return useCachedQuery(
-    QUERY_KEYS.storesByLocation(city || 'all', state || 'all'),
-    () => OptimizedSupabaseService.getStores(city, state),
+    ['stores'],
+    () => OptimizedSupabaseService.getStores(),
     {
       staleTime: 10 * 60 * 1000, // 10 minutos
       enabled: true,
@@ -45,16 +45,16 @@ export const useOptimizedUserComparisons = (page = 0, limit = 10) => {
 };
 
 // Hook para buscar ofertas diárias com cache otimizado
-export const useOptimizedDailyOffers = (city: string, state: string) => {
+export const useOptimizedDailyOffers = () => {
   return useCachedQuery(
-    QUERY_KEYS.offersByLocation(city, state),
+    ['daily-offers'],
     async () => {
       // Implementação temporária usando service existente
       return [];
     },
     {
       staleTime: 2 * 60 * 1000, // 2 minutos (dados mais voláteis)
-      enabled: !!(city && state),
+      enabled: true,
     }
   );
 };
@@ -64,9 +64,9 @@ export const useDataPreloader = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Preload após 1 segundo para não bloquear a renderização inicial
+  // Preload após 1 segundo para não bloquear a renderização inicial
     const timeoutId = setTimeout(() => {
-      OptimizedSupabaseService.preloadCriticalData(user?.id);
+      OptimizedSupabaseService.preloadCriticalData();
     }, 1000);
 
     return () => clearTimeout(timeoutId);
@@ -76,7 +76,7 @@ export const useDataPreloader = () => {
   useEffect(() => {
     if ('requestIdleCallback' in window) {
       const idleId = (window as any).requestIdleCallback(() => {
-        OptimizedSupabaseService.preloadCriticalData(user?.id);
+        OptimizedSupabaseService.preloadCriticalData();
       }, { timeout: 5000 });
 
       return () => {

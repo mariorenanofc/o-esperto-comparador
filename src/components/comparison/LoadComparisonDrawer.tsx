@@ -102,6 +102,7 @@ function toComparisonData(item: any): ComparisonData {
   const storesMap = new Map<string, Store>();
   const productsMap = new Map<string, Product>();
 
+  // First try to build from prices
   for (const row of prices) {
     const prod = row.product;
     const store = row.store;
@@ -127,6 +128,35 @@ function toComparisonData(item: any): ComparisonData {
 
     const p = productsMap.get(pId)!;
     p.prices[sId] = Number(row.price) || 0;
+  }
+
+  // If no prices found, try to rebuild from comparison_products and stores relationships
+  if (productsMap.size === 0 && item.comparison_products) {
+    const comparisonProducts = Array.isArray(item.comparison_products) 
+      ? item.comparison_products 
+      : [item.comparison_products];
+    
+    for (const cp of comparisonProducts) {
+      if (cp.products) {
+        const prod = cp.products;
+        productsMap.set(prod.id, {
+          id: prod.id,
+          name: prod.name,
+          quantity: prod.quantity || 1,
+          unit: prod.unit || "unidade", 
+          category: prod.category || "outros",
+          prices: {},
+        });
+      }
+    }
+  }
+
+  // Build stores from any available source
+  if (storesMap.size === 0 && item.stores) {
+    const stores = Array.isArray(item.stores) ? item.stores : [item.stores];
+    for (const store of stores) {
+      storesMap.set(store.id, { id: store.id, name: store.name });
+    }
   }
 
   return {
