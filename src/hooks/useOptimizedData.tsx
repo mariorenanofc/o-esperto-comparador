@@ -29,14 +29,16 @@ export const useOptimizedProducts = (searchTerm?: string) => {
 };
 
 // Hook para buscar comparações do usuário com cache otimizado
-export const useOptimizedUserComparisons = (page = 0, limit = 10) => {
+export const useOptimizedUserComparisons = () => {
   const { user } = useAuth();
   
   return useCachedQuery(
     QUERY_KEYS.userComparisons(user?.id || 'anonymous'),
     async () => {
-      // Implementação temporária usando service existente
-      return [];
+      if (!user?.id) return [];
+      // Usar o service existente que foi corrigido
+      const { getUserComparisons } = await import('@/services/comparisonService');
+      return await getUserComparisons(user.id);
     },
     {
       staleTime: 5 * 60 * 1000, // 5 minutos
@@ -50,8 +52,21 @@ export const useOptimizedDailyOffers = () => {
   return useCachedQuery(
     ['daily-offers'],
     async () => {
-      // Implementação temporária usando service existente
-      return [];
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data, error } = await supabase
+          .from('daily_offers')
+          .select('*')
+          .eq('verified', true)
+          .order('created_at', { ascending: false })
+          .limit(20);
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching daily offers:', error);
+        return [];
+      }
     },
     {
       staleTime: 2 * 60 * 1000, // 2 minutos (dados mais voláteis)

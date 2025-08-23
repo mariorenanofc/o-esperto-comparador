@@ -23,18 +23,24 @@ export const useProductSearch = (searchTerm: string, debounceMs: number = 300) =
       if (!debouncedSearch.trim()) {
         return [];
       }
-      const results = await productService.searchProducts(debouncedSearch);
-      return results.map(product => ({
-        ...product,
-        category: product.category || 'outros',
-        quantity: product.quantity ?? 1,
-        unit: product.unit || 'unidade',
-        prices: {} // Initialize empty prices object
-      }));
+      try {
+        const results = await productService.searchProducts(debouncedSearch);
+        return results.map(product => ({
+          ...product,
+          category: product.category || 'outros',
+          quantity: product.quantity ?? 1,
+          unit: product.unit || 'unidade',
+          prices: {} // Initialize empty prices object
+        }));
+      } catch (error) {
+        console.error('Error searching products:', error);
+        return [];
+      }
     },
     enabled: debouncedSearch.trim().length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
+    retry: 2,
   });
 
   return {

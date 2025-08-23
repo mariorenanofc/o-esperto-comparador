@@ -23,3 +23,6 @@ export const comparisonService = {
     }
   },
 };
+
+// Export individual functions for direct import
+export const { getUserComparisons, saveComparison, deleteComparison } = comparisonService;

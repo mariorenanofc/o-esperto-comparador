@@ -36,9 +36,16 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
   const { searchHistory, addToHistory, clearHistory, removeFromHistory } = useSearchHistory();
   
   // Use product search with debounce for suggestions
-  const { searchResults, isSearching } = useProductSearch(
+  const { searchResults, isSearching, searchError } = useProductSearch(
     showSuggestions && value.length > 2 ? value : ''
   );
+
+  // Log search errors
+  React.useEffect(() => {
+    if (searchError) {
+      console.error('Product search error:', searchError);
+    }
+  }, [searchError]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +82,11 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
     }
   };
 
-  const showPopover = isOpen && (searchHistory.length > 0 || (searchResults && searchResults.length > 0));
+  const showPopover = isOpen && (
+    searchHistory.length > 0 || 
+    (searchResults && searchResults.length > 0) ||
+    isSearching
+  );
 
   return (
     <div className={`relative ${className}`}>
@@ -194,10 +205,25 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
                 </div>
               )}
 
+              {/* Search error */}
+              {searchError && (
+                <div className="text-sm text-destructive p-2">
+                  Erro ao buscar produtos. Tente novamente.
+                </div>
+              )}
+
               {/* Loading state */}
               {isSearching && (
                 <div className="text-sm text-muted-foreground p-2">
                   Buscando produtos...
+                </div>
+              )}
+
+              {/* No results found */}
+              {showSuggestions && !isSearching && !searchError && value.length > 2 && 
+               searchResults && searchResults.length === 0 && (
+                <div className="text-sm text-muted-foreground p-2">
+                  Nenhum produto encontrado para "{value}"
                 </div>
               )}
             </div>

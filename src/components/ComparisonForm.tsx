@@ -237,51 +237,64 @@ const ComparisonForm: React.FC = () => {
 
   // Handle adding product from search suggestions
   const handleAddProductFromSearch = (product: Product) => {
-    // Check if product already exists
-    const existingProduct = comparisonData.products.find(p => 
-      p.name.toLowerCase() === product.name.toLowerCase()
-    );
-    
-    if (existingProduct) {
-      toast.info("Produto já está na comparação");
-      return;
-    }
-
-    // Check limits
-    const planDetails = getPlanById(currentPlan);
-    const maxProducts = planDetails?.limitations?.maxProductsPerComparison || 8;
-    if (comparisonData.products.length >= maxProducts) {
-      if (!isSignedIn) {
-        toast.error("Limite atingido", {
-          description: `Você pode adicionar no máximo ${maxProducts} produtos. Faça login para mais!`,
-          duration: 3000,
-        });
-      } else {
-        toast.error("Limite do plano atingido", {
-          description: `Seu plano permite adicionar no máximo ${maxProducts} produtos.`,
-          duration: 3000,
-          action: {
-            label: "Upgrade",
-            onClick: () => (window.location.href = "/plans"),
-          },
-        });
+    try {
+      console.log('Adding product from search:', product);
+      
+      // Check if product already exists
+      const existingProduct = comparisonData.products.find(p => 
+        p.name.toLowerCase() === product.name.toLowerCase()
+      );
+      
+      if (existingProduct) {
+        toast.info("Produto já está na comparação");
+        return;
       }
-      return;
+
+      // Check limits
+      const planDetails = getPlanById(currentPlan);
+      const maxProducts = planDetails?.limitations?.maxProductsPerComparison || 8;
+      if (comparisonData.products.length >= maxProducts) {
+        if (!isSignedIn) {
+          toast.error("Limite atingido", {
+            description: `Você pode adicionar no máximo ${maxProducts} produtos. Faça login para mais!`,
+            duration: 3000,
+          });
+        } else {
+          toast.error("Limite do plano atingido", {
+            description: `Seu plano permite adicionar no máximo ${maxProducts} produtos.`,
+            duration: 3000,
+            action: {
+              label: "Upgrade",
+              onClick: () => (window.location.href = "/plans"),
+            },
+          });
+        }
+        return;
+      }
+
+      // Add product with empty prices for all stores
+      const newProduct: Product = {
+        ...product,
+        id: `product-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        prices: {}
+      };
+
+      // Initialize prices for existing stores
+      comparisonData.stores.forEach(store => {
+        newProduct.prices[store.id] = 0;
+      });
+
+      setComparisonData({
+        ...comparisonData,
+        products: [...comparisonData.products, newProduct]
+      });
+
+      toast.success(`"${product.name}" adicionado à comparação!`);
+      console.log('Product added successfully:', newProduct);
+    } catch (error) {
+      console.error('Error adding product from search:', error);
+      toast.error("Erro ao adicionar produto à comparação");
     }
-
-    // Add product with empty prices
-    const newProduct: Product = {
-      ...product,
-      id: `product-${Date.now()}`,
-      prices: {}
-    };
-
-    setComparisonData({
-      ...comparisonData,
-      products: [...comparisonData.products, newProduct]
-    });
-
-    toast.success(`"${product.name}" adicionado à comparação!`);
   };
 
   const handleSaveProduct = (productFormData: ProductFormData) => {
