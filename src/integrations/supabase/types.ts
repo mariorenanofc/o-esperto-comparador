@@ -498,6 +498,10 @@ export type Database = {
         Args: { current_usage?: number; feature_name: string }
         Returns: boolean
       }
+      cleanup_orphaned_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_db_usage: {
         Args: { limit_bytes?: number }
         Returns: Json
