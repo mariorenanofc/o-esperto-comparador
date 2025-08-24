@@ -17,23 +17,17 @@ export const useAdminAuth = () => {
       }
 
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('plan, email')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (profileError) {
+        // Use secure RPC call to check admin status
+        const { data: isUserAdmin, error } = await supabase.rpc('is_user_admin');
+        
+        if (error) {
+          console.error('Error checking admin status:', error);
           setIsAdmin(false);
         } else {
-          const adminEmails = ['mariovendasonline10k@gmail.com','mariorenan25@gmail.com'];
-          const userIsAdmin = profile?.plan === 'admin' || (profile?.email ? adminEmails.includes(profile.email) : false);
-          if (userIsAdmin && profile?.plan !== 'admin') {
-            await supabase.from('profiles').update({ plan: 'admin' }).eq('id', user.id);
-          }
-          setIsAdmin(userIsAdmin);
+          setIsAdmin(!!isUserAdmin);
         }
       } catch (error) {
+        console.error('Error in checkAdminStatus:', error);
         setIsAdmin(false);
       } finally {
         setIsLoaded(true);
@@ -51,23 +45,17 @@ export const useAdminAuth = () => {
     
     setIsLoaded(false);
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('plan, email')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!profileError && profile) {
-        const adminEmails = ['mariovendasonline10k@gmail.com','mariorenan25@gmail.com'];
-        const userIsAdmin = profile.plan === 'admin' || (profile.email ? adminEmails.includes(profile.email) : false);
-        setIsAdmin(userIsAdmin);
-        if (userIsAdmin && profile.plan !== 'admin') {
-          await supabase.from('profiles').update({ plan: 'admin' }).eq('id', user.id);
-        }
-      } else {
+      // Use secure RPC call to check admin status
+      const { data: isUserAdmin, error } = await supabase.rpc('is_user_admin');
+      
+      if (error) {
+        console.error('Error refreshing admin status:', error);
         setIsAdmin(false);
+      } else {
+        setIsAdmin(!!isUserAdmin);
       }
     } catch (error) {
+      console.error('Error in refreshAdminStatus:', error);
       setIsAdmin(false);
     } finally {
       setIsLoaded(true);

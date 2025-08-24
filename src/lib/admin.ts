@@ -3,31 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const isAdmin = async (userId?: string): Promise<boolean> => {
   try {
-    console.log('isAdmin: Checking admin status for userId:', userId);
-    
     if (!userId) {
-      console.log('isAdmin: No userId provided');
       return false;
     }
     
-    // Check user profile directly from profiles table
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('plan, email')
-      .eq('id', userId)
-      .maybeSingle();
+    // Use secure RPC call that enforces proper access control
+    const { data: isUserAdmin, error } = await supabase.rpc('check_user_admin_status', { 
+      user_uuid: userId 
+    });
     
     if (error) {
-      console.error('isAdmin: Error checking admin status:', error);
+      console.error('Error checking admin status:', error);
       return false;
     }
     
-    const adminEmails = ['mariovendasonline10k@gmail.com','mariorenan25@gmail.com'];
-    const result = profile?.plan === 'admin' || (profile?.email ? adminEmails.includes(profile.email) : false);
-    console.log('isAdmin: Result:', result, 'Profile plan:', profile?.plan, 'Email:', profile?.email);
-    return result;
+    return !!isUserAdmin;
   } catch (error) {
-    console.error('isAdmin: Error in isAdmin function:', error);
+    console.error('Error in isAdmin function:', error);
     return false;
   }
 };

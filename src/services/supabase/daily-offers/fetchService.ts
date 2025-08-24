@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { DailyOffer } from '@/lib/types';
+import { secureLogger } from '@/lib/secureLogger';
 
 export const fetchService = {
   mapOffersData(data: any[]): DailyOffer[] {
@@ -21,7 +22,7 @@ export const fetchService = {
   },
 
   async getTodaysOffers(): Promise<DailyOffer[]> {
-    console.log('Fetching today\'s offers...');
+    secureLogger.log('Fetching today\'s offers...');
     
     try {
       // Primeiro executar limpeza manual para garantir que dados antigos sejam removidos
@@ -31,8 +32,8 @@ export const fetchService = {
       const twentyFourHoursAgo = new Date(Date.now() - (24 * 60 * 60 * 1000));
       
       const { data, error } = await supabase
-        .from('daily_offers')
-        .select('*, quantity, unit')
+        .from('daily_offers_public')
+        .select('*')
         .eq('verified', true)
         .gte('created_at', twentyFourHoursAgo.toISOString())
         .order('created_at', { ascending: false });
@@ -41,8 +42,8 @@ export const fetchService = {
         console.error('Error fetching verified offers:', error);
         // Em caso de erro, tentar buscar sem filtro de verificação como fallback
         const { data: fallbackData } = await supabase
-          .from('daily_offers')
-          .select('*, quantity, unit')
+          .from('daily_offers_public')
+          .select('*')
           .gte('created_at', twentyFourHoursAgo.toISOString())
           .order('created_at', { ascending: false })
           .limit(10);
@@ -61,8 +62,8 @@ export const fetchService = {
       if (offers.length === 0) {
         console.log('No verified offers found, checking for unverified ones...');
         const { data: unverifiedData } = await supabase
-          .from('daily_offers')
-          .select('*, quantity, unit')
+          .from('daily_offers_public')
+          .select('*')
           .eq('verified', false)
           .gte('created_at', twentyFourHoursAgo.toISOString())
           .order('created_at', { ascending: false })
