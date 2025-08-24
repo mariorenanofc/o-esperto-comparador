@@ -487,7 +487,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      daily_offers_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          id: string | null
+          price: number | null
+          product_name: string | null
+          quantity: number | null
+          state: string | null
+          store_name: string | null
+          unit: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          price?: number | null
+          product_name?: string | null
+          quantity?: number | null
+          state?: string | null
+          store_name?: string | null
+          unit?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          price?: number | null
+          product_name?: string | null
+          quantity?: number | null
+          state?: string | null
+          store_name?: string | null
+          unit?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_user_admin_status: {
