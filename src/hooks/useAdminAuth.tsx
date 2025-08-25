@@ -39,7 +39,7 @@ export const useAdminAuth = () => {
     }
   }, [user, loading]);
 
-  // Add a refresh function to force re-check admin status
+  // Refresh function only re-checks, no client-side promotion
   const refreshAdminStatus = async () => {
     if (!user) return;
     

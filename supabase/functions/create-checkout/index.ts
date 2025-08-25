@@ -2,10 +2,33 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Security: Mask sensitive data for logging
+const maskSensitiveData = (data: any): any => {
+  if (!data) return data;
+  
+  if (typeof data === 'object') {
+    const masked: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (key.toLowerCase().includes('email')) {
+        masked[key] = typeof value === 'string' && value.includes('@') 
+          ? value.substring(0, 3) + '***@' + value.split('@')[1] 
+          : '***';
+      } else if (key.toLowerCase().includes('customer') || key.toLowerCase().includes('stripe')) {
+        masked[key] = '***PROTECTED***';
+      } else {
+        masked[key] = value;
+      }
+    }
+    return masked;
+  }
+  
+  return data;
+};
+
 // Security: Define allowed origins
 const getAllowedOrigins = (): string[] => {
   const allowedOriginsEnv = Deno.env.get("ALLOWED_ORIGINS");
-  return allowedOriginsEnv ? allowedOriginsEnv.split(",") : ["http://localhost:5173"];
+  return allowedOriginsEnv ? allowedOriginsEnv.split(",").map(o => o.trim()) : ["http://localhost:5173"];
 };
 
 const createCorsHeaders = (origin: string | null) => {
@@ -54,7 +77,7 @@ serve(async (req) => {
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", maskSensitiveData({ userId: user.id, email: user.email }));
 
     // Get the plan from request body
     const { planId } = await req.json();
@@ -78,7 +101,7 @@ serve(async (req) => {
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Found existing customer", { customerId });
+      logStep("Found existing customer", maskSensitiveData({ customerId }));
     } else {
       logStep("No existing customer found");
     }

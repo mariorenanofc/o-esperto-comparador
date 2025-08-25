@@ -4,6 +4,7 @@ import { DailyOffer } from '@/lib/types';
 import { secureLogger } from '@/lib/secureLogger';
 
 export const fetchService = {
+  // Map offers data excluding PII fields (contributor_name, user_id removed)
   mapOffersData(data: any[]): DailyOffer[] {
     return data.map(item => ({
       id: item.id,
@@ -12,8 +13,8 @@ export const fetchService = {
       storeName: item.store_name,
       city: item.city,
       state: item.state,
-      contributorName: item.contributor_name,
-      userId: item.user_id,
+      contributorName: 'Anônimo', // Don't expose real contributor names
+      userId: '', // Don't expose user IDs
       timestamp: new Date(item.created_at || ''),
       verified: item.verified || false,
       quantity: item.quantity || 1,
