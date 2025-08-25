@@ -3,7 +3,7 @@ import { Product, ProductFilters } from '@/lib/types';
 
 export const useProductFilters = (products: Product[]) => {
   const [filters, setFilters] = useState<ProductFilters>({
-    category: '',
+    category: 'all',
     search: '',
     sortBy: 'name',
     sortOrder: 'asc'
@@ -68,7 +68,7 @@ export const useProductFilters = (products: Product[]) => {
   // Limpar filtros
   const clearFilters = useCallback(() => {
     setFilters({
-      category: '',
+      category: 'all',
       search: '',
       sortBy: 'name',
       sortOrder: 'asc'
@@ -95,7 +95,7 @@ export const useProductFilters = (products: Product[]) => {
     totalProducts: products.length,
     filteredProducts: filteredProducts.length,
     categoriesCount: availableCategories.length,
-    hasActiveFilters: !!(filters.search || filters.category)
+    hasActiveFilters: !!(filters.search || (filters.category && filters.category !== 'all'))
   }), [products.length, filteredProducts.length, availableCategories.length, filters]);
 
   return {

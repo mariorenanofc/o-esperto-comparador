@@ -86,7 +86,7 @@ export const useProductsByCategory = (category: string) => {
 export const useOptimizedProductFilters = () => {
   const [filters, setFilters] = useState({
     search: '',
-    category: '',
+    category: 'all',
     sortBy: 'name' as 'name' | 'category' | 'created_at',
     sortOrder: 'asc' as 'asc' | 'desc'
   });
@@ -165,7 +165,7 @@ export const useOptimizedProductFilters = () => {
     totalProducts: allProducts.length,
     filteredProducts: filteredProducts.length,
     categoriesCount: availableCategories.length,
-    hasActiveFilters: !!(filters.search || filters.category)
+    hasActiveFilters: !!(filters.search || (filters.category && filters.category !== 'all'))
   }), [allProducts.length, filteredProducts.length, availableCategories.length, filters]);
 
   const updateFilters = (newFilters: Partial<typeof filters>) => {
@@ -175,7 +175,7 @@ export const useOptimizedProductFilters = () => {
   const clearFilters = () => {
     setFilters({
       search: '',
-      category: '',
+      category: 'all',
       sortBy: 'name',
       sortOrder: 'asc'
     });

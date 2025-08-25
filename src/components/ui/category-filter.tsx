@@ -63,7 +63,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
             <Button
               variant={selectedCategory === '' || selectedCategory === 'all' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => onCategoryChange('')}
+              onClick={() => onCategoryChange('all')}
               className="h-8"
             >
               <Package2 className="mr-2 h-4 w-4" />
@@ -96,7 +96,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
       <Select value={selectedCategory} onValueChange={onCategoryChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma categoria">
-            {selectedCategory ? (
+            {selectedCategory && selectedCategory !== 'all' ? (
               <div className="flex items-center gap-2">
                 <span>{getCategoryIcon(selectedCategory)}</span>
                 <span>{getCategoryDisplayName(selectedCategory)}</span>
@@ -108,7 +108,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
         </SelectTrigger>
         <SelectContent>
           {showAllOption && (
-            <SelectItem value="">
+            <SelectItem value="all">
               <div className="flex items-center gap-2">
                 <Package2 className="h-4 w-4" />
                 <span>Todas as categorias</span>

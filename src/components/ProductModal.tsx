@@ -39,7 +39,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
     editProduct || {
       name: "",
       quantity: 1,
-      unit: "unid",
+      unit: "unidade",
       category: "outros",
       prices: {},
     }
@@ -59,7 +59,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
         editProduct || {
           name: "",
           quantity: 1,
-          unit: "unid",
+          unit: "unidade",
           category: "outros",
           prices: {},
         }
