@@ -58,7 +58,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      setProfile(data as UserProfile); // Garante que o tipo seja UserProfile
+      // Força atualização do plano para admins
+      const updatedProfile = data as UserProfile;
+      const isAdminEmail = updatedProfile.email === 'mariorenan25@gmail.com' || updatedProfile.email === 'mariovendasonline10k@gmail.com';
+      
+      if (isAdminEmail && updatedProfile.plan !== 'admin') {
+        // Atualizar perfil para admin se necessário
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ plan: 'admin', updated_at: new Date().toISOString() })
+          .eq("id", userId);
+          
+        if (!updateError) {
+          updatedProfile.plan = 'admin';
+        }
+      }
+
+      setProfile(updatedProfile);
     } catch (error) {
       console.error("Error in fetchProfile:", error);
     }

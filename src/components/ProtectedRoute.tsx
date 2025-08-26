@@ -38,7 +38,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             </h2>
           </div>
           <p className="text-muted-foreground mb-6 leading-relaxed">{fallbackMessage}</p>
-          <Link to="/">
+          <Link to="/sign-in">
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 w-full">
               Fazer Login
             </Button>
