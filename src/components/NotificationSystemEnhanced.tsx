@@ -19,7 +19,7 @@ export const NotificationSystemEnhanced: React.FC = () => {
   return (
     <div className={`fixed z-[9999] ${
       isMobile 
-        ? 'top-4 right-4' 
+        ? 'top-20 right-4' 
         : 'top-6 right-6'
     }`}>
       <NotificationBell />
