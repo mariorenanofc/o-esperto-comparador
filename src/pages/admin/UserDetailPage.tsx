@@ -123,7 +123,7 @@ const UserDetailPage: React.FC = () => {
     try {
       console.log(`Iniciando deleção para o usuário: ${userId}`);
       // --- INÍCIO DA MODIFICAÇÃO AQUI ---
-      await supabaseAdminService.deleteUserAuthAndProfile(userId, accessToken); // <-- Passando o token
+      await supabaseAdminService.deleteUserAuthAndProfile(userId);
       // --- FIM DA MODIFICAÇÃO AQUI ---
 
       toast.success(

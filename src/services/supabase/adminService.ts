@@ -6,11 +6,33 @@ import { Database } from "@/integrations/supabase/types";
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export const supabaseAdminService = {
+  // Helper function to ensure admin authorization
+  async ensureAdminAccess(): Promise<void> {
+    const { data: isAdmin, error } = await supabase.rpc('check_admin_with_auth');
+    if (error || !isAdmin) {
+      throw new Error('Unauthorized: Admin access required');
+    }
+  },
+
+  // Helper function to log admin actions
+  async logAdminAction(action: string, targetUserId?: string, details?: any): Promise<void> {
+    try {
+      await supabase.rpc('log_admin_action', {
+        action_type: action,
+        target_user: targetUserId || null,
+        action_details: details || null
+      });
+    } catch (error) {
+      console.error('Failed to log admin action:', error);
+    }
+  },
+
   async approveContribution(contributionId: string): Promise<void> {
     console.log("=== ADMIN SERVICE: APPROVING CONTRIBUTION ===");
-    console.log("Contribution ID:", contributionId);
-
+    
     try {
+      await this.ensureAdminAccess();
+      
       const { error } = await supabase
         .from("daily_offers")
         .update({ verified: true })
@@ -21,6 +43,7 @@ export const supabaseAdminService = {
         throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
       }
 
+      await this.logAdminAction('APPROVE_CONTRIBUTION', null, { contributionId });
       console.log("✅ Contribuição aprovada com sucesso");
     } catch (error) {
       console.error("❌ Erro no serviço de admin:", error);
@@ -30,9 +53,10 @@ export const supabaseAdminService = {
 
   async rejectContribution(contributionId: string): Promise<void> {
     console.log("=== ADMIN SERVICE: REJECTING CONTRIBUTION ===");
-    console.log("Contribution ID:", contributionId);
 
     try {
+      await this.ensureAdminAccess();
+      
       const { error } = await supabase
         .from("daily_offers")
         .delete()
@@ -43,6 +67,7 @@ export const supabaseAdminService = {
         throw new Error(`Erro ao rejeitar contribuição: ${error.message}`);
       }
 
+      await this.logAdminAction('REJECT_CONTRIBUTION', null, { contributionId });
       console.log("✅ Contribuição rejeitada com sucesso");
     } catch (error) {
       console.error("❌ Erro no serviço de admin:", error);
@@ -130,29 +155,32 @@ export const supabaseAdminService = {
   },
 
   // --- INÍCIO DA FUNÇÃO deleteUserAuthAndProfile COM AUTORIZAÇÃO ---
-  async deleteUserAuthAndProfile(userId: string, accessToken: string): Promise<void> { // <-- Adicionado accessToken
-    console.log(`=== ADMIN SERVICE: INVOCANDO EDGE FUNCTION PARA DELETAR USUÁRIO: ${userId} ===`);
+  async deleteUserAuthAndProfile(userId: string): Promise<void> {
+    console.log(`=== ADMIN SERVICE: DELETING USER: ${userId} ===`);
 
     try {
-      const SUPABASE_URL = "https://diqdsmrlhldanxxrtozl.supabase.co"; // URL base do seu projeto Supabase
-      const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/delete-user`;
-
-      const response = await fetch(EDGE_FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`, // <-- AQUI! Adicionando o token de autorização
-        },
-        body: JSON.stringify({ userId: userId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erro ao chamar Edge Function:', response.status, errorData);
-        throw new Error(`Erro ao deletar usuário: ${errorData.error || 'Erro desconhecido'}`);
+      await this.ensureAdminAccess();
+      
+      // Get current session for authorization
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('No valid session for admin operation');
       }
 
-      console.log('✅ Usuário e perfil deletados com sucesso via Edge Function.');
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Error calling delete-user function:', error);
+        throw new Error(`Erro ao deletar usuário: ${error.message}`);
+      }
+
+      await this.logAdminAction('DELETE_USER', userId);
+      console.log('✅ Usuário deletado com sucesso');
     } catch (error) {
       console.error('❌ Erro no serviço de deleção de usuário:', error);
       throw error;
@@ -272,9 +300,15 @@ export const supabaseAdminService = {
 
   async updateUserPlan(userId: string, plan: string): Promise<void> {
     console.log("=== ADMIN SERVICE: UPDATING USER PLAN ===");
-    console.log("User ID:", userId, "Plan:", plan);
 
     try {
+      await this.ensureAdminAccess();
+      
+      // Prevent admin plan assignment to unauthorized users
+      if (plan === 'admin') {
+        throw new Error('Admin plan cannot be assigned through this method');
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({ plan })
@@ -285,6 +319,7 @@ export const supabaseAdminService = {
         throw new Error(`Erro ao atualizar plano do usuário: ${error.message}`);
       }
 
+      await this.logAdminAction('UPDATE_USER_PLAN', userId, { newPlan: plan });
       console.log("✅ Plano do usuário atualizado com sucesso");
     } catch (error) {
       console.error("❌ Erro ao atualizar plano do usuário:", error);

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -528,6 +555,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_admin_with_auth: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_user_admin_status: {
         Args: { user_uuid?: string }
         Returns: boolean
@@ -547,6 +578,14 @@ export type Database = {
       is_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      log_admin_action: {
+        Args: {
+          action_details?: Json
+          action_type: string
+          target_user?: string
+        }
+        Returns: undefined
       }
       mark_inactive_users_offline: {
         Args: Record<PropertyKey, never>

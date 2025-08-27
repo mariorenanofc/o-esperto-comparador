@@ -17,8 +17,8 @@ export const useAdminAuth = () => {
       }
 
       try {
-        // Use secure RPC call to check admin status
-        const { data: isUserAdmin, error } = await supabase.rpc('is_user_admin');
+        // Use secure authenticated RPC call to check admin status
+        const { data: isUserAdmin, error } = await supabase.rpc('check_admin_with_auth');
         
         if (error) {
           console.error('Error checking admin status:', error);
@@ -45,8 +45,8 @@ export const useAdminAuth = () => {
     
     setIsLoaded(false);
     try {
-      // Use secure RPC call to check admin status
-      const { data: isUserAdmin, error } = await supabase.rpc('is_user_admin');
+      // Use secure authenticated RPC call to check admin status
+      const { data: isUserAdmin, error } = await supabase.rpc('check_admin_with_auth');
       
       if (error) {
         console.error('Error refreshing admin status:', error);
