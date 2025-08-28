@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import { AuthProvider } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ThemeProvider from "./components/ThemeProvider";
 import { AppContent } from "./components/AppContent";
 import { useDataPreloader } from "./hooks/useOptimizedData";
@@ -91,11 +90,13 @@ function App() {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <SubscriptionProvider>
-            <Router>
-              <AppWithHooks />
-            </Router>
-          </SubscriptionProvider>
+          <SecurityProvider sessionTimeoutMinutes={120}>
+            <SubscriptionProvider>
+              <Router>
+                <AppWithHooks />
+              </Router>
+            </SubscriptionProvider>
+          </SecurityProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

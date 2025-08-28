@@ -1,5 +1,6 @@
 
 import { useAuth } from '@/hooks/useAuth';
+import { useRateLimit } from '@/hooks/useRateLimit';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useFormValidation } from './price-contribution/useFormValidation';
 import { useFormState } from './price-contribution/useFormState';
@@ -13,6 +14,7 @@ interface UsePriceContributionFormProps {
 export const usePriceContributionForm = (props?: UsePriceContributionFormProps) => {
   const { user, profile } = useAuth();
   const { city, state, loading: locationLoading } = useGeolocation();
+  const { checkRateLimit } = useRateLimit();
   const { validateForm } = useFormValidation();
   const { formData, setFormData, resetForm } = useFormState({ city, state });
   const { isSubmitting, submitContribution } = useFormSubmission(props);
@@ -24,6 +26,17 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     console.log('Event:', e);
     console.log('Event type:', e.type);
     console.log('Event target:', e.target);
+    
+    // Check rate limit first
+    const allowed = await checkRateLimit('price_contribution', {
+      maxAttempts: 5,
+      windowMinutes: 60,
+      blockMinutes: 30
+    });
+
+    if (!allowed) {
+      return; // Rate limit toast is shown by the hook
+    }
     
     // Validações básicas
     const validation = validateForm(formData, user);

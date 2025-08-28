@@ -612,6 +612,10 @@ export type Database = {
         Args: { current_usage?: number; feature_name: string }
         Returns: boolean
       }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_orphaned_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
