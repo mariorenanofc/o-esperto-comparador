@@ -595,6 +595,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          block_minutes?: number
+          endpoint_name: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       check_user_admin_status: {
         Args: { user_uuid?: string }
         Returns: boolean
@@ -631,9 +640,21 @@ export type Database = {
         Args: { email_input: string }
         Returns: string
       }
+      sanitize_text_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
       user_plan_access: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      validate_email: {
+        Args: { email_input: string }
+        Returns: boolean
+      }
+      validate_price: {
+        Args: { price_input: number }
+        Returns: boolean
       }
     }
     Enums: {
