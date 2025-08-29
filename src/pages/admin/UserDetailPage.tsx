@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { supabaseAdminService } from "@/services/supabase/adminService";
 import { useAuth } from "@/hooks/useAuth"; // <-- Importado para pegar o session/token
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Crown, Trash2, User } from "lucide-react";
+import { Loader2, ArrowLeft, Crown, Trash2, User, Calendar, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserProfile {
   id: string;
@@ -35,6 +37,13 @@ interface UserProfile {
   created_at: string;
   is_online: boolean | null;
   last_activity: string | null;
+  comparisons_made_this_month?: number;
+}
+
+interface SubscriptionData {
+  subscribed: boolean;
+  subscription_tier: string | null;
+  subscription_end: string | null;
 }
 
 const UserDetailPage: React.FC = () => {
@@ -45,12 +54,14 @@ const UserDetailPage: React.FC = () => {
   const accessToken = session?.access_token || ""; // Extrai o token de acesso
   // --- FIM DA MODIFICAÇÃO AQUI ---
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
       fetchUserProfile(userId);
+      fetchSubscriptionData(userId);
     }
   }, [userId]);
 
@@ -73,6 +84,27 @@ const UserDetailPage: React.FC = () => {
       toast.error("Erro ao carregar perfil do usuário.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSubscriptionData = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('subscribers')
+        .select('subscribed, subscription_tier, subscription_end')
+        .eq('user_id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao buscar dados de assinatura:', error);
+        return;
+      }
+
+      if (data) {
+        setSubscriptionData(data);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados de assinatura:', error);
     }
   };
 
@@ -163,12 +195,6 @@ const UserDetailPage: React.FC = () => {
             Pro
           </Badge>
         );
-      case "empresarial":
-        return (
-          <Badge variant="default" className="bg-green-600">
-            Empresarial
-          </Badge>
-        );
       default:
         return <Badge variant="outline">Free</Badge>;
     }
@@ -178,6 +204,56 @@ const UserDetailPage: React.FC = () => {
     if (!lastActivity) return "Nunca";
     const date = new Date(lastActivity);
     return date.toLocaleString("pt-BR");
+  };
+
+  const getSubscriptionStatus = () => {
+    if (!subscriptionData) return { status: "Sem assinatura", daysRemaining: null, isExpired: true };
+    
+    if (!subscriptionData.subscribed) {
+      return { status: "Inativo", daysRemaining: null, isExpired: true };
+    }
+
+    if (!subscriptionData.subscription_end) {
+      return { status: "Ativo", daysRemaining: null, isExpired: false };
+    }
+
+    const endDate = new Date(subscriptionData.subscription_end);
+    const now = new Date();
+    const diffTime = endDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 0) {
+      return { status: "Expirado", daysRemaining: 0, isExpired: true };
+    }
+
+    return { 
+      status: "Ativo", 
+      daysRemaining: diffDays, 
+      isExpired: false,
+      endDate: endDate.toLocaleDateString("pt-BR")
+    };
+  };
+
+  const getPlanUsage = () => {
+    const currentUsage = userProfile?.comparisons_made_this_month || 0;
+    let maxUsage = 0;
+
+    switch (userProfile?.plan) {
+      case "free":
+        maxUsage = 2;
+        break;
+      case "premium":
+        maxUsage = 10;
+        break;
+      case "pro":
+      case "admin":
+        return { current: currentUsage, max: -1, percentage: 0 }; // Ilimitado
+      default:
+        maxUsage = 2;
+    }
+
+    const percentage = maxUsage > 0 ? (currentUsage / maxUsage) * 100 : 0;
+    return { current: currentUsage, max: maxUsage, percentage };
   };
 
   if (loading) {
@@ -311,18 +387,6 @@ const UserDetailPage: React.FC = () => {
                     Mudar para Pro
                   </Button>
                 )}
-                {userProfile.plan !== "empresarial" && (
-                  <Button
-                    variant="outline"
-                    onClick={() => handleUpdatePlan("empresarial")}
-                    disabled={
-                      actionLoading === "plan" ||
-                      (currentUser && userProfile.id === currentUser.id)
-                    }
-                  >
-                    Mudar para Empresarial
-                  </Button>
-                )}
                 {userProfile.plan !== "admin" && (
                   <Button
                     variant="outline"
@@ -411,27 +475,82 @@ const UserDetailPage: React.FC = () => {
           {/* Status de Consumo do Plano */}
           <Card className="mt-6 bg-white dark:bg-gray-800">
             <CardHeader>
-              <CardTitle>Status de Consumo do Plano</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Status de Consumo do Plano
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-muted rounded-lg">
-                    <h4 className="font-semibold text-primary">Comparações</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Uso de comparações no período atual
-                    </p>
+              <div className="space-y-6">
+                {/* Status da Assinatura */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-primary flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Status da Assinatura
+                    </h4>
+                    <Badge 
+                      variant={getSubscriptionStatus().isExpired ? "destructive" : "default"}
+                      className={getSubscriptionStatus().isExpired ? "" : "bg-green-600"}
+                    >
+                      {getSubscriptionStatus().status}
+                    </Badge>
                   </div>
-                  <div className="p-4 bg-muted rounded-lg">
-                    <h4 className="font-semibold text-primary">Alertas</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Alertas de preço configurados
-                    </p>
+                  {getSubscriptionStatus().daysRemaining !== null && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        {getSubscriptionStatus().isExpired 
+                          ? "Assinatura expirada" 
+                          : `${getSubscriptionStatus().daysRemaining} dias restantes`}
+                      </p>
+                      {getSubscriptionStatus().endDate && (
+                        <p className="text-sm font-medium">
+                          Vencimento: {getSubscriptionStatus().endDate}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Uso de Comparações */}
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-semibold text-primary mb-3">Uso de Comparações</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">
+                        Comparações neste mês
+                      </span>
+                      <span className="font-medium">
+                        {getPlanUsage().current}
+                        {getPlanUsage().max > 0 ? ` / ${getPlanUsage().max}` : " (Ilimitado)"}
+                      </span>
+                    </div>
+                    {getPlanUsage().max > 0 && (
+                      <div className="space-y-1">
+                        <Progress 
+                          value={getPlanUsage().percentage} 
+                          className="h-2"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {Math.round(getPlanUsage().percentage)}% do limite usado
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  (Funcionalidade em desenvolvimento)
-                </p>
+
+                {/* Tier da Assinatura */}
+                {subscriptionData?.subscription_tier && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <h4 className="font-semibold text-primary mb-2">Plano Ativo</h4>
+                    <div className="flex items-center gap-2">
+                      {getPlanBadge(subscriptionData.subscription_tier)}
+                      <span className="text-sm text-muted-foreground">
+                        (via Stripe)
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
