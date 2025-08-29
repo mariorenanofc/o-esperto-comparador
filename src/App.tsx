@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
+import { initializeCacheService } from "@/services/reactiveCache";
 
 import { AuthProvider } from "@/hooks/useAuth";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
@@ -9,6 +10,7 @@ import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ThemeProvider from "./components/ThemeProvider";
 import { AppContent } from "./components/AppContent";
 import { useDataPreloader } from "./hooks/useOptimizedData";
+import { CacheMonitor } from "./components/CacheMonitor";
 
 // Lazy-loaded non-critical features for better mobile performance
 const PushInitializerLazy = React.lazy(() => import("./components/PushInitializer"));
@@ -37,16 +39,17 @@ const AppWithHooks: React.FC = () => {
   }, []);
 
   return (
-    <>
-      <Toaster />
+    <div className="min-h-screen bg-background text-foreground">
+      <AppContent />
+      <CacheMonitor />
       {deferReady && (
         <React.Suspense fallback={null}>
           <PushInitializerLazy />
           <NotificationSystemLazy />
         </React.Suspense>
       )}
-      <AppContent />
-    </>
+      <Toaster />
+    </div>
   );
 };
 
@@ -68,6 +71,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Inicializar cache service
+initializeCacheService(queryClient);
 
 function App() {
   // Add defensive check for React
