@@ -207,7 +207,13 @@ const UserDetailPage: React.FC = () => {
   };
 
   const getSubscriptionStatus = () => {
-    if (!subscriptionData) return { status: "Sem assinatura", daysRemaining: null, isExpired: true };
+    // Se não há dados de subscription mas tem plano premium/pro, é assinatura manual
+    if (!subscriptionData) {
+      if (userProfile?.plan === 'pro' || userProfile?.plan === 'premium') {
+        return { status: "Ativo (Manual)", daysRemaining: null, isExpired: false };
+      }
+      return { status: "Sem assinatura", daysRemaining: null, isExpired: true };
+    }
     
     if (!subscriptionData.subscribed) {
       return { status: "Inativo", daysRemaining: null, isExpired: true };
