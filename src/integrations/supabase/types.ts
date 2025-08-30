@@ -507,6 +507,57 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_history: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          currency: string | null
+          id: string
+          metadata: Json | null
+          payment_status: string
+          period_end: string | null
+          period_start: string | null
+          plan_type: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_status: string
+          period_end?: string | null
+          period_start?: string | null
+          plan_type: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_status?: string
+          period_end?: string | null
+          period_start?: string | null
+          plan_type?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       suggestions: {
         Row: {
           category: string
@@ -547,6 +598,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_access_control: {
+        Row: {
+          access_suspended: boolean | null
+          created_at: string
+          current_plan: string | null
+          grace_period_days: number | null
+          id: string
+          last_payment_date: string | null
+          months_subscribed: number | null
+          next_billing_date: string | null
+          plan_end_date: string | null
+          plan_start_date: string | null
+          subscription_count: number | null
+          suspension_reason: string | null
+          total_invested: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_suspended?: boolean | null
+          created_at?: string
+          current_plan?: string | null
+          grace_period_days?: number | null
+          id?: string
+          last_payment_date?: string | null
+          months_subscribed?: number | null
+          next_billing_date?: string | null
+          plan_end_date?: string | null
+          plan_start_date?: string | null
+          subscription_count?: number | null
+          suspension_reason?: string | null
+          total_invested?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_suspended?: boolean | null
+          created_at?: string
+          current_plan?: string | null
+          grace_period_days?: number | null
+          id?: string
+          last_payment_date?: string | null
+          months_subscribed?: number | null
+          next_billing_date?: string | null
+          plan_end_date?: string | null
+          plan_start_date?: string | null
+          subscription_count?: number | null
+          suspension_reason?: string | null
+          total_invested?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -622,6 +727,10 @@ export type Database = {
       }
       get_db_usage: {
         Args: { limit_bytes?: number }
+        Returns: Json
+      }
+      get_user_subscription_stats: {
+        Args: { target_user_id: string }
         Returns: Json
       }
       is_user_admin: {
