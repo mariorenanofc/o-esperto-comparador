@@ -28,6 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { SubscriptionStatsCard } from "@/components/admin/SubscriptionStatsCard";
 
 interface UserProfile {
   id: string;
@@ -46,6 +47,25 @@ interface SubscriptionData {
   subscription_end: string | null;
 }
 
+interface DetailedSubscriptionData {
+  totalInvested: number;
+  monthsSubscribed: number;
+  firstPaymentDate: Date | null;
+  lastPaymentDate: Date | null;
+  planEndDate: Date | null;
+  nextBillingDate: Date | null;
+  accessSuspended: boolean;
+}
+
+interface PaymentHistory {
+  id: string;
+  amount: number;
+  currency: string;
+  date: Date;
+  plan: string;
+  status: string;
+}
+
 const UserDetailPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -55,13 +75,17 @@ const UserDetailPage: React.FC = () => {
   // --- FIM DA MODIFICAÇÃO AQUI ---
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
+  const [detailedSubscriptionData, setDetailedSubscriptionData] = useState<DetailedSubscriptionData | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
   useEffect(() => {
     if (userId) {
       fetchUserProfile(userId);
       fetchSubscriptionData(userId);
+      fetchDetailedSubscriptionData(userId);
     }
   }, [userId]);
 
@@ -105,6 +129,40 @@ const UserDetailPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar dados de assinatura:', error);
+    }
+  };
+
+  const fetchDetailedSubscriptionData = async (id: string) => {
+    if (!userId || !session?.access_token) return;
+    
+    setSubscriptionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('subscription-management', {
+        body: { userId: id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao buscar dados detalhados de assinatura:', error);
+        return;
+      }
+
+      if (data?.success) {
+        setDetailedSubscriptionData(data.accessControl);
+        setPaymentHistory(data.subscriptionHistory || []);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados detalhados de assinatura:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  const handleRefreshSubscription = () => {
+    if (userId) {
+      fetchDetailedSubscriptionData(userId);
     }
   };
 
@@ -478,88 +536,109 @@ const UserDetailPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Status de Consumo do Plano */}
-          <Card className="mt-6 bg-white dark:bg-gray-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Status de Consumo do Plano
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {/* Status da Assinatura */}
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-primary flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      Status da Assinatura
-                    </h4>
-                    <Badge 
-                      variant={getSubscriptionStatus().isExpired ? "destructive" : "default"}
-                      className={getSubscriptionStatus().isExpired ? "" : "bg-green-600"}
-                    >
-                      {getSubscriptionStatus().status}
-                    </Badge>
-                  </div>
-                  {getSubscriptionStatus().daysRemaining !== null && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        {getSubscriptionStatus().isExpired 
-                          ? "Assinatura expirada" 
-                          : `${getSubscriptionStatus().daysRemaining} dias restantes`}
-                      </p>
-                      {getSubscriptionStatus().endDate && (
-                        <p className="text-sm font-medium">
-                          Vencimento: {getSubscriptionStatus().endDate}
-                        </p>
-                      )}
+          {/* Status de Consumo do Plano - Nova Implementação */}
+          {detailedSubscriptionData ? (
+            <div className="mt-6">
+              <SubscriptionStatsCard
+                subscriptionData={detailedSubscriptionData}
+                paymentHistory={paymentHistory}
+                currentPlan={userProfile.plan || 'free'}
+                onRefresh={handleRefreshSubscription}
+                isLoading={subscriptionLoading}
+              />
+            </div>
+          ) : (
+            /* Status de Consumo do Plano - Fallback para dados básicos */
+            <Card className="mt-6 bg-white dark:bg-gray-800">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Status de Consumo do Plano
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRefreshSubscription}
+                    disabled={subscriptionLoading}
+                  >
+                    {subscriptionLoading ? "Carregando..." : "Carregar Detalhes"}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Status da Assinatura */}
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-primary flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        Status da Assinatura
+                      </h4>
+                      <Badge 
+                        variant={getSubscriptionStatus().isExpired ? "destructive" : "default"}
+                        className={getSubscriptionStatus().isExpired ? "" : "bg-green-600"}
+                      >
+                        {getSubscriptionStatus().status}
+                      </Badge>
                     </div>
-                  )}
-                </div>
-
-                {/* Uso de Comparações */}
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-semibold text-primary mb-3">Uso de Comparações</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">
-                        Comparações neste mês
-                      </span>
-                      <span className="font-medium">
-                        {getPlanUsage().current}
-                        {getPlanUsage().max > 0 ? ` / ${getPlanUsage().max}` : " (Ilimitado)"}
-                      </span>
-                    </div>
-                    {getPlanUsage().max > 0 && (
-                      <div className="space-y-1">
-                        <Progress 
-                          value={getPlanUsage().percentage} 
-                          className="h-2"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          {Math.round(getPlanUsage().percentage)}% do limite usado
+                    {getSubscriptionStatus().daysRemaining !== null && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          {getSubscriptionStatus().isExpired 
+                            ? "Assinatura expirada" 
+                            : `${getSubscriptionStatus().daysRemaining} dias restantes`}
                         </p>
+                        {getSubscriptionStatus().endDate && (
+                          <p className="text-sm font-medium">
+                            Vencimento: {getSubscriptionStatus().endDate}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Tier da Assinatura */}
-                {subscriptionData?.subscription_tier && (
+                  {/* Uso de Comparações */}
                   <div className="p-4 bg-muted rounded-lg">
-                    <h4 className="font-semibold text-primary mb-2">Plano Ativo</h4>
-                    <div className="flex items-center gap-2">
-                      {getPlanBadge(subscriptionData.subscription_tier)}
-                      <span className="text-sm text-muted-foreground">
-                        (via Stripe)
-                      </span>
+                    <h4 className="font-semibold text-primary mb-3">Uso de Comparações</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">
+                          Comparações neste mês
+                        </span>
+                        <span className="font-medium">
+                          {getPlanUsage().current}
+                          {getPlanUsage().max > 0 ? ` / ${getPlanUsage().max}` : " (Ilimitado)"}
+                        </span>
+                      </div>
+                      {getPlanUsage().max > 0 && (
+                        <div className="space-y-1">
+                          <Progress 
+                            value={getPlanUsage().percentage} 
+                            className="h-2"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {Math.round(getPlanUsage().percentage)}% do limite usado
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
+                  {/* Tier da Assinatura */}
+                  {subscriptionData?.subscription_tier && (
+                    <div className="p-4 bg-muted rounded-lg">
+                      <h4 className="font-semibold text-primary mb-2">Plano Ativo</h4>
+                      <div className="flex items-center gap-2">
+                        {getPlanBadge(subscriptionData.subscription_tier)}
+                        <span className="text-sm text-muted-foreground">
+                          (via Stripe)
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </AdminRoute>
