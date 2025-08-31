@@ -47,40 +47,31 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   const createCheckout = async (planId: PlanTier) => {
-    console.log('[DEBUG] createCheckout called with:', { planId, user: user?.id, userEmail: user?.email });
-    
     if (!user) {
       toast.error("Você precisa estar logado para assinar um plano");
-      console.error('[DEBUG] No user found');
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log('[DEBUG] Invoking create-checkout function...');
-      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { planId }
       });
 
-      console.log('[DEBUG] Function response:', { data, error });
-
       if (error) {
         toast.error(`Erro ao criar checkout: ${error.message || 'Erro desconhecido'}`);
-        console.error('[DEBUG] Checkout error:', error);
+        console.error('Checkout error:', error);
         return;
       }
 
       if (data?.url) {
-        console.log('[DEBUG] Opening Stripe URL:', data.url);
         window.open(data.url, '_blank');
       } else {
-        console.error('[DEBUG] No URL returned from checkout');
         toast.error("Nenhuma URL de checkout foi retornada");
       }
     } catch (error) {
       toast.error(`Erro ao processar pagamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      console.error('[DEBUG] Error in createCheckout:', error);
+      console.error('Error in createCheckout:', error);
     } finally {
       setIsLoading(false);
     }
