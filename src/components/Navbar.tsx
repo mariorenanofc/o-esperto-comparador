@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Menu, X, Settings, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Settings, User, Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "./ThemeToggle";
 
@@ -77,6 +77,16 @@ const Navbar = () => {
             >
               Planos
             </Link>
+            
+            {user && (
+              <Link 
+                to="/notifications" 
+                className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
+              >
+                <Bell className="w-4 h-4" />
+                Notificações
+              </Link>
+            )}
             
             {/* Admin Link - Only visible to administrators */}
             {user && isLoaded && isAdmin && (
@@ -175,13 +185,16 @@ const Navbar = () => {
               >
                 Economia
               </Link>
-              <Link 
-                to="/plans" 
-                className="text-muted-foreground hover:text-app-secondary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Planos
-              </Link>
+              {user && (
+                <Link 
+                  to="/notifications" 
+                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Bell className="w-4 h-4" />
+                  Notificações
+                </Link>
+              )}
               
               {/* Admin Link Mobile - Only visible to administrators */}
               {user && isLoaded && isAdmin && (

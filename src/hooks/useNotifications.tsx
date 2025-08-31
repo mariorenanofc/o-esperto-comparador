@@ -67,11 +67,32 @@ export const useNotifications = () => {
     }
   };
 
-  const showNotification = (notification: Notification) => {
+  const showNotification = async (notification: Notification) => {
     console.log('🔔 Showing notification:', notification.title);
     
     // Add to state
     setNotifications(prev => [notification, ...prev.slice(0, 9)]);
+    
+    // Persistir a notificação no banco de dados
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: user.id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            data: {}
+          });
+        
+        if (error) {
+          console.error('Error saving notification to DB:', error);
+        }
+      } catch (error) {
+        console.error('Error persisting notification:', error);
+      }
+    }
     
     // Show toast
     toast(notification.title, {
@@ -91,6 +112,41 @@ export const useNotifications = () => {
       });
     }
   };
+
+  // ... keep existing code (showNotification function)
+  
+  // Carregar notificações persistidas do banco
+  const loadPersistedNotifications = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('read', false)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading persisted notifications:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const persistedNotifications = data.map(n => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          type: n.type as 'info' | 'success' | 'warning' | 'error',
+          timestamp: new Date(n.created_at),
+          read: n.read
+        }));
+        
+        setNotifications(prev => [...persistedNotifications, ...prev]);
+      }
+    } catch (error) {
+      console.error('Error loading persisted notifications:', error);
+    }
+  }, []);
 
   // Cleanup function for channels
   const cleanupChannels = useCallback(() => {
@@ -388,6 +444,9 @@ export const useNotifications = () => {
     // Setup notifications immediately
     console.log('🔔 Setting up notifications for user:', user.id);
     setupNotifications(user.id);
+    
+    // Carregar notificações persistidas
+    loadPersistedNotifications(user.id);
   }, [user?.id, setupNotifications]);
 
   // Cleanup on unmount

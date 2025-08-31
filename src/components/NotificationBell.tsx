@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/button';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Badge } from '@/components/ui/badge';
 
-export const NotificationBell: React.FC = () => {
+interface NotificationBellProps {
+  onOpenCenter?: () => void;
+}
+
+export const NotificationBell: React.FC<NotificationBellProps> = ({ onOpenCenter }) => {
   const { notifications, unreadCount, markAsRead, clearAllNotifications } = useNotifications();
   const [showPanel, setShowPanel] = useState(false);
 
@@ -87,6 +91,20 @@ export const NotificationBell: React.FC = () => {
                 </div>
               ))
             )}
+          </div>
+          
+          <div className="p-4 border-t border-border/50">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                onOpenCenter?.();
+                setShowPanel(false);
+              }}
+            >
+              Ver Todas as Notificações
+            </Button>
           </div>
         </div>
       )}

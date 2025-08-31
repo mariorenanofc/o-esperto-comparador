@@ -28,6 +28,7 @@ const Profile = React.lazy(() => import("@/pages/Profile"));
 const Terms = React.lazy(() => import("@/pages/Terms"));
 const Privacy = React.lazy(() => import("@/pages/Privacy"));
 const Plans = React.lazy(() => import("@/pages/Plans"));
+const Notifications = React.lazy(() => import("@/pages/Notifications"));
 const Success = React.lazy(() => import("@/pages/Success"));
 const SignIn = React.lazy(() => import("@/pages/SignIn"));
 const SignUp = React.lazy(() => import("@/pages/SignUp"));
@@ -128,6 +129,18 @@ export const AppContent: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
+            
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <OptimizedSuspense message="Carregando notificações...">
+                    <Notifications />
+                  </OptimizedSuspense>
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route path="/success" element={<Success />} />
             <Route 
               path="/admin" 

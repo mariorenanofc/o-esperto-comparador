@@ -269,6 +269,90 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          admin_notifications_enabled: boolean | null
+          contributions_enabled: boolean | null
+          created_at: string
+          desktop_enabled: boolean | null
+          email_enabled: boolean | null
+          id: string
+          marketing_enabled: boolean | null
+          push_enabled: boolean | null
+          sound_enabled: boolean | null
+          suggestions_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notifications_enabled?: boolean | null
+          contributions_enabled?: boolean | null
+          created_at?: string
+          desktop_enabled?: boolean | null
+          email_enabled?: boolean | null
+          id?: string
+          marketing_enabled?: boolean | null
+          push_enabled?: boolean | null
+          sound_enabled?: boolean | null
+          suggestions_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notifications_enabled?: boolean | null
+          contributions_enabled?: boolean | null
+          created_at?: string
+          desktop_enabled?: boolean | null
+          email_enabled?: boolean | null
+          id?: string
+          marketing_enabled?: boolean | null
+          push_enabled?: boolean | null
+          sound_enabled?: boolean | null
+          suggestions_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          clicked: boolean | null
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clicked?: boolean | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clicked?: boolean | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_prices: {
         Row: {
           comparison_id: string | null
@@ -718,6 +802,10 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_old_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
