@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
+import { PushNotificationTest } from "@/components/PushNotificationTest";
 
 // Componente para itens com barra de progresso (uso limitado para manter padrão)
 const ProgressItem = ({
@@ -315,6 +316,18 @@ const Index: React.FC = () => {
                   )}
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        )}
+
+        {/* Seção de Teste de Push Notifications (apenas para usuários logados) */}
+        {user && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-4 text-app-dark dark:text-white">
+              🔔 Teste de Notificações Push
+            </h2>
+            <div className="max-w-lg mx-auto">
+              <PushNotificationTest />
             </div>
           </div>
         )}
