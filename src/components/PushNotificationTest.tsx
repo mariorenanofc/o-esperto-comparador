@@ -48,11 +48,20 @@ export const PushNotificationTest: React.FC = () => {
       // Test VAPID key fetch
       try {
         const { data, error } = await supabase.functions.invoke('get-vapid');
+        console.log('VAPID function response:', { data, error });
         if (error) throw error;
-        results.vapidKey = !!data?.publicKey;
-        console.log('VAPID key check:', data);
+        
+        if (!data?.publicKey || data.publicKey === '') {
+          console.error('VAPID key is empty or missing');
+          toast.error('Falha ao obter chave VAPID: Chave não encontrada');
+          results.vapidKey = false;
+        } else {
+          results.vapidKey = true;
+          console.log('VAPID key found successfully');
+        }
       } catch (error) {
         console.error('VAPID key fetch error:', error);
+        toast.error(`Erro na função VAPID: ${error.message}`);
         results.vapidKey = false;
       }
 
