@@ -843,6 +843,14 @@ export type Database = {
       }
     }
     Functions: {
+      can_send_notification: {
+        Args: {
+          channel_type?: string
+          notification_type: string
+          target_user_id: string
+        }
+        Returns: boolean
+      }
       check_admin_with_auth: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -903,6 +911,16 @@ export type Database = {
       mask_sensitive_admin_data: {
         Args: { email_input: string }
         Returns: string
+      }
+      record_notification_sent: {
+        Args: {
+          channel_type?: string
+          notification_metadata?: Json
+          notification_type: string
+          success_status?: boolean
+          target_user_id: string
+        }
+        Returns: undefined
       }
       sanitize_text_input: {
         Args: { input_text: string }

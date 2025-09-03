@@ -11,6 +11,13 @@ interface NotificationSettings {
   suggestions_enabled: boolean;
   admin_notifications_enabled: boolean;
   marketing_enabled: boolean;
+  location_city?: string;
+  location_state?: string;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  offers_enabled: boolean;
+  subscription_reminders_enabled: boolean;
 }
 
 const defaultSettings: NotificationSettings = {
@@ -22,6 +29,13 @@ const defaultSettings: NotificationSettings = {
   suggestions_enabled: true,
   admin_notifications_enabled: true,
   marketing_enabled: false,
+  location_city: '',
+  location_state: '',
+  quiet_hours_enabled: true,
+  quiet_hours_start: '22:00',
+  quiet_hours_end: '08:00',
+  offers_enabled: true,
+  subscription_reminders_enabled: true,
 };
 
 export const useNotificationSettings = () => {
@@ -65,6 +79,13 @@ export const useNotificationSettings = () => {
           suggestions_enabled: data.suggestions_enabled,
           admin_notifications_enabled: data.admin_notifications_enabled,
           marketing_enabled: data.marketing_enabled,
+          location_city: data.location_city || '',
+          location_state: data.location_state || '',
+          quiet_hours_enabled: data.quiet_hours_enabled ?? true,
+          quiet_hours_start: data.quiet_hours_start?.substring(0, 5) || '22:00',
+          quiet_hours_end: data.quiet_hours_end?.substring(0, 5) || '08:00',
+          offers_enabled: data.offers_enabled ?? true,
+          subscription_reminders_enabled: data.subscription_reminders_enabled ?? true,
         });
       } else {
         // Se não existir, criar com valores padrão
@@ -119,14 +140,49 @@ export const useNotificationSettings = () => {
     }
   };
 
-  const isNotificationTypeEnabled = (type: keyof NotificationSettings): boolean => {
-    return settings[type];
+  const isNotificationTypeEnabled = (type: string): boolean => {
+    const booleanSettings = [
+      'push_enabled', 'email_enabled', 'sound_enabled', 'desktop_enabled',
+      'contributions_enabled', 'suggestions_enabled', 'admin_notifications_enabled', 
+      'marketing_enabled', 'quiet_hours_enabled', 'offers_enabled', 'subscription_reminders_enabled'
+    ];
+    
+    if (booleanSettings.includes(type)) {
+      return settings[type as keyof NotificationSettings] as boolean;
+    }
+    
+    return false;
+  };
+
+  const updateLocation = async (city: string, state: string) => {
+    await updateSettings({
+      location_city: city,
+      location_state: state
+    });
+
+    // Also update push subscriptions with location
+    try {
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .update({
+          location_city: city,
+          location_state: state
+        })
+        .eq('user_id', user?.id);
+
+      if (error) {
+        console.error('Error updating push subscription location:', error);
+      }
+    } catch (error) {
+      console.error('Error updating push subscription location:', error);
+    }
   };
 
   return {
     settings,
     loading,
     updateSettings,
+    updateLocation,
     isNotificationTypeEnabled,
     loadSettings
   };
