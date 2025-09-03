@@ -269,6 +269,39 @@ export type Database = {
           },
         ]
       }
+      notification_send_log: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          notification_type: string
+          sent_at: string
+          success: boolean | null
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notification_type: string
+          sent_at?: string
+          success?: boolean | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notification_type?: string
+          sent_at?: string
+          success?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           admin_notifications_enabled: boolean | null
@@ -277,9 +310,16 @@ export type Database = {
           desktop_enabled: boolean | null
           email_enabled: boolean | null
           id: string
+          location_city: string | null
+          location_state: string | null
           marketing_enabled: boolean | null
+          offers_enabled: boolean | null
           push_enabled: boolean | null
+          quiet_hours_enabled: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
           sound_enabled: boolean | null
+          subscription_reminders_enabled: boolean | null
           suggestions_enabled: boolean | null
           updated_at: string
           user_id: string
@@ -291,9 +331,16 @@ export type Database = {
           desktop_enabled?: boolean | null
           email_enabled?: boolean | null
           id?: string
+          location_city?: string | null
+          location_state?: string | null
           marketing_enabled?: boolean | null
+          offers_enabled?: boolean | null
           push_enabled?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
           sound_enabled?: boolean | null
+          subscription_reminders_enabled?: boolean | null
           suggestions_enabled?: boolean | null
           updated_at?: string
           user_id: string
@@ -305,9 +352,16 @@ export type Database = {
           desktop_enabled?: boolean | null
           email_enabled?: boolean | null
           id?: string
+          location_city?: string | null
+          location_state?: string | null
           marketing_enabled?: boolean | null
+          offers_enabled?: boolean | null
           push_enabled?: boolean | null
+          quiet_hours_enabled?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
           sound_enabled?: boolean | null
+          subscription_reminders_enabled?: boolean | null
           suggestions_enabled?: boolean | null
           updated_at?: string
           user_id?: string
@@ -474,6 +528,9 @@ export type Database = {
           created_at: string
           endpoint: string
           id: string
+          location_city: string | null
+          location_state: string | null
+          marketing_enabled: boolean | null
           p256dh: string
           updated_at: string
           user_agent: string | null
@@ -484,6 +541,9 @@ export type Database = {
           created_at?: string
           endpoint: string
           id?: string
+          location_city?: string | null
+          location_state?: string | null
+          marketing_enabled?: boolean | null
           p256dh: string
           updated_at?: string
           user_agent?: string | null
@@ -494,6 +554,9 @@ export type Database = {
           created_at?: string
           endpoint?: string
           id?: string
+          location_city?: string | null
+          location_state?: string | null
+          marketing_enabled?: boolean | null
           p256dh?: string
           updated_at?: string
           user_agent?: string | null
