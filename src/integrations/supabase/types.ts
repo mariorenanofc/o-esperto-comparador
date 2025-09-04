@@ -884,6 +884,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      enhanced_sanitize_text_input: {
+        Args: { input_text: string }
+        Returns: string
+      }
       get_db_usage: {
         Args: { limit_bytes?: number }
         Returns: Json
@@ -902,6 +906,10 @@ export type Database = {
           action_type: string
           target_user?: string
         }
+        Returns: undefined
+      }
+      log_security_event: {
+        Args: { details?: Json; event_type: string; severity?: string }
         Returns: undefined
       }
       mark_inactive_users_offline: {

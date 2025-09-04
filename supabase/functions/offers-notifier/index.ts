@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.10";
+import webpush from "npm:web-push@3.6.7";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,18 +24,18 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log('[OFFERS-NOTIFIER] Function started');
 
-    // Initialize Supabase client
+    // Initialize Supabase client with service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get VAPID keys
-    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
-    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-    const vapidSubject = Deno.env.get('VAPID_SUBJECT');
+    // Get VAPID configuration
+    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+    const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') ?? "mailto:mariovendasonline10K@gmail.com";
 
-    if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) {
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       console.error('[OFFERS-NOTIFIER] Missing VAPID keys');
       return new Response(JSON.stringify({ error: 'VAPID keys not configured' }), {
         status: 500,
@@ -42,9 +43,48 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    // Parse request body to get offer details
-    const { offerId, city, state, productName, storeName, price } = await req.json();
+    // Configure web-push with VAPID details
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+
+    // Parse and validate request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      console.error('[OFFERS-NOTIFIER] Invalid JSON body:', error);
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    const { offerId, city, state, productName, storeName, price } = requestBody;
+
+    // Validate required fields
+    if (!offerId || !city || !state || !productName || !storeName || price === undefined) {
+      return new Response(JSON.stringify({ 
+        error: 'Missing required fields: offerId, city, state, productName, storeName, price' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
+
     console.log('[OFFERS-NOTIFIER] Processing offer:', { offerId, city, state, productName, storeName });
+
+    // Input sanitization
+    const sanitizedCity = String(city).trim().substring(0, 100);
+    const sanitizedState = String(state).trim().substring(0, 50);
+    const sanitizedProductName = String(productName).trim().substring(0, 200);
+    const sanitizedStoreName = String(storeName).trim().substring(0, 100);
+    const numericPrice = parseFloat(String(price));
+
+    if (isNaN(numericPrice) || numericPrice <= 0) {
+      return new Response(JSON.stringify({ error: 'Invalid price value' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders }
+      });
+    }
 
     // Get users who should receive notifications for this location
     const { data: eligibleUsers, error: usersError } = await supabase
@@ -58,8 +98,8 @@ const handler = async (req: Request): Promise<Response> => {
         location_city,
         location_state
       `)
-      .eq('location_city', city)
-      .eq('location_state', state)
+      .eq('location_city', sanitizedCity)
+      .eq('location_state', sanitizedState)
       .eq('marketing_enabled', true);
 
     if (usersError) {
@@ -85,7 +125,7 @@ const handler = async (req: Request): Promise<Response> => {
     const notifications = [];
     const failedNotifications = [];
 
-    // Process each user
+    // Process each user with proper rate limiting and permissions
     for (const user of eligibleUsers) {
       try {
         // Check if user can receive notification
@@ -101,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
           continue;
         }
 
-        // Prepare push notification
+        // Prepare push notification subscription
         const subscription: WebPushSubscription = {
           endpoint: user.endpoint,
           keys: {
@@ -110,16 +150,17 @@ const handler = async (req: Request): Promise<Response> => {
           }
         };
 
+        // Prepare notification payload
         const payload = {
           title: '🏷️ Nova Oferta Especial!',
-          body: `${productName} por R$ ${price.toFixed(2)} na ${storeName}`,
+          body: `${sanitizedProductName} por R$ ${numericPrice.toFixed(2)} na ${sanitizedStoreName}`,
           icon: '/icon-192.png',
           badge: '/icon-192.png',
           data: {
             type: 'marketing_offer',
-            offerId,
-            city,
-            state,
+            offerId: String(offerId),
+            city: sanitizedCity,
+            state: sanitizedState,
             url: '/'
           },
           actions: [
@@ -134,74 +175,55 @@ const handler = async (req: Request): Promise<Response> => {
           ]
         };
 
-        // Send push notification using Web Push Protocol
-        const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `key=${vapidPrivateKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            to: subscription.endpoint.split('/').pop(),
-            notification: payload,
-            webpush: {
-              headers: {
-                'Urgency': 'normal'
-              }
-            }
-          })
+        // Send push notification using web-push library (NOT FCM directly)
+        await webpush.sendNotification(subscription, JSON.stringify(payload));
+
+        notifications.push({
+          user_id: user.user_id,
+          success: true
         });
 
-        if (response.ok) {
-          notifications.push({
-            user_id: user.user_id,
-            success: true
-          });
+        // Record successful notification
+        await supabase.rpc('record_notification_sent', {
+          target_user_id: user.user_id,
+          notification_type: 'marketing_offer',
+          channel_type: 'push',
+          success_status: true,
+          notification_metadata: {
+            offerId: String(offerId),
+            city: sanitizedCity,
+            state: sanitizedState,
+            productName: sanitizedProductName,
+            storeName: sanitizedStoreName,
+            price: numericPrice
+          }
+        });
 
-          // Record notification sent
-          await supabase.rpc('record_notification_sent', {
-            target_user_id: user.user_id,
-            notification_type: 'marketing_offer',
-            channel_type: 'push',
-            success_status: true,
-            notification_metadata: {
-              offerId,
-              city,
-              state,
-              productName,
-              storeName,
-              price
+        // Insert in-app notification
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: user.user_id,
+            type: 'marketing_offer',
+            title: 'Nova Oferta Especial!',
+            message: `${sanitizedProductName} por R$ ${numericPrice.toFixed(2)} na ${sanitizedStoreName} - ${sanitizedCity}/${sanitizedState}`,
+            data: {
+              offerId: String(offerId),
+              city: sanitizedCity,
+              state: sanitizedState,
+              productName: sanitizedProductName,
+              storeName: sanitizedStoreName,
+              price: numericPrice
             }
           });
 
-          // Insert in-app notification
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: user.user_id,
-              type: 'marketing_offer',
-              title: 'Nova Oferta Especial!',
-              message: `${productName} por R$ ${price.toFixed(2)} na ${storeName} - ${city}/${state}`,
-              data: {
-                offerId,
-                city,
-                state,
-                productName,
-                storeName,
-                price
-              }
-            });
-
-          console.log(`[OFFERS-NOTIFIER] Notification sent successfully to user ${user.user_id}`);
-        } else {
-          throw new Error(`Push notification failed: ${response.status}`);
-        }
+        console.log(`[OFFERS-NOTIFIER] Notification sent successfully to user ${user.user_id}`);
 
       } catch (error) {
         console.error(`[OFFERS-NOTIFIER] Failed to send notification to user ${user.user_id}:`, error);
         failedNotifications.push({
           user_id: user.user_id,
-          error: error.message
+          error: error instanceof Error ? error.message : String(error)
         });
 
         // Record failed notification
@@ -211,14 +233,28 @@ const handler = async (req: Request): Promise<Response> => {
           channel_type: 'push',
           success_status: false,
           notification_metadata: {
-            error: error.message,
-            offerId,
-            city,
-            state
+            error: error instanceof Error ? error.message : String(error),
+            offerId: String(offerId),
+            city: sanitizedCity,
+            state: sanitizedState
           }
         });
       }
     }
+
+    // Log security event
+    await supabase.rpc('log_security_event', {
+      event_type: 'marketing_notifications_sent',
+      severity: 'info',
+      details: {
+        offerId: String(offerId),
+        city: sanitizedCity,
+        state: sanitizedState,
+        total_eligible: eligibleUsers.length,
+        successful_sends: notifications.length,
+        failed_sends: failedNotifications.length
+      }
+    });
 
     console.log(`[OFFERS-NOTIFIER] Processed ${notifications.length} successful notifications, ${failedNotifications.length} failed`);
 
@@ -239,7 +275,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error('[OFFERS-NOTIFIER] Function error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error.message || 'Internal server error',
       stack: error.stack 
     }), {
       status: 500,
