@@ -600,6 +600,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_reminders: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          status: string | null
+          task_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          status?: string | null
+          task_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          status?: string | null
+          task_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       stores: {
         Row: {
           created_at: string | null
