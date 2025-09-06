@@ -26,55 +26,18 @@ export const fetchService = {
     secureLogger.log('Fetching today\'s offers...');
     
     try {
-      // Primeiro executar limpeza manual para garantir que dados antigos sejam removidos
-      await this.cleanupOldOffers();
-      
-      // Buscar apenas ofertas verificadas das últimas 24 horas
-      const twentyFourHoursAgo = new Date(Date.now() - (24 * 60 * 60 * 1000));
-      
       const { data, error } = await supabase
         .from('daily_offers_public')
         .select('*')
-        .eq('verified', true)
-        .gte('created_at', twentyFourHoursAgo.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching verified offers:', error);
-        // Em caso de erro, tentar buscar sem filtro de verificação como fallback
-        const { data: fallbackData } = await supabase
-          .from('daily_offers_public')
-          .select('*')
-          .gte('created_at', twentyFourHoursAgo.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(10);
-        
-        if (fallbackData && fallbackData.length > 0) {
-          console.log('Using fallback data with unverified offers');
-          return this.mapOffersData(fallbackData);
-        }
+        console.error('Error fetching offers:', error);
         throw error;
       }
 
       const offers = this.mapOffersData(data || []);
-      console.log('Fetched today\'s offers (last 24h):', offers.length);
-      
-      // Se não há ofertas verificadas, buscar algumas não verificadas como fallback
-      if (offers.length === 0) {
-        console.log('No verified offers found, checking for unverified ones...');
-        const { data: unverifiedData } = await supabase
-          .from('daily_offers_public')
-          .select('*')
-          .eq('verified', false)
-          .gte('created_at', twentyFourHoursAgo.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
-        if (unverifiedData && unverifiedData.length > 0) {
-          console.log('Found unverified offers as fallback:', unverifiedData.length);
-          return this.mapOffersData(unverifiedData);
-        }
-      }
+      console.log('Fetched offers from secure view:', offers.length);
       
       return offers;
     } catch (error) {
@@ -110,25 +73,4 @@ export const fetchService = {
     }
   },
 
-  async cleanupOldOffers(): Promise<void> {
-    try {
-      console.log('Executing manual cleanup of old offers...');
-      
-      // Executar limpeza manual removendo ofertas antigas
-      const twentyFourHoursAgo = new Date(Date.now() - (24 * 60 * 60 * 1000));
-      
-      const { error } = await supabase
-        .from('daily_offers')
-        .delete()
-        .lt('created_at', twentyFourHoursAgo.toISOString());
-      
-      if (error) {
-        console.error('Error during cleanup:', error);
-      } else {
-        console.log('Cleanup completed successfully');
-      }
-    } catch (error) {
-      console.error('Error in cleanupOldOffers:', error);
-    }
-  }
 };

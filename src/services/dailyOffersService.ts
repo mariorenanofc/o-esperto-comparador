@@ -21,12 +21,6 @@ export const dailyOffersService = {
   // Manter validações locais
   validatePriceContribution: validationService.validatePriceContribution,
 
-  // Função de limpeza manual
-  async cleanupOldOffers(): Promise<void> {
-    console.log('Manual cleanup requested - handled by database trigger');
-    // A limpeza agora é feita automaticamente pelo trigger do banco
-  },
-
   // Manter função de verificação para compatibilidade
   checkIfShouldBeVerified: (contribution: PriceContribution, userId: string, offers: DailyOffer[]) => {
     const similarOffer = offers.find(offer => 

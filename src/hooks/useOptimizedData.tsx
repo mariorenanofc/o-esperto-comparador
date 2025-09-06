@@ -55,9 +55,8 @@ export const useOptimizedDailyOffers = () => {
       try {
         const { supabase } = await import('@/integrations/supabase/client');
         const { data, error } = await supabase
-          .from('daily_offers')
+          .from('daily_offers_public')
           .select('*')
-          .eq('verified', true)
           .order('created_at', { ascending: false })
           .limit(20);
         
