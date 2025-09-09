@@ -48,7 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Check if user is admin OR if they're sending test email to themselves
-    const { data: isAdmin, error: adminError } = await supabase.rpc('check_admin_with_auth');
+    const { data: isAdmin, error: adminError } = await supabase.rpc('check_user_admin_status', { user_uuid: user.id });
     
     const emailRequest: EmailRequest = await req.json();
     const isTestEmailToSelf = emailRequest.template_id && 
