@@ -27,7 +27,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({
   children,
   sessionTimeoutMinutes = 120
 }) => {
-  const { user } = useAuth();
+  const { user, updateActivity } = useAuth();
   
   // Initialize session timeout
   useSessionTimeout({
@@ -57,7 +57,6 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // User returned to tab, update activity
-        const { updateActivity } = useAuth();
         updateActivity();
       }
     };
