@@ -12,7 +12,8 @@ import {
   Send, 
   Mail,
   Search,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 import { EmailTemplate, emailTemplatesService } from '@/services/emailTemplatesService';
 import { EmailTemplateEditor } from './EmailTemplateEditor';
@@ -28,6 +29,7 @@ export const EmailTemplatesList: React.FC = () => {
   const [testEmail, setTestEmail] = useState('');
   const [isTesting, setIsTesting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     loadTemplates();
@@ -121,6 +123,166 @@ export const EmailTemplatesList: React.FC = () => {
     }
   };
 
+  const exampleTemplates = [
+    {
+      name: "Boas-vindas",
+      subject: "Bem-vindo ao {{app_name}}!",
+      html_content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #2563eb; text-align: center;">Bem-vindo, {{user_name}}!</h1>
+          <p>Obrigado por se juntar ao <strong>{{app_name}}</strong>.</p>
+          <p>Agora você pode:</p>
+          <ul>
+            <li>Comparar preços de produtos</li>
+            <li>Contribuir com ofertas diárias</li>
+            <li>Receber alertas de preços</li>
+            <li>Gerar relatórios mensais</li>
+          </ul>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{{action_url}}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Começar agora</a>
+          </div>
+          <p style="color: #666; font-size: 14px;">Atenciosamente,<br>Equipe {{app_name}}</p>
+        </div>
+      `,
+      text_content: "Bem-vindo, {{user_name}}!\n\nObrigado por se juntar ao {{app_name}}.\n\nAgora você pode comparar preços, contribuir com ofertas e muito mais.\n\nAcesse: {{action_url}}\n\nAtenciosamente,\nEquipe {{app_name}}",
+      variables: ["user_name", "app_name", "action_url"]
+    },
+    {
+      name: "Alerta de Preço",
+      subject: "🔔 Alerta: {{product_name}} com preço baixo!",
+      html_content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #dc2626;">🔔 Alerta de Preço!</h1>
+          <p>Olá {{user_name}},</p>
+          <p>O produto <strong>{{product_name}}</strong> está com um preço especial:</p>
+          <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h2 style="color: #dc2626; margin: 0;">{{product_name}}</h2>
+            <p style="font-size: 24px; font-weight: bold; color: #dc2626; margin: 10px 0;">R$ {{new_price}}</p>
+            <p style="color: #666;">De: <span style="text-decoration: line-through;">R$ {{old_price}}</span></p>
+            <p style="color: #666;">Loja: {{store_name}}</p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{{action_url}}" style="background-color: #dc2626; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Ver Oferta</a>
+          </div>
+          <p style="color: #666; font-size: 12px;">Você está recebendo este alerta porque configurou notificações para este produto.</p>
+        </div>
+      `,
+      text_content: "🔔 Alerta de Preço!\n\nOlá {{user_name}},\n\nO produto {{product_name}} está com preço especial:\n\nPreço: R$ {{new_price}} (era R$ {{old_price}})\nLoja: {{store_name}}\n\nVer oferta: {{action_url}}\n\nVocê está recebendo este alerta porque configurou notificações.",
+      variables: ["user_name", "product_name", "new_price", "old_price", "store_name", "action_url"]
+    },
+    {
+      name: "Relatório Mensal",
+      subject: "📊 Seu relatório mensal de {{month}} está pronto",
+      html_content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #059669;">📊 Relatório de {{month}}</h1>
+          <p>Olá {{user_name}},</p>
+          <p>Aqui está o resumo das suas atividades em {{month}}:</p>
+          <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #059669; margin-top: 0;">Estatísticas do Mês</h3>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>{{comparisons_count}}</strong> comparações realizadas</li>
+              <li><strong>{{contributions_count}}</strong> contribuições de preços</li>
+              <li><strong>R$ {{total_savings}}</strong> em economia identificada</li>
+              <li><strong>{{visited_stores}}</strong> lojas visitadas</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{{report_url}}" style="background-color: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Ver Relatório Completo</a>
+          </div>
+          <p style="color: #666; font-size: 14px;">Continue economizando com {{app_name}}!</p>
+        </div>
+      `,
+      text_content: "📊 Relatório de {{month}}\n\nOlá {{user_name}},\n\nResumo do mês:\n- {{comparisons_count}} comparações\n- {{contributions_count}} contribuições\n- R$ {{total_savings}} economia identificada\n- {{visited_stores}} lojas visitadas\n\nVer relatório: {{report_url}}\n\nContinue economizando!",
+      variables: ["user_name", "month", "comparisons_count", "contributions_count", "total_savings", "visited_stores", "report_url", "app_name"]
+    },
+    {
+      name: "Confirmação de Contribuição",
+      subject: "✅ Obrigado pela contribuição de preço!",
+      html_content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #7c3aed;">✅ Contribuição Recebida!</h1>
+          <p>Olá {{contributor_name}},</p>
+          <p>Obrigado por contribuir com informações de preço para nossa comunidade!</p>
+          <div style="background-color: #faf5ff; border: 1px solid #d8b4fe; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #7c3aed; margin-top: 0;">Detalhes da Contribuição</h3>
+            <p><strong>Produto:</strong> {{product_name}}</p>
+            <p><strong>Preço:</strong> R$ {{price}}</p>
+            <p><strong>Loja:</strong> {{store_name}}</p>
+            <p><strong>Local:</strong> {{city}}, {{state}}</p>
+            <p><strong>Data:</strong> {{date}}</p>
+          </div>
+          <p>Sua contribuição será verificada por nossa equipe e ficará disponível para outros usuários em breve.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{{action_url}}" style="background-color: #7c3aed; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Ver Minhas Contribuições</a>
+          </div>
+          <p style="color: #666; font-size: 14px;">Obrigado por tornar o {{app_name}} melhor para todos!</p>
+        </div>
+      `,
+      text_content: "✅ Contribuição Recebida!\n\nOlá {{contributor_name}},\n\nObrigado por contribuir!\n\nDetalhes:\n- Produto: {{product_name}}\n- Preço: R$ {{price}}\n- Loja: {{store_name}}\n- Local: {{city}}, {{state}}\n- Data: {{date}}\n\nVer contribuições: {{action_url}}\n\nObrigado!",
+      variables: ["contributor_name", "product_name", "price", "store_name", "city", "state", "date", "action_url", "app_name"]
+    },
+    {
+      name: "Lembrete de Renovação",
+      subject: "🔔 Seu plano {{plan_name}} expira em {{days_remaining}} dias",
+      html_content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #ea580c;">🔔 Lembrete de Renovação</h1>
+          <p>Olá {{user_name}},</p>
+          <p>Seu plano <strong>{{plan_name}}</strong> expira em <strong>{{days_remaining}} dias</strong>.</p>
+          <div style="background-color: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #ea580c; margin-top: 0;">Detalhes da Assinatura</h3>
+            <p><strong>Plano:</strong> {{plan_name}}</p>
+            <p><strong>Expira em:</strong> {{expiry_date}}</p>
+            <p><strong>Valor:</strong> R$ {{plan_price}}/mês</p>
+          </div>
+          <p>Renove agora para continuar aproveitando todos os benefícios:</p>
+          <ul>
+            <li>Comparações ilimitadas</li>
+            <li>Alertas de preços personalizados</li>
+            <li>Relatórios detalhados</li>
+            <li>Suporte prioritário</li>
+          </ul>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{{renewal_url}}" style="background-color: #ea580c; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Renovar Agora</a>
+          </div>
+          <p style="color: #666; font-size: 14px;">Precisa de ajuda? Entre em contato conosco.</p>
+        </div>
+      `,
+      text_content: "🔔 Lembrete de Renovação\n\nOlá {{user_name}},\n\nSeu plano {{plan_name}} expira em {{days_remaining}} dias.\n\nDetalhes:\n- Plano: {{plan_name}}\n- Expira: {{expiry_date}}\n- Valor: R$ {{plan_price}}/mês\n\nRenovar: {{renewal_url}}\n\nPrecisa de ajuda? Entre em contato.",
+      variables: ["user_name", "plan_name", "days_remaining", "expiry_date", "plan_price", "renewal_url"]
+    }
+  ];
+
+  const importExampleTemplates = async () => {
+    try {
+      setIsImporting(true);
+      
+      // Check which templates already exist
+      const existingTemplates = templates.map(t => t.name);
+      const templatesToImport = exampleTemplates.filter(
+        template => !existingTemplates.includes(template.name)
+      );
+
+      if (templatesToImport.length === 0) {
+        toast.info("Todos os templates de exemplo já existem");
+        return;
+      }
+
+      // Import each template
+      for (const template of templatesToImport) {
+        await emailTemplatesService.createTemplate(template);
+      }
+
+      toast.success(`${templatesToImport.length} templates importados com sucesso`);
+      await loadTemplates();
+    } catch (error) {
+      toast.error("Erro ao importar templates");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const filteredTemplates = templates.filter(template =>
     template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     template.subject.toLowerCase().includes(searchQuery.toLowerCase())
@@ -146,13 +308,27 @@ export const EmailTemplatesList: React.FC = () => {
             Gerencie templates reutilizáveis para notificações por email
           </p>
         </div>
-        <Button onClick={() => {
-          setSelectedTemplate(null);
-          setIsEditorOpen(true);
-        }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Template
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={importExampleTemplates}
+            disabled={isImporting}
+          >
+            {isImporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Importar Exemplos
+          </Button>
+          <Button onClick={() => {
+            setSelectedTemplate(null);
+            setIsEditorOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Template
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center space-x-2">
