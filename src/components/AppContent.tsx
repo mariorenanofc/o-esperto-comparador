@@ -26,6 +26,15 @@ import AdminLogin from "@/pages/admin/AdminLogin";
 import NotAuthorized from "@/pages/admin/NotAuthorized";
 import Admin from "@/pages/Admin";
 import UserDetailPage from "@/pages/admin/UserDetailPage";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import Dashboard from "@/pages/admin/Dashboard";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import Content from "@/pages/admin/Content";
+import AdminNotifications from "@/pages/admin/AdminNotifications";
+import Billing from "@/pages/admin/Billing";
+import Security from "@/pages/admin/Security";
+import AdminSettings from "@/pages/admin/AdminSettings";
+import Analytics from "@/pages/admin/Analytics";
 
 import PWAInstallBanner from "./PWAInstallBanner";
 import { PWAInstallPromotion } from "./PWAInstallPromotion";
@@ -94,31 +103,107 @@ export const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            }
-          />
-          <Route path="/admin/users" element={<Navigate to="/admin" replace />} />
-          <Route 
-            path="/admin/user/:userId" 
-            element={
-              <AdminRoute>
+        {/* Admin Routes */}
+        <Route 
+          path="/admin" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Dashboard />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/users" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/user/:userId" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
                 <UserDetailPage />
-              </AdminRoute>
-            } 
-          />
-          <Route 
-            path="/admin/users/:userId" 
-            element={
-              <AdminRoute>
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/users/:userId" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
                 <UserDetailPage />
-              </AdminRoute>
-            } 
-          />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/content" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Content />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/notifications" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminNotifications />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/billing" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Billing />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/security" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Security />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/settings" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminSettings />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/analytics" 
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Analytics />
+              </AdminLayout>
+            </AdminRoute>
+          } 
+        />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           {/* User Authentication Routes */}
