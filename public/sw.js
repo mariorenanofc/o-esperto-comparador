@@ -9,7 +9,17 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+      .then((cache) => {
+        // Add resources one by one and ignore failures
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            cache.add(url).catch(err => {
+              console.warn('Failed to cache:', url, err);
+              return null;
+            })
+          )
+        );
+      })
   );
 });
 

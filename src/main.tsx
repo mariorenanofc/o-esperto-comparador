@@ -4,9 +4,63 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
+// Add error boundary wrapper
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Error caught by boundary:", error, errorInfo);
+    
+    // Log additional context about potential extension interference
+    const hasExtensionScripts = Array.from(document.scripts).some(script => 
+      script.src && script.src.includes('chrome-extension://')
+    );
+    
+    if (hasExtensionScripts) {
+      console.warn("Browser extensions detected - this may be related to the error");
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">
+              Algo deu errado
+            </h1>
+            <p className="text-gray-600 mb-4">
+              Recarregue a página para tentar novamente.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Recarregar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Enhanced initialization with extension interference protection
 let initializationAttempts = 0;
 const MAX_INIT_ATTEMPTS = 3;
+let appRoot: ReturnType<typeof createRoot> | null = null;
 
 function initializeApp() {
   try {
@@ -26,9 +80,12 @@ function initializeApp() {
       container.innerHTML = '';
     }
 
-    const root = createRoot(container);
+    // Create root only once to avoid warnings
+    if (!appRoot) {
+      appRoot = createRoot(container);
+    }
     
-    root.render(
+    appRoot.render(
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
@@ -84,59 +141,6 @@ if (document.readyState === 'loading') {
 } else {
   // DOM is already ready
   initializeApp();
-}
-
-// Add error boundary wrapper
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
-    
-    // Log additional context about potential extension interference
-    const hasExtensionScripts = Array.from(document.scripts).some(script => 
-      script.src && script.src.includes('chrome-extension://')
-    );
-    
-    if (hasExtensionScripts) {
-      console.warn("Browser extensions detected - this may be related to the error");
-    }
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">
-              Algo deu errado
-            </h1>
-            <p className="text-gray-600 mb-4">
-              Recarregue a página para tentar novamente.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              Recarregar
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
 }
 
 // This will be handled by the new initializeApp function
