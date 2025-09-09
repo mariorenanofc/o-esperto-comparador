@@ -17,12 +17,48 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // SECURITY: Extract and validate JWT token
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Missing or invalid authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    
     console.log('🧹 Starting cleanup of old daily offers...')
 
-    // Initialize Supabase client with service role key for admin operations
+    // Initialize Supabase client with anon key to verify user
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
+    // Create client for user verification
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    })
+    
+    // SECURITY: Verify user is admin
+    const { data: user, error: userError } = await userSupabase.auth.getUser()
+    if (userError || !user?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Check if user is admin using database function
+    const { data: isAdmin, error: adminError } = await userSupabase.rpc('is_user_admin')
+    if (adminError || !isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Insufficient privileges - admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Now proceed with cleanup using service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Calculate cutoff date: 30 days ago

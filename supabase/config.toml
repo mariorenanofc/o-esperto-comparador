@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.subscription-management]
 verify_jwt = true
+
+[functions.cleanup-old-offers]
+verify_jwt = true
