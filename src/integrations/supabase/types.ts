@@ -41,6 +41,126 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_alerts: {
+        Row: {
+          alert_type: string
+          comparison_operator: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_triggered: string | null
+          metric_name: string
+          notification_channels: Json | null
+          threshold_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          comparison_operator?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_triggered?: string | null
+          metric_name: string
+          notification_channels?: Json | null
+          threshold_value: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          comparison_operator?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_triggered?: string | null
+          metric_name?: string
+          notification_channels?: Json | null
+          threshold_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          page_url: string | null
+          properties: Json | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          page_url?: string | null
+          properties?: Json | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          page_url?: string | null
+          properties?: Json | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      api_performance_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          method: string
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number
+          status_code: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          method: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms: number
+          status_code: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          method?: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number
+          status_code?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -230,6 +350,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          html_content: string
+          id: string
+          name: string
+          subject: string
+          text_content: string | null
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          html_content: string
+          id?: string
+          name: string
+          subject: string
+          text_content?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          html_content?: string
+          id?: string
+          name?: string
+          subject?: string
+          text_content?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
       }
       monthly_reports: {
         Row: {
@@ -824,6 +980,48 @@ export type Database = {
           total_invested?: number | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_dashboard_widgets: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          height: number
+          id: string
+          position_x: number
+          position_y: number
+          updated_at: string
+          user_id: string
+          widget_config: Json
+          widget_type: string
+          width: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          updated_at?: string
+          user_id: string
+          widget_config?: Json
+          widget_type: string
+          width?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          updated_at?: string
+          user_id?: string
+          widget_config?: Json
+          widget_type?: string
+          width?: number
         }
         Relationships: []
       }

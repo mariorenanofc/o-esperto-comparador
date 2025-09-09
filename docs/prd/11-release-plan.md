@@ -8,10 +8,10 @@
 - [x] **v1.2** - PWA e Offline Mode
 - [x] **v1.3** - Admin Panel Avançado (Fases 1 & 2)
 
-### Q2 2025 🔄
+## Q2 2025 ✅
 - [✅] **v1.4** - Sistema de Notificações (90% completo)
-- [✅] **v1.5** - Analytics Avançado (85% completo)
-- [ ] **v1.6** - API Pública
+- [✅] **v1.5** - Analytics Avançado (90% completo)
+- [⏳] **v1.6** - API Pública (Em desenvolvimento)
 
 ### Q3 2025 📝
 - [ ] **v2.0** - Machine Learning

@@ -11,6 +11,7 @@ import ThemeProvider from "./components/ThemeProvider";
 import { AppContent } from "./components/AppContent";
 import { useDataPreloader } from "./hooks/useOptimizedData";
 import { CacheMonitor } from "./components/CacheMonitor";
+import { useAnalytics } from "./hooks/useAnalytics";
 
 // Importações diretas para evitar problemas
 import PushInitializer from "./components/PushInitializer";
@@ -19,6 +20,7 @@ import { NotificationSystemEnhanced } from "./components/NotificationSystemEnhan
 // Component interno para usar hooks
 const AppWithHooks: React.FC = () => {
   useDataPreloader(); // Preload de dados críticos
+  useAnalytics(); // Analytics tracking
   
   // Defer non-critical features for faster first paint on mobile
   const [deferReady, setDeferReady] = React.useState(false);

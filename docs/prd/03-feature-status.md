@@ -114,62 +114,56 @@
 - `src/components/ui/`
 - `src/components/ThemeProvider.tsx`
 
+### ✅ Notificações (90% - Funcional)
+**Status**: Sistema básico implementado
+**Implementado**:
+- [x] Push notifications com service worker
+- [x] Notificações in-app em tempo real  
+- [x] Sistema de preferências do usuário
+- [x] Quiet hours para usuários premium
+- [x] Templates de email para admins
+- [x] Histórico de notificações
+- [x] Rate limiting por plano
+- [x] Segmentação por localização
+- [x] Sistema de alertas automáticos
+
+**Pendente**:
+- [ ] Integração completa com provedor de email (Resend)
+- [ ] Templates de email mais sofisticados
+- [ ] A/B testing para notificações
+
+---
+
+### ✅ Analytics Avançado (90% - Funcional)
+**Status**: Implementação avançada completa
+**Implementado**:
+- [x] Tracking completo de eventos (page views, ações, erros)
+- [x] Web Vitals monitoring automático
+- [x] Performance de API tracking
+- [x] Dashboard customizável por usuário
+- [x] Sistema de alertas automáticos
+- [x] Exportação de dados em múltiplos formatos
+- [x] Métricas de retenção e engajamento
+- [x] Analytics em tempo real
+- [x] Segmentação avançada de usuários
+- [x] Tabelas de dados analytics no banco
+
+**Pendente**:
+- [ ] Integração com Google Analytics 4
+- [ ] Machine learning para insights automáticos
+- [ ] Predição de churn avançada
+
+**Arquivos implementados:**
+- `src/lib/analytics.ts` - Serviço de analytics
+- `src/hooks/useAnalytics.tsx` - Hook para tracking
+- `src/components/analytics/CustomDashboard.tsx`
+- `src/components/analytics/AlertsManager.tsx`
+- `src/services/emailService.ts` - Serviço de email
+- Tabelas: `analytics_events`, `api_performance_logs`, `user_dashboard_widgets`, `analytics_alerts`, `email_templates`
+
 ---
 
 ### 🔄 Em Desenvolvimento
-
-### 📊 Analytics Avançado
-- [x] **Métricas Detalhadas** - KPIs específicos implementados
-- [x] **Dashboards Admin** - Gráficos e estatísticas em tempo real
-- [x] **Exportação de Dados** - Sistema completo CSV/PDF
-- [x] **Monitoramento de Uso** - Tracking de features e performance
-- [x] **Estatísticas de Usuários** - Análise de comportamento
-- [x] **Dashboards Personalizáveis** - Configuração pelo usuário
-- [x] **Alertas Automáticos** - Sistema de alertas configurável
-- [ ] **Analytics Preditivos** - Tendências e previsões
-
-**Status**: 85% completo
-**Arquivos implementados:**
-- `src/pages/admin/Analytics.tsx`
-- `src/components/admin/ReportsExporter.tsx`
-- `src/components/admin/PlatformStatsCards.tsx`
-- `src/components/analytics/CustomDashboard.tsx`
-- `src/components/analytics/AlertsManager.tsx`
-- `src/services/supabase/adminService.ts`
-
-**Pendências:**
-- Integração com Google Analytics
-- Machine learning para previsões
-
----
-
-### 🔔 Sistema de Notificações  
-- [x] **Push Notifications** - Notificações web push configuradas
-- [x] **In-app Notifications** - Sistema completo implementado
-- [x] **Preferências de Notificação** - Controle granular pelo usuário
-- [x] **Notificações Admin** - Envio configurável para usuários
-- [x] **Histórico de Notificações** - Log completo de envios
-- [x] **Rate Limiting** - Controle de frequência por plano
-- [x] **Quiet Hours** - Horários personalizáveis implementados
-- [x] **Email Templates** - Editor de templates configurável
-- [ ] **Email Notifications** - Envio efetivo por email
-
-**Status**: 90% completo
-**Arquivos implementados:**
-- `src/components/NotificationSystem.tsx`
-- `src/components/admin/NotificationSender.tsx`
-- `src/components/notifications/NotificationCenter.tsx`
-- `src/components/notifications/NotificationSettings.tsx`
-- `src/components/notifications/QuietHoursSettings.tsx`
-- `src/components/notifications/EmailTemplateEditor.tsx`
-- `src/services/push/pushService.ts`
-- `supabase/functions/notify-user/`
-
-**Pendências:**
-- Integração com provedores de email (SendGrid/Mailgun)
-
----
-
 ### 🔍 Busca Avançada
 - [ ] **Busca Inteligente** - Auto-complete melhorado
 - [ ] **Filtros Avançados** - Múltiplos critérios
@@ -185,30 +179,6 @@
 - Algoritmo de relevância
 - Cache de resultados
 - Integração com APIs externas
-
----
-
-### 📊 Analytics Avançado
-- [x] **Métricas Detalhadas** - KPIs específicos implementados
-- [x] **Dashboards Admin** - Gráficos e estatísticas em tempo real
-- [x] **Exportação de Dados** - Sistema completo CSV/PDF
-- [x] **Monitoramento de Uso** - Tracking de features e performance
-- [x] **Estatísticas de Usuários** - Análise de comportamento
-- [ ] **Dashboards Personalizáveis** - Configuração pelo usuário
-- [ ] **Alertas Automáticos** - Notificações baseadas em métricas
-- [ ] **Analytics Preditivos** - Tendências e previsões
-
-**Status**: 60% completo
-**Arquivos implementados:**
-- `src/pages/admin/Analytics.tsx`
-- `src/components/admin/ReportsExporter.tsx`
-- `src/components/admin/PlatformStatsCards.tsx`
-- `src/services/supabase/adminService.ts`
-
-**Pendências:**
-- Dashboards configuráveis por usuário
-- Sistema de alertas automáticos
-- Integração com Google Analytics
 
 ---
 
