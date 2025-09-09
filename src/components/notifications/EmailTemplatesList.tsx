@@ -12,16 +12,14 @@ import {
   Send, 
   Mail,
   Search,
-  Loader2,
-  Eye
+  Loader2
 } from 'lucide-react';
 import { EmailTemplate, emailTemplatesService } from '@/services/emailTemplatesService';
-import { emailService } from '@/services/emailService';
 import { EmailTemplateEditor } from './EmailTemplateEditor';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const EmailTemplatesList: React.FC = () => {
-  const { toast } = useToast();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -41,11 +39,7 @@ export const EmailTemplatesList: React.FC = () => {
       const templatesData = await emailTemplatesService.getTemplates();
       setTemplates(templatesData);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar templates",
-        variant: "destructive"
-      });
+      toast.error("Erro ao carregar templates");
     } finally {
       setLoading(false);
     }
@@ -55,27 +49,17 @@ export const EmailTemplatesList: React.FC = () => {
     try {
       if (template.id) {
         await emailTemplatesService.updateTemplate(template.id, template);
-        toast({
-          title: "Template atualizado",
-          description: "Template foi atualizado com sucesso"
-        });
+        toast.success("Template atualizado com sucesso");
       } else {
         await emailTemplatesService.createTemplate(template);
-        toast({
-          title: "Template criado",
-          description: "Template foi criado com sucesso"
-        });
+        toast.success("Template criado com sucesso");
       }
       
       await loadTemplates();
       setIsEditorOpen(false);
       setSelectedTemplate(null);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar template",
-        variant: "destructive"
-      });
+      toast.error("Erro ao salvar template");
     }
   };
 
@@ -84,17 +68,10 @@ export const EmailTemplatesList: React.FC = () => {
 
     try {
       await emailTemplatesService.deleteTemplate(templateId);
-      toast({
-        title: "Template excluído",
-        description: "Template foi excluído com sucesso"
-      });
+      toast.success("Template excluído com sucesso");
       await loadTemplates();
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir template",
-        variant: "destructive"
-      });
+      toast.error("Erro ao excluir template");
     }
   };
 
@@ -108,30 +85,37 @@ export const EmailTemplatesList: React.FC = () => {
 
     try {
       setIsTesting(true);
-      await emailService.sendEmail({
-        to: testEmail,
-        template_id: selectedTemplate.id!,
-        variables: {
-          user_name: 'Usuário Teste',
-          app_name: 'Economia Comparada',
-          date: new Date().toLocaleDateString('pt-BR'),
-          action_url: window.location.origin
+      
+      // Use the send-email edge function directly
+      const response = await supabase.functions.invoke('send-email', {
+        body: {
+          to: testEmail,
+          template_id: selectedTemplate.id!,
+          variables: {
+            user_name: 'Usuário Teste',
+            app_name: 'Economia Comparada',
+            date: new Date().toLocaleDateString('pt-BR'),
+            action_url: window.location.origin,
+            // Add any other variables from the template
+            ...selectedTemplate.variables?.reduce((acc, variable) => {
+              acc[variable] = `[Teste ${variable}]`;
+              return acc;
+            }, {} as Record<string, string>)
+          }
         }
       });
 
-      toast({
-        title: "Teste enviado",
-        description: `Email de teste enviado para ${testEmail}`
-      });
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast.success(`Email de teste enviado para ${testEmail} (simulado)`);
       
       setIsTestDialogOpen(false);
       setTestEmail('');
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar email de teste",
-        variant: "destructive"
-      });
+      console.error('Error sending test email:', error);
+      toast.error("Erro ao enviar email de teste");
     } finally {
       setIsTesting(false);
     }

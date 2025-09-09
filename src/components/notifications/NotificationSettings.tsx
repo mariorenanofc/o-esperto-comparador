@@ -241,6 +241,53 @@ export const NotificationSettings: React.FC = () => {
 
         <Separator />
 
+        {/* Horário Silencioso - Consolidado aqui */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Horário Silencioso
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Ativar Horário Silencioso</p>
+                <p className="text-sm text-muted-foreground">Não receber notificações durante período específico</p>
+              </div>
+              <Switch
+                checked={localSettings.quiet_hours_enabled}
+                onCheckedChange={(checked) => updateLocalSetting('quiet_hours_enabled', checked)}
+              />
+            </div>
+            
+            {localSettings.quiet_hours_enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-lg">
+                <div>
+                  <Label htmlFor="quiet_start">Início (22:00 padrão)</Label>
+                  <Input
+                    id="quiet_start"
+                    type="time"
+                    value={localSettings.quiet_hours_start}
+                    onChange={(e) => updateLocalSetting('quiet_hours_start', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="quiet_end">Fim (08:00 padrão)</Label>
+                  <Input
+                    id="quiet_end"
+                    type="time"
+                    value={localSettings.quiet_hours_end}
+                    onChange={(e) => updateLocalSetting('quiet_hours_end', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
         {/* Tipos de Notificação */}
         <div>
           <h3 className="text-lg font-semibold mb-4">Tipos de Notificação</h3>

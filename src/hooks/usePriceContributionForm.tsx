@@ -6,6 +6,7 @@ import { useFormValidation } from './price-contribution/useFormValidation';
 import { useFormState } from './price-contribution/useFormState';
 import { useFormSubmission } from './price-contribution/useFormSubmission';
 import { toast } from 'sonner';
+import { analytics } from '@/lib/analytics';
 
 interface UsePriceContributionFormProps {
   onClose?: () => void;
@@ -46,7 +47,30 @@ export const usePriceContributionForm = (props?: UsePriceContributionFormProps) 
     }
 
     // Submeter contribuição
-    await submitContribution(formData, user!, profile, resetForm, city, state);
+    const startTime = Date.now();
+    try {
+      await submitContribution(formData, user!, profile, resetForm, city, state);
+      
+      // Track successful contribution
+      await analytics.trackContribution({
+        productName: formData.productName,
+        storeName: formData.storeName,
+        price: formData.price,
+        city: city || 'unknown',
+        state: state || 'unknown',
+        timeMs: Date.now() - startTime
+      });
+    } catch (error) {
+      await analytics.trackError(error as Error, { 
+        context: 'price_contribution',
+        formData: {
+          productName: formData.productName,
+          storeName: formData.storeName,
+          price: formData.price
+        }
+      });
+      throw error;
+    }
   };
 
   return {

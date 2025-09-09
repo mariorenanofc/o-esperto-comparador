@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanTier } from "@/lib/plans";
+import { analytics } from '@/lib/analytics';
 
 type UserProfile = {
   id: string;
@@ -90,6 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signOut = async () => {
     try {
+      // Track logout before signing out
+      await analytics.trackUserAction('logout');
+      
       // Mark user as offline before signing out
       if (user) {
         await supabase
@@ -124,6 +128,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           redirectTo: `${window.location.origin}${redirectPath}`,
         },
       });
+
+      // Track Google sign-in attempt
+      if (data && !error) {
+        await analytics.trackUserAction('login', {
+          loginMethod: 'google_oauth',
+          redirectPath
+        });
+      }
 
       return { error };
     } catch (error) {

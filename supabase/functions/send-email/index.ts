@@ -83,11 +83,25 @@ const handler = async (req: Request): Promise<Response> => {
 
       // Replace variables in content
       if (emailRequest.variables) {
+        const templateVariables = template.variables || [];
+        console.log('Template variables:', templateVariables);
+        console.log('Provided variables:', emailRequest.variables);
+
         for (const [key, value] of Object.entries(emailRequest.variables)) {
           const placeholder = `{{${key}}}`;
           subject = subject.replace(new RegExp(placeholder, 'g'), value);
           htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), value);
           textContent = textContent.replace(new RegExp(placeholder, 'g'), value);
+        }
+
+        // Check for unreplaced variables and log warnings
+        const unreplacedVars = templateVariables.filter(variable => 
+          !emailRequest.variables!.hasOwnProperty(variable)
+        );
+        
+        if (unreplacedVars.length > 0) {
+          console.warn(`Missing variables in email request: ${unreplacedVars.join(', ')}`);
+          console.warn('These variables will appear as placeholders in the email');
         }
       }
     }
