@@ -331,15 +331,14 @@ export const supabaseAdminService = {
     console.log("=== ADMIN SERVICE: FETCHING ANALYTICS ===");
 
     try {
+      await this.ensureAdminAccess();
+
       const { data: contributions, error: contributionsError } = await supabase
         .from("daily_offers")
         .select("*");
 
       if (contributionsError) {
-        console.error(
-          "Error fetching contributions for analytics:",
-          contributionsError
-        );
+        console.error("Error fetching contributions for analytics:", contributionsError);
         throw contributionsError;
       }
 
@@ -348,10 +347,7 @@ export const supabaseAdminService = {
         .select("*");
 
       if (suggestionsError) {
-        console.error(
-          "Error fetching suggestions for analytics:",
-          suggestionsError
-        );
+        console.error("Error fetching suggestions for analytics:", suggestionsError);
         throw suggestionsError;
       }
 
@@ -364,19 +360,168 @@ export const supabaseAdminService = {
         throw usersError;
       }
 
+      const { data: comparisons, error: comparisonsError } = await supabase
+        .from("comparisons")
+        .select("*");
+
+      if (comparisonsError) {
+        console.error("Error fetching comparisons for analytics:", comparisonsError);
+        throw comparisonsError;
+      }
+
+      // Calculate more detailed analytics
+      const today = new Date();
+      const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+      const newUsersThisMonth = users?.filter(u => new Date(u.created_at) >= thisMonth).length || 0;
+      const newUsersLastMonth = users?.filter(u => {
+        const createdAt = new Date(u.created_at);
+        return createdAt >= lastMonth && createdAt < thisMonth;
+      }).length || 0;
+
+      const premiumUsers = users?.filter(u => ['premium', 'pro', 'admin'].includes(u.plan || '')).length || 0;
+
       const analytics = {
         totalContributions: contributions?.length || 0,
-        verifiedContributions:
-          contributions?.filter((c) => c.verified).length || 0,
+        verifiedContributions: contributions?.filter((c) => c.verified).length || 0,
+        pendingContributions: contributions?.filter((c) => !c.verified).length || 0,
         totalSuggestions: suggestions?.length || 0,
+        openSuggestions: suggestions?.filter((s) => s.status === 'open').length || 0,
         totalUsers: users?.length || 0,
         activeUsers: users?.filter((u) => u.is_online).length || 0,
+        newUsersThisMonth,
+        newUsersLastMonth,
+        premiumUsers,
+        freeUsers: (users?.length || 0) - premiumUsers,
+        totalComparisons: comparisons?.length || 0,
+        comparisonsThisMonth: comparisons?.filter(c => new Date(c.created_at || '') >= thisMonth).length || 0,
+        // Growth calculations
+        userGrowthRate: newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100 : 0,
       };
 
       console.log("✅ Analytics carregadas:", analytics);
       return analytics;
     } catch (error) {
       console.error("❌ Erro ao carregar analytics:", error);
+      throw error;
+    }
+  },
+
+  async getDatabaseUsage(): Promise<any> {
+    try {
+      await this.ensureAdminAccess();
+      
+      const { data, error } = await supabase.rpc('get_db_usage');
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error("❌ Erro ao obter uso do banco:", error);
+      throw error;
+    }
+  },
+
+  async getAuditLogs(limit = 50): Promise<any[]> {
+    try {
+      await this.ensureAdminAccess();
+      
+      const { data, error } = await supabase
+        .from("admin_audit_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("❌ Erro ao carregar logs de auditoria:", error);
+      throw error;
+    }
+  },
+
+  async getRateLimits(): Promise<any[]> {
+    try {
+      await this.ensureAdminAccess();
+      
+      const { data, error } = await supabase
+        .from("rate_limits")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("❌ Erro ao carregar rate limits:", error);
+      throw error;
+    }
+  },
+
+  async sendNotification(
+    userIds: string[], 
+    title: string, 
+    message: string, 
+    type: string = 'admin_announcement'
+  ): Promise<void> {
+    try {
+      await this.ensureAdminAccess();
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        throw new Error('No valid session for admin operation');
+      }
+
+      const { error } = await supabase.functions.invoke('notify-admins', {
+        body: { 
+          userIds, 
+          title, 
+          message, 
+          type,
+          sendPush: true 
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      
+      await this.logAdminAction('SEND_NOTIFICATION', null, { 
+        userCount: userIds.length, 
+        title, 
+        type 
+      });
+    } catch (error) {
+      console.error("❌ Erro ao enviar notificação:", error);
+      throw error;
+    }
+  },
+
+  async performMaintenance(action: string): Promise<void> {
+    try {
+      await this.ensureAdminAccess();
+      
+      let result;
+      switch (action) {
+        case 'cleanup_sessions':
+          result = await supabase.rpc('cleanup_expired_sessions');
+          break;
+        case 'cleanup_notifications':
+          result = await supabase.rpc('cleanup_old_notifications');
+          break;
+        case 'mark_offline':
+          result = await supabase.rpc('mark_inactive_users_offline');
+          break;
+        default:
+          throw new Error('Ação de manutenção inválida');
+      }
+
+      if (result?.error) throw result.error;
+      
+      await this.logAdminAction('MAINTENANCE', null, { action });
+    } catch (error) {
+      console.error("❌ Erro na manutenção:", error);
       throw error;
     }
   },
