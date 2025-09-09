@@ -470,44 +470,44 @@ const Index: React.FC = () => {
                 <h3 className="text-sm font-semibold mb-2">Links</h3>
                 <ul className="space-y-1">
                   <li>
-                    <a
-                      href="/"
+                    <Link
+                      to="/"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Início
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="/comparison"
+                    <Link
+                      to="/comparison"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Comparar
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="/reports"
+                    <Link
+                      to="/reports"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Relatórios
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="/contribute"
+                    <Link
+                      to="/contribute"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Contribuir
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="/plans"
+                    <Link
+                      to="/plans"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Planos
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
@@ -515,20 +515,20 @@ const Index: React.FC = () => {
                 <h3 className="text-sm font-semibold mb-2">Legal</h3>
                 <ul className="space-y-1">
                   <li>
-                    <a
-                      href="/terms"
+                    <Link
+                      to="/terms"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Termos
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a
-                      href="/privacy"
+                    <Link
+                      to="/privacy"
                       className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
                     >
                       Privacidade
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>

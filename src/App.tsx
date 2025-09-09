@@ -12,9 +12,9 @@ import { AppContent } from "./components/AppContent";
 import { useDataPreloader } from "./hooks/useOptimizedData";
 import { CacheMonitor } from "./components/CacheMonitor";
 
-// Lazy-loaded non-critical features for better mobile performance
-const PushInitializerLazy = React.lazy(() => import("./components/PushInitializer"));
-const NotificationSystemLazy = React.lazy(() => import("./components/NotificationSystemEnhanced").then(m => ({ default: m.NotificationSystemEnhanced })));
+// Importações diretas para evitar problemas
+import PushInitializer from "./components/PushInitializer";
+import { NotificationSystemEnhanced } from "./components/NotificationSystemEnhanced";
 
 // Component interno para usar hooks
 const AppWithHooks: React.FC = () => {
@@ -43,10 +43,10 @@ const AppWithHooks: React.FC = () => {
       <AppContent />
       <CacheMonitor />
       {deferReady && (
-        <React.Suspense fallback={null}>
-          <PushInitializerLazy />
-          <NotificationSystemLazy />
-        </React.Suspense>
+        <>
+          <PushInitializer />
+          <NotificationSystemEnhanced />
+        </>
       )}
       <Toaster />
     </div>
