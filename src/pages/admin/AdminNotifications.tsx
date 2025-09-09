@@ -1,8 +1,7 @@
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { NotificationSender } from "@/components/admin/NotificationSender";
-import { EmailTemplateEditor } from "@/components/notifications/EmailTemplateEditor";
+import { EmailTemplatesList } from "@/components/notifications/EmailTemplatesList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function AdminNotifications() {
   return (
@@ -26,24 +25,7 @@ export default function AdminNotifications() {
           </TabsContent>
           
           <TabsContent value="templates" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Templates de Email</CardTitle>
-                <CardDescription>
-                  Crie e gerencie templates para notificações por email
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <EmailTemplateEditor 
-                  onSave={(template) => {
-                    console.log('Template saved:', template);
-                  }}
-                  onTest={(template) => {
-                    console.log('Template test:', template);
-                  }}
-                />
-              </CardContent>
-            </Card>
+            <EmailTemplatesList />
           </TabsContent>
         </Tabs>
       </div>

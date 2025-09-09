@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,20 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Mail, Eye, Save, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  htmlContent: string;
-  textContent: string;
-  variables: string[];
-}
+import { emailTemplatesService, EmailTemplate } from '@/services/emailTemplatesService';
+import { emailService } from '@/services/emailService';
 
 interface EmailTemplateEditorProps {
   template?: EmailTemplate;
-  onSave: (template: Omit<EmailTemplate, 'id'>) => void;
-  onTest?: (template: EmailTemplate) => void;
+  onSave: (template: EmailTemplate) => Promise<void>;
+  onTest?: (template: EmailTemplate) => Promise<void>;
 }
 
 export const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
@@ -30,14 +23,25 @@ export const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
   onTest
 }) => {
   const { toast } = useToast();
-  const [name, setName] = useState(template?.name || '');
-  const [subject, setSubject] = useState(template?.subject || '');
-  const [htmlContent, setHtmlContent] = useState(template?.htmlContent || '');
-  const [textContent, setTextContent] = useState(template?.textContent || '');
+  const [name, setName] = useState('');
+  const [subject, setSubject] = useState('');
+  const [htmlContent, setHtmlContent] = useState('');
+  const [textContent, setTextContent] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   const defaultVariables = ['{{user_name}}', '{{app_name}}', '{{date}}', '{{action_url}}'];
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (template) {
+      setName(template.name);
+      setSubject(template.subject);
+      setHtmlContent(template.html_content);
+      setTextContent(template.text_content || '');
+    }
+  }, [template]);
+
+  const handleSave = async () => {
     if (!name || !subject || (!htmlContent && !textContent)) {
       toast({
         title: "Erro",
@@ -47,30 +51,62 @@ export const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
       return;
     }
 
-    onSave({
-      name,
-      subject,
-      htmlContent,
-      textContent,
-      variables: defaultVariables
-    });
-
-    toast({
-      title: "Template salvo",
-      description: "Template de email foi salvo com sucesso"
-    });
-  };
-
-  const handleTest = () => {
-    if (onTest && template) {
-      onTest({
+    try {
+      setSaving(true);
+      const templateData: EmailTemplate = {
         ...template,
         name,
         subject,
-        htmlContent,
-        textContent,
+        html_content: htmlContent,
+        text_content: textContent,
         variables: defaultVariables
+      };
+
+      await onSave(templateData);
+
+      toast({
+        title: "Template salvo",
+        description: "Template de email foi salvo com sucesso"
       });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar template",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTest = async () => {
+    if (!onTest) return;
+
+    try {
+      setTesting(true);
+      const templateData: EmailTemplate = {
+        ...template,
+        name,
+        subject,
+        html_content: htmlContent,
+        text_content: textContent,
+        variables: defaultVariables
+      };
+
+      await onTest(templateData);
+
+      toast({
+        title: "Teste enviado",
+        description: "Email de teste foi enviado com sucesso"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar teste",
+        variant: "destructive"
+      });
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -160,9 +196,13 @@ export const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
           </Tabs>
 
           <div className="flex gap-2 pt-4">
-            <Button onClick={handleSave} className="flex items-center gap-2">
+            <Button 
+              onClick={handleSave} 
+              className="flex items-center gap-2"
+              disabled={saving}
+            >
               <Save className="h-4 w-4" />
-              Salvar Template
+              {saving ? 'Salvando...' : 'Salvar Template'}
             </Button>
             
             {onTest && (
@@ -170,9 +210,10 @@ export const EmailTemplateEditor: React.FC<EmailTemplateEditorProps> = ({
                 variant="outline"
                 onClick={handleTest}
                 className="flex items-center gap-2"
+                disabled={testing}
               >
                 <Send className="h-4 w-4" />
-                Testar Envio
+                {testing ? 'Enviando...' : 'Testar Envio'}
               </Button>
             )}
             
