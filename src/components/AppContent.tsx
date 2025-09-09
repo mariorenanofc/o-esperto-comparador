@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useRealTimeUserStatus } from "@/hooks/useRealTimeUserStatus";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -110,6 +110,7 @@ export const AppContent: React.FC = () => {
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/sign-in" element={<Navigate to="/signin" replace />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/success" element={<Success />} />
           <Route path="*" element={<NotFound />} />
