@@ -27,15 +27,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
+  // Pass-through to network to avoid interfering with module/chunk loading
+  event.respondWith(fetch(event.request));
 });
 
 self.addEventListener('push', (event) => {

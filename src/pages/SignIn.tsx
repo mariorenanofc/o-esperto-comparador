@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Chrome } from "lucide-react";
 
 const SignIn: React.FC = () => {
   const { signInWithGoogle, loading, user } = useAuth();
@@ -70,7 +69,7 @@ const SignIn: React.FC = () => {
             variant="outline"
           >
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Chrome className="w-5 h-5 text-white" />
+              <span className="text-white font-bold text-sm">G</span>
             </div>
             {loading ? "🔄 Conectando..." : "🚀 Continuar com Google"}
           </Button>
