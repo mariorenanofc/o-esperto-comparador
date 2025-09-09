@@ -24,6 +24,7 @@ type AuthContextType = {
   updateActivity: () => void;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<{ error: unknown }>;
+  signInWithGoogleWithRedirect: (redirectPath: string) => Promise<{ error: unknown }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: unknown }>;
 };
 
@@ -58,23 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      // Força atualização do plano para admins
-      const updatedProfile = data as UserProfile;
-      const isAdminEmail = updatedProfile.email === 'mariorenan25@gmail.com' || updatedProfile.email === 'mariovendasonline10k@gmail.com';
-      
-      if (isAdminEmail && updatedProfile.plan !== 'admin') {
-        // Atualizar perfil para admin se necessário
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ plan: 'admin', updated_at: new Date().toISOString() })
-          .eq("id", userId);
-          
-        if (!updateError) {
-          updatedProfile.plan = 'admin';
-        }
-      }
-
-      setProfile(updatedProfile);
+      setProfile(data as UserProfile);
     } catch (error) {
       console.error("Error in fetchProfile:", error);
     }
@@ -124,6 +109,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signInWithGoogle = async () => {
+    return signInWithGoogleWithRedirect("/");
+  };
+
+  const signInWithGoogleWithRedirect = async (redirectPath: string) => {
     try {
       // Prepare for sign in by cleaning up existing state
       const { prepareForSignIn } = await import('@/lib/authCleanup');
@@ -132,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}${redirectPath}`,
         },
       });
 
@@ -224,6 +213,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     updateActivity,
     signOut,
     signInWithGoogle,
+    signInWithGoogleWithRedirect,
     updateProfile,
   };
 

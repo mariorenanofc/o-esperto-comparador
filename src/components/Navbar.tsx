@@ -126,9 +126,9 @@ const Navbar = () => {
                 </Button>
               </div>
             ) : (
-              <Link to="/signin">
+              <Link to="/login">
                 <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-white">
-                  Entrar com Google
+                  Entrar
                 </Button>
               </Link>
             )}
@@ -239,9 +239,9 @@ const Navbar = () => {
                   </div>
                 </div>
               ) : (
-                <Link to="/signin" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                   <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-white w-full">
-                    Entrar com Google
+                    Entrar
                   </Button>
                 </Link>
               )}

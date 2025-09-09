@@ -24,11 +24,11 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/sign-in" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   if (!isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin/not-authorized" replace />;
   }
 
   console.log("AdminRoute: Access granted to admin panel");

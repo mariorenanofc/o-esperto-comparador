@@ -27,7 +27,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass-through to network to avoid interfering with module/chunk loading
+  // Handle navigation requests (SPA routing)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        // If network fails, return index.html for SPA routing
+        return caches.match('/') || fetch('/');
+      })
+    );
+    return;
+  }
+  
+  // For all other requests, pass through to network
   event.respondWith(fetch(event.request));
 });
 

@@ -21,6 +21,9 @@ import Notifications from "@/pages/Notifications";
 import Success from "@/pages/Success";
 import SignIn from "@/pages/SignIn";
 import SignUp from "@/pages/SignUp";
+import Login from "@/pages/Login";
+import AdminLogin from "@/pages/admin/AdminLogin";
+import NotAuthorized from "@/pages/admin/NotAuthorized";
 import Admin from "@/pages/Admin";
 import UserDetailPage from "@/pages/admin/UserDetailPage";
 
@@ -118,9 +121,15 @@ export const AppContent: React.FC = () => {
           />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/sign-in" element={<Navigate to="/signin" replace />} />
+          {/* User Authentication Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signin" element={<Navigate to="/login" replace />} />
+          <Route path="/sign-in" element={<Navigate to="/login" replace />} />
           <Route path="/signup" element={<SignUp />} />
+          
+          {/* Admin Authentication Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/not-authorized" element={<NotAuthorized />} />
           <Route path="/success" element={<Success />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
