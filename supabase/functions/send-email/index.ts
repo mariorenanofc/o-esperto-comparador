@@ -47,16 +47,28 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if user is admin
+    // Check if user is admin OR if they're sending test email to themselves
     const { data: isAdmin, error: adminError } = await supabase.rpc('check_admin_with_auth');
-    if (adminError || !isAdmin) {
+    
+    const emailRequest: EmailRequest = await req.json();
+    const isTestEmailToSelf = emailRequest.template_id && 
+                              emailRequest.to === user.email && 
+                              typeof emailRequest.to === 'string';
+    
+    if (adminError && !isTestEmailToSelf) {
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
+        JSON.stringify({ error: 'Authentication failed' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!isAdmin && !isTestEmailToSelf) {
+      return new Response(
+        JSON.stringify({ error: 'Admin access required or test email to own address only' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const emailRequest: EmailRequest = await req.json();
     
     let subject = emailRequest.subject || '';
     let htmlContent = emailRequest.html_content || '';

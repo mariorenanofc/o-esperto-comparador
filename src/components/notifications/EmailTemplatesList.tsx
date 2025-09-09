@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   Edit, 
   Trash2, 
@@ -19,8 +19,10 @@ import { EmailTemplate, emailTemplatesService } from '@/services/emailTemplatesS
 import { EmailTemplateEditor } from './EmailTemplateEditor';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export const EmailTemplatesList: React.FC = () => {
+  const { user } = useAuth();
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -79,6 +81,7 @@ export const EmailTemplatesList: React.FC = () => {
 
   const handleTestTemplate = async (template: EmailTemplate) => {
     setSelectedTemplate(template);
+    setTestEmail(user?.email || '');
     setIsTestDialogOpen(true);
   };
 
@@ -436,6 +439,9 @@ export const EmailTemplatesList: React.FC = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Testar Template</DialogTitle>
+            <DialogDescription>
+              Envie um email de teste usando este template para verificar como ficará formatado.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
