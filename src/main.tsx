@@ -4,17 +4,87 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Ensure React is properly initialized
-if (!React) {
-  throw new Error("React is not properly loaded");
+// Enhanced initialization with extension interference protection
+let initializationAttempts = 0;
+const MAX_INIT_ATTEMPTS = 3;
+
+function initializeApp() {
+  try {
+    // Ensure React is properly initialized
+    if (!React) {
+      throw new Error("React is not properly loaded");
+    }
+
+    const container = document.getElementById("root");
+    if (!container) {
+      throw new Error("Root element not found");
+    }
+
+    // Clear any potential interference from browser extensions
+    if (container.innerHTML && container.innerHTML.trim() !== '') {
+      console.warn('Root container has unexpected content, clearing...');
+      container.innerHTML = '';
+    }
+
+    const root = createRoot(container);
+    
+    root.render(
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    );
+    
+    console.log('App initialized successfully');
+  } catch (error) {
+    console.error(`Initialization attempt ${initializationAttempts + 1} failed:`, error);
+    
+    initializationAttempts++;
+    if (initializationAttempts < MAX_INIT_ATTEMPTS) {
+      console.log(`Retrying initialization in 1 second... (attempt ${initializationAttempts + 1}/${MAX_INIT_ATTEMPTS})`);
+      setTimeout(initializeApp, 1000);
+    } else {
+      // Final fallback - show error message directly in DOM
+      const container = document.getElementById("root");
+      if (container) {
+        container.innerHTML = `
+          <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f9fafb; padding: 20px;">
+            <div style="text-align: center; max-width: 500px;">
+              <h1 style="color: #dc2626; font-size: 24px; font-weight: bold; margin-bottom: 16px;">
+                Erro de Carregamento
+              </h1>
+              <p style="color: #6b7280; margin-bottom: 20px;">
+                A página não conseguiu carregar completamente. Isso pode ser causado por extensões do navegador.
+              </p>
+              <div style="margin-bottom: 20px;">
+                <p style="color: #374151; font-size: 14px; margin-bottom: 8px;">Tente:</p>
+                <ul style="color: #6b7280; font-size: 14px; text-align: left; display: inline-block;">
+                  <li>• Recarregar a página (F5)</li>
+                  <li>• Desabilitar extensões do navegador</li>
+                  <li>• Usar modo privado/anônimo</li>
+                  <li>• Limpar cache do navegador</li>
+                </ul>
+              </div>
+              <button 
+                onclick="window.location.reload()" 
+                style="background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;"
+              >
+                Recarregar Página
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
 }
 
-const container = document.getElementById("root");
-if (!container) {
-  throw new Error("Root element not found");
+// Wait for DOM to be ready before initializing
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  // DOM is already ready
+  initializeApp();
 }
-
-const root = createRoot(container);
 
 // Add error boundary wrapper
 class ErrorBoundary extends React.Component<
@@ -32,6 +102,15 @@ class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Error caught by boundary:", error, errorInfo);
+    
+    // Log additional context about potential extension interference
+    const hasExtensionScripts = Array.from(document.scripts).some(script => 
+      script.src && script.src.includes('chrome-extension://')
+    );
+    
+    if (hasExtensionScripts) {
+      console.warn("Browser extensions detected - this may be related to the error");
+    }
   }
 
   render() {
@@ -60,8 +139,4 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-root.render(
-  <ErrorBoundary>
-    <App />
-  </ErrorBoundary>
-);
+// This will be handled by the new initializeApp function
