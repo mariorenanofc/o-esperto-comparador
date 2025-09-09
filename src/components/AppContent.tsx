@@ -99,8 +99,17 @@ export const AppContent: React.FC = () => {
               </AdminRoute>
             }
           />
+          <Route path="/admin/users" element={<Navigate to="/admin" replace />} />
           <Route 
             path="/admin/user/:userId" 
+            element={
+              <AdminRoute>
+                <UserDetailPage />
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users/:userId" 
             element={
               <AdminRoute>
                 <UserDetailPage />

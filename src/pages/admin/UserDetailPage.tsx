@@ -219,7 +219,7 @@ const UserDetailPage: React.FC = () => {
       toast.success(
         `Usuário ${userProfile.name || userProfile.email} excluído com sucesso.`
       );
-      navigate("/admin/users");
+      navigate("/admin");
     } catch (error) {
       console.error("Error deleting user:", error);
       const errorMessage =
@@ -342,7 +342,7 @@ const UserDetailPage: React.FC = () => {
           <p className="text-red-500">
             Perfil do usuário não encontrado ou ID inválido.
           </p>
-          <Button onClick={() => navigate("/admin/users")} className="mt-4">
+          <Button onClick={() => navigate("/admin")} className="mt-4">
             Voltar para Gerenciamento de Usuários
           </Button>
         </div>
