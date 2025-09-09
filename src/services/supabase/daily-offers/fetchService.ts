@@ -27,8 +27,10 @@ export const fetchService = {
     
     try {
       const { data, error } = await supabase
-        .from('daily_offers_public')
+        .from('daily_offers')
         .select('*')
+        .eq('verified', true)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: false });
 
       if (error) {
