@@ -1,4 +1,4 @@
-const CACHE_NAME = 'o-esperto-comparador-v2';
+const CACHE_NAME = 'o-esperto-comparador-v3';
 const urlsToCache = [
   '/',
   '/icon-192.png',
@@ -7,20 +7,7 @@ const urlsToCache = [
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        // Add resources one by one and ignore failures
-        return Promise.allSettled(
-          urlsToCache.map(url => 
-            cache.add(url).catch(err => {
-              console.warn('Failed to cache:', url, err);
-              return null;
-            })
-          )
-        );
-      })
-  );
+  // Não tenta fazer cache durante a instalação para evitar falhas
 });
 
 self.addEventListener('activate', (event) => {
