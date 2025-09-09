@@ -86,15 +86,23 @@ export const EmailTemplatesList: React.FC = () => {
   };
 
   const sendTestEmail = async () => {
-    if (!selectedTemplate || !testEmail) return;
+    if (!selectedTemplate || !testEmail.trim()) return;
 
     try {
       setIsTesting(true);
       
+      // Parse recipients (support for multiple emails separated by comma)
+      const recipients = testEmail.split(',').map(email => email.trim()).filter(email => email);
+      
+      if (recipients.length === 0) {
+        toast.error("Por favor, insira pelo menos um destinatário válido");
+        return;
+      }
+
       // Use the send-email edge function directly
       const response = await supabase.functions.invoke('send-email', {
         body: {
-          to: testEmail,
+          to: recipients.length === 1 ? recipients[0] : recipients,
           template_id: selectedTemplate.id!,
           variables: {
             user_name: 'Usuário Teste',
@@ -114,13 +122,13 @@ export const EmailTemplatesList: React.FC = () => {
         throw response.error;
       }
 
-      toast.success(`Email de teste enviado para ${testEmail} (simulado)`);
+      toast.success(`Email enviado para ${recipients.length} destinatário(s)!`);
       
       setIsTestDialogOpen(false);
       setTestEmail('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test email:', error);
-      toast.error("Erro ao enviar email de teste");
+      toast.error(error.message || "Erro ao enviar email de teste");
     } finally {
       setIsTesting(false);
     }
@@ -438,47 +446,69 @@ export const EmailTemplatesList: React.FC = () => {
       <Dialog open={isTestDialogOpen} onOpenChange={setIsTestDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Testar Template</DialogTitle>
+            <DialogTitle>Testar Template de Email</DialogTitle>
             <DialogDescription>
-              Envie um email de teste usando este template para verificar como ficará formatado.
+              Envie um email de teste usando este template. As variáveis serão preenchidas automaticamente com valores de teste.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="test-email">Email de destino</Label>
-              <Input
-                id="test-email"
-                type="email"
-                placeholder="seu-email@exemplo.com"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsTestDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={sendTestEmail}
-                disabled={!testEmail || isTesting}
-              >
-                {isTesting ? (
-                  <>
+          
+          {selectedTemplate && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Template:</Label>
+                <p className="text-sm text-muted-foreground">{selectedTemplate.name}</p>
+              </div>
+              
+              <div>
+                <Label className="text-sm font-medium">Assunto:</Label>
+                <p className="text-sm text-muted-foreground">{selectedTemplate.subject}</p>
+              </div>
+
+              <div>
+                <Label htmlFor="test-email" className="text-sm font-medium">
+                  Destinatário(s) - separar por vírgula para múltiplos emails:
+                </Label>
+                <Input
+                  id="test-email"
+                  type="email"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  placeholder="email@exemplo.com, outro@exemplo.com"
+                  className="mt-1"
+                />
+              </div>
+
+              {selectedTemplate.variables && selectedTemplate.variables.length > 0 && (
+                <div>
+                  <Label className="text-sm font-medium">Variáveis que serão substituídas:</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedTemplate.variables.map((variable, index) => (
+                      <Badge key={index} variant="secondary">
+                        {variable}: [Teste {variable}]
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsTestDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={sendTestEmail} 
+                  disabled={isTesting || !testEmail.trim()}
+                >
+                  {isTesting ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Enviando...
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <Send className="h-4 w-4 mr-2" />
-                    Enviar Teste
-                  </>
-                )}
-              </Button>
+                  )}
+                  Enviar Teste
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
