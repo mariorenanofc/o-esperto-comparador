@@ -1,4 +1,4 @@
-const CACHE_NAME = 'o-esperto-comparador-v3';
+const CACHE_NAME = 'o-esperto-comparador-v4-realtime-fix';
 const urlsToCache = [
   '/',
   '/icon-192.png',

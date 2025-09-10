@@ -2,7 +2,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
 import { UserManagementAdvanced } from "@/components/admin/UserManagementAdvanced";
-import { RealtimePresence } from "@/components/admin/RealtimePresence";
+import { RealtimePresenceHardened } from "@/components/admin/RealtimePresenceHardened";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Users, 
@@ -42,7 +42,7 @@ const AdminUsers: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="presence">
-          <RealtimePresence />
+          <RealtimePresenceHardened />
         </TabsContent>
       </Tabs>
     </div>

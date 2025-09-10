@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NotificationBell } from '@/components/NotificationBell';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-import { useNotifications } from '@/hooks/useNotifications';
+import { ConnectionStatusIndicator } from '@/components/ConnectionStatusIndicator';
+import { useNotificationsHardened } from '@/hooks/useNotificationsHardened';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -10,8 +11,8 @@ export const NotificationSystemEnhanced: React.FC = () => {
   const isMobile = useIsMobile();
   const [showCenter, setShowCenter] = useState(false);
   
-  // Initialize notifications hook to set up real-time listeners
-  useNotifications();
+  // Initialize hardened notifications hook to set up real-time listeners
+  const { connectionStatus } = useNotificationsHardened();
 
   // Only show notifications if user is logged in
   if (!user) {
@@ -25,7 +26,10 @@ export const NotificationSystemEnhanced: React.FC = () => {
           ? 'top-20 right-4' 
           : 'top-6 right-6'
       }`}>
-        <NotificationBell onOpenCenter={() => setShowCenter(true)} />
+        <div className="flex flex-col items-end gap-2">
+          <NotificationBell onOpenCenter={() => setShowCenter(true)} />
+          <ConnectionStatusIndicator status={connectionStatus} />
+        </div>
       </div>
       
       <NotificationCenter 
