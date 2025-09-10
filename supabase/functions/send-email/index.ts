@@ -80,6 +80,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Sanitize template variables to prevent XSS
+    const sanitizeVariable = (value: string): string => {
+      return value
+        .replace(/[<>\"'&]/g, (match) => {
+          const entityMap: Record<string, string> = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '&': '&amp;'
+          };
+          return entityMap[match] || match;
+        })
+        .substring(0, 500); // Limit variable length
+    };
     
     let subject = emailRequest.subject || '';
     let htmlContent = emailRequest.html_content || '';
@@ -145,22 +160,6 @@ const handler = async (req: Request): Promise<Response> => {
     const replyTo = Deno.env.get('EMAIL_REPLY_TO');
     
     const resend = new Resend(resendApiKey);
-    
-    // Sanitize template variables to prevent XSS
-    const sanitizeVariable = (value: string): string => {
-      return value
-        .replace(/[<>\"'&]/g, (match) => {
-          const entityMap: Record<string, string> = {
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;',
-            '&': '&amp;'
-          };
-          return entityMap[match] || match;
-        })
-        .substring(0, 500); // Limit variable length
-    };
     
     // Send emails
     const results = [];

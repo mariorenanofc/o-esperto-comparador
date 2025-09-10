@@ -449,6 +449,11 @@ export const EmailTemplatesList: React.FC = () => {
             <DialogTitle>Testar Template de Email</DialogTitle>
             <DialogDescription>
               Envie um email de teste usando este template. As variáveis serão preenchidas automaticamente com valores de teste.
+              <br />
+              <span className="inline-flex items-center gap-1 mt-2 text-xs text-amber-600 dark:text-amber-400">
+                <span>⚠️</span>
+                <span>Modo de teste: emails são enviados de "onboarding@resend.dev" até que um domínio próprio seja verificado.</span>
+              </span>
             </DialogDescription>
           </DialogHeader>
           
