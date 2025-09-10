@@ -12,7 +12,7 @@ export const NotificationSystemEnhanced: React.FC = () => {
   const [showCenter, setShowCenter] = useState(false);
   
   // Initialize hardened notifications hook to set up real-time listeners
-  const { connectionStatus } = useNotificationsHardened();
+  const { notifications, unreadCount, markAsRead, clearAllNotifications, connectionStatus } = useNotificationsHardened();
 
   // Only show notifications if user is logged in
   if (!user) {
@@ -27,7 +27,13 @@ export const NotificationSystemEnhanced: React.FC = () => {
           : 'top-6 right-6'
       }`}>
         <div className="flex flex-col items-end gap-2">
-          <NotificationBell onOpenCenter={() => setShowCenter(true)} />
+          <NotificationBell 
+            onOpenCenter={() => setShowCenter(true)}
+            notifications={notifications}
+            unreadCount={unreadCount}
+            markAsRead={markAsRead}
+            clearAllNotifications={clearAllNotifications}
+          />
           <ConnectionStatusIndicator status={connectionStatus} />
         </div>
       </div>

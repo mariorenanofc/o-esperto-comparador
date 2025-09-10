@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from "@/components/ui/dialog";
 
 interface ContributionModalProps {
   isOpen: boolean;
@@ -15,7 +15,12 @@ const ContributionModal: React.FC<ContributionModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogOverlay className="bg-black/50" />
-      <DialogContent className="max-w-lg">{children}</DialogContent>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Contribuição</DialogTitle>
+        </DialogHeader>
+        {children}
+      </DialogContent>
     </Dialog>
   );
 };

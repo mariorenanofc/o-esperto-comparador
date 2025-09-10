@@ -1,15 +1,32 @@
 import React, { useState } from 'react';
 import { Bell, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNotifications } from '@/hooks/useNotifications';
 import { Badge } from '@/components/ui/badge';
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  timestamp: Date;
+  read: boolean;
+}
 
 interface NotificationBellProps {
   onOpenCenter?: () => void;
+  notifications: Notification[];
+  unreadCount: number;
+  markAsRead: (id: string) => void;
+  clearAllNotifications: () => void;
 }
 
-export const NotificationBell: React.FC<NotificationBellProps> = ({ onOpenCenter }) => {
-  const { notifications, unreadCount, markAsRead, clearAllNotifications } = useNotifications();
+export const NotificationBell: React.FC<NotificationBellProps> = ({ 
+  onOpenCenter, 
+  notifications, 
+  unreadCount, 
+  markAsRead, 
+  clearAllNotifications 
+}) => {
   const [showPanel, setShowPanel] = useState(false);
 
   return (
