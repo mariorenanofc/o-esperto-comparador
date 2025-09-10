@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.10";
-import { Resend } from "https://esm.sh/resend@2.0.0";
+import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,11 +9,15 @@ const corsHeaders = {
 
 interface EmailRequest {
   to: string | string[];
+  cc?: string | string[];
+  bcc?: string | string[];
   template_id?: string;
   subject?: string;
   html_content?: string;
   text_content?: string;
   variables?: Record<string, string>;
+  tags?: { name: string; value: string }[];
+  reply_to?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -55,10 +59,13 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Validate recipients based on user role
     const recipients = Array.isArray(emailRequest.to) ? emailRequest.to : [emailRequest.to];
+    const ccRecipients = emailRequest.cc ? (Array.isArray(emailRequest.cc) ? emailRequest.cc : [emailRequest.cc]) : [];
+    const bccRecipients = emailRequest.bcc ? (Array.isArray(emailRequest.bcc) ? emailRequest.bcc : [emailRequest.bcc]) : [];
     
     if (!isAdmin) {
       // Non-admin users can only send emails to themselves
-      if (recipients.length !== 1 || recipients[0] !== user.email) {
+      const allRecipients = [...recipients, ...ccRecipients, ...bccRecipients];
+      if (allRecipients.length !== 1 || allRecipients[0] !== user.email) {
         return new Response(
           JSON.stringify({ error: 'Non-admin users can only send test emails to their own address' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -97,17 +104,18 @@ const handler = async (req: Request): Promise<Response> => {
       htmlContent = template.html_content;
       textContent = template.text_content || '';
 
-      // Replace variables in content
+      // Replace variables in content with sanitization
       if (emailRequest.variables) {
         const templateVariables = template.variables || [];
         console.log('Template variables:', templateVariables);
         console.log('Provided variables:', emailRequest.variables);
 
         for (const [key, value] of Object.entries(emailRequest.variables)) {
+          const sanitizedValue = sanitizeVariable(value);
           const placeholder = `{{${key}}}`;
-          subject = subject.replace(new RegExp(placeholder, 'g'), value);
-          htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), value);
-          textContent = textContent.replace(new RegExp(placeholder, 'g'), value);
+          subject = subject.replace(new RegExp(placeholder, 'g'), sanitizedValue);
+          htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), sanitizedValue);
+          textContent = textContent.replace(new RegExp(placeholder, 'g'), sanitizedValue);
         }
 
         // Check for unreplaced variables and log warnings
@@ -132,7 +140,27 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     
+    // Get email configuration from environment or use defaults
+    const fromEmail = Deno.env.get('EMAIL_FROM') || 'Economia Comparada <onboarding@resend.dev>';
+    const replyTo = Deno.env.get('EMAIL_REPLY_TO');
+    
     const resend = new Resend(resendApiKey);
+    
+    // Sanitize template variables to prevent XSS
+    const sanitizeVariable = (value: string): string => {
+      return value
+        .replace(/[<>\"'&]/g, (match) => {
+          const entityMap: Record<string, string> = {
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '&': '&amp;'
+          };
+          return entityMap[match] || match;
+        })
+        .substring(0, 500); // Limit variable length
+    };
     
     // Send emails
     const results = [];
@@ -141,19 +169,53 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       for (const recipient of recipients) {
         try {
-          const emailResponse = await resend.emails.send({
-            from: 'Economia Comparada <onboarding@resend.dev>',
+          // Build email payload with enhanced options
+          const emailPayload: any = {
+            from: fromEmail,
             to: [recipient],
             subject,
             html: htmlContent,
-            text: textContent || undefined,
-          });
+          };
+
+          // Add optional fields
+          if (textContent) emailPayload.text = textContent;
+          if (ccRecipients.length > 0) emailPayload.cc = ccRecipients;
+          if (bccRecipients.length > 0) emailPayload.bcc = bccRecipients;
+          if (emailRequest.reply_to || replyTo) emailPayload.reply_to = emailRequest.reply_to || replyTo;
+          if (emailRequest.tags && emailRequest.tags.length > 0) emailPayload.tags = emailRequest.tags;
+
+          const emailResponse = await resend.emails.send(emailPayload);
           
-          results.push({ recipient, success: true, id: emailResponse.data?.id });
-          console.log(`Email sent successfully to ${recipient}:`, emailResponse.data?.id);
+          if (emailResponse.error) {
+            console.error(`Resend API error for ${recipient}:`, {
+              name: emailResponse.error.name,
+              message: emailResponse.error.message,
+              details: emailResponse.error
+            });
+            errors.push({ 
+              recipient, 
+              error: `Resend API error: ${emailResponse.error.message}`,
+              code: emailResponse.error.name
+            });
+          } else {
+            results.push({ recipient, success: true, id: emailResponse.data?.id });
+            console.log(`Email sent successfully to ${recipient}:`, {
+              id: emailResponse.data?.id,
+              from: fromEmail,
+              subject: subject
+            });
+          }
         } catch (emailError: any) {
-          console.error(`Failed to send email to ${recipient}:`, emailError);
-          errors.push({ recipient, error: emailError.message });
+          console.error(`Failed to send email to ${recipient}:`, {
+            message: emailError.message,
+            stack: emailError.stack,
+            name: emailError.name
+          });
+          errors.push({ 
+            recipient, 
+            error: emailError.message,
+            code: emailError.name || 'UNKNOWN_ERROR'
+          });
         }
       }
       
