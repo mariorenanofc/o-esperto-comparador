@@ -1083,9 +1083,44 @@ export type Database = {
         Args: { limit_bytes?: number }
         Returns: Json
       }
+      get_offers_by_location: {
+        Args: { city_param?: string; hours_back?: number; state_param?: string }
+        Returns: {
+          city: string
+          contributor_name: string
+          created_at: string
+          id: string
+          price: number
+          product_name: string
+          quantity: number
+          state: string
+          store_name: string
+          unit: string
+        }[]
+      }
       get_user_subscription_stats: {
         Args: { target_user_id: string }
         Returns: Json
+      }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       is_user_admin: {
         Args: Record<PropertyKey, never>
@@ -1124,6 +1159,34 @@ export type Database = {
       sanitize_text_input: {
         Args: { input_text: string }
         Returns: string
+      }
+      search_products_optimized: {
+        Args: {
+          category_filter?: string
+          limit_count?: number
+          search_term?: string
+        }
+        Returns: {
+          category: string
+          created_at: string
+          id: string
+          name: string
+          quantity: number
+          similarity_score: number
+          unit: string
+        }[]
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
       }
       user_plan_access: {
         Args: Record<PropertyKey, never>
