@@ -26,8 +26,11 @@ export class ReactiveCacheService {
 
       case 'PRODUCT_CREATED':
       case 'PRODUCT_UPDATED':
-        // Invalidar produtos e buscas
+      case 'PRODUCT_SEARCH_OPTIMIZED':
+        // Invalidar produtos e buscas otimizadas
         await this.queryClient.invalidateQueries({ queryKey: ['products'] });
+        await this.queryClient.invalidateQueries({ queryKey: ['optimized-products'] });
+        
         // Manter cache de categorias se não mudou a categoria
         if (!data?.categoryChanged) {
           // Só invalida a categoria específica
@@ -35,11 +38,17 @@ export class ReactiveCacheService {
             await this.queryClient.invalidateQueries({ 
               queryKey: ['products', 'category', data.category] 
             });
+            await this.queryClient.invalidateQueries({ 
+              queryKey: ['optimized-products', 'category', data.category] 
+            });
           }
         } else {
           // Invalidar todas as categorias
           await this.queryClient.invalidateQueries({ 
             queryKey: ['products', 'category'] 
+          });
+          await this.queryClient.invalidateQueries({ 
+            queryKey: ['categories'] 
           });
         }
         break;
@@ -53,9 +62,18 @@ export class ReactiveCacheService {
       case 'DAILY_OFFER_CREATED':
       case 'DAILY_OFFER_APPROVED':
       case 'DAILY_OFFER_REJECTED':
-        // Invalidar ofertas públicas
+      case 'OFFERS_LOCATION_UPDATED':
+        // Invalidar ofertas públicas e por localização
         await this.queryClient.invalidateQueries({ queryKey: ['dailyOffers'] });
         await this.queryClient.invalidateQueries({ queryKey: ['offers'] });
+        await this.queryClient.invalidateQueries({ queryKey: ['offers-location'] });
+        
+        // Se tem dados de localização, invalidar cache específico
+        if (data?.city || data?.state) {
+          await this.queryClient.invalidateQueries({ 
+            queryKey: ['offers', data.city, data.state] 
+          });
+        }
         break;
 
       case 'PROFILE_UPDATED':
@@ -75,6 +93,24 @@ export class ReactiveCacheService {
         await this.queryClient.invalidateQueries({ 
           queryKey: ['offers', data?.city, data?.state] 
         });
+        await this.queryClient.invalidateQueries({ 
+          queryKey: ['offers-location'] 
+        });
+        break;
+
+      case 'PERFORMANCE_STATS_UPDATED':
+        // Invalidar estatísticas de performance
+        await this.queryClient.invalidateQueries({ queryKey: ['performance-stats'] });
+        break;
+
+      case 'EMAIL_TEST_SENT':
+        // Invalidar logs de email se existirem
+        await this.queryClient.invalidateQueries({ queryKey: ['email-logs'] });
+        break;
+
+      case 'CACHE_CLEANUP':
+        // Limpeza geral de cache
+        console.log('🧹 General cache cleanup triggered');
         break;
 
       default:

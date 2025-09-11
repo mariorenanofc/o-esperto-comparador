@@ -23,11 +23,13 @@ export const productService = {
   },
 
   async getProductsByCategory(category: string) {
+    // Usar função otimizada para busca por categoria
     const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("category", category)
-      .order("name");
+      .rpc("search_products_optimized", {
+        search_term: null,
+        category_filter: category,
+        limit_count: 100
+      });
 
     if (error) {
       console.error("Error fetching products by category:", error);
@@ -37,15 +39,34 @@ export const productService = {
     return data || [];
   },
 
-  async searchProducts(searchTerm: string) {
+  async searchProducts(searchTerm: string, category?: string) {
+    // Usar função otimizada com busca fuzzy
     const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .ilike("name", `%${searchTerm}%`)
-      .order("name");
+      .rpc("search_products_optimized", {
+        search_term: searchTerm.trim(),
+        category_filter: category || null,
+        limit_count: 100
+      });
 
     if (error) {
       console.error("Error searching products:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async searchProductsWithSimilarity(searchTerm: string, category?: string) {
+    // Nova função para busca com score de similaridade
+    const { data, error } = await supabase
+      .rpc("search_products_optimized", {
+        search_term: searchTerm.trim(),
+        category_filter: category || null,
+        limit_count: 50
+      });
+
+    if (error) {
+      console.error("Error searching products with similarity:", error);
       throw error;
     }
 

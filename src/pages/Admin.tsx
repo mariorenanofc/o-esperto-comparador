@@ -6,6 +6,7 @@ import { FeedbackSection } from "@/components/admin/FeedbackSection";
 import { UserManagementSection } from "@/components/admin/UserManagementSection";
 import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
 import { ActiveUsersSection } from "@/components/admin/ActiveUsersSection";
+import { OptimizedAdminDashboard } from "@/components/admin/OptimizedAdminDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
@@ -13,6 +14,7 @@ import {
   MessageSquare,
   Clock,
   UserCheck,
+  TrendingUp,
 } from "lucide-react";
 
 const Admin: React.FC = () => {
@@ -31,10 +33,18 @@ const Admin: React.FC = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="analytics" className="space-y-6">
+          <Tabs defaultValue="optimizations" className="space-y-6">
             {/* Responsivo: Scroll horizontal em telas pequenas */}
             <div className="overflow-x-auto">
-              <TabsList className="grid w-full grid-cols-5 min-w-[600px] md:min-w-0">
+              <TabsList className="grid w-full grid-cols-6 min-w-[720px] md:min-w-0">
+                <TabsTrigger
+                  value="optimizations"
+                  className="flex items-center gap-1 md:gap-2 text-xs md:text-sm"
+                >
+                  <TrendingUp className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Otimizações</span>
+                  <span className="sm:hidden">🚀</span>
+                </TabsTrigger>
                 <TabsTrigger
                   value="analytics"
                   className="flex items-center gap-1 md:gap-2 text-xs md:text-sm"
@@ -71,6 +81,10 @@ const Admin: React.FC = () => {
                 </TabsTrigger>
               </TabsList>
             </div>
+
+            <TabsContent value="optimizations" className="space-y-6">
+              <OptimizedAdminDashboard />
+            </TabsContent>
 
             <TabsContent value="analytics" className="space-y-6">
               <AnalyticsSection />
