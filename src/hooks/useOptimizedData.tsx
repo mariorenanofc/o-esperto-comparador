@@ -1,112 +1,106 @@
-import { useEffect } from 'react';
-import { useCachedQuery, QUERY_KEYS } from './useQueryCache';
-import { productService } from '@/services/productService';
+import { useQuery } from '@tanstack/react-query';
 import { storeService } from '@/services/storeService';
-import { useAuth } from './useAuth';
+import { productService } from '@/services/productService';
+import { comparisonService } from '@/services/comparisonService';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useCachedQuery } from '@/hooks/useQueryCache';
+import { useEffect } from 'react';
 
-// Hook para buscar stores com cache otimizado
+// Optimized stores hook with longer cache time
 export const useOptimizedStores = () => {
-  return useCachedQuery(
-    QUERY_KEYS.stores,
-    () => storeService.getStores(),
-    {
-      staleTime: 10 * 60 * 1000, // 10 minutos
-      enabled: true,
-    }
-  );
+  return useQuery({
+    queryKey: ['stores'],
+    queryFn: storeService.getStores,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
 };
 
-// Hook para buscar produtos com cache otimizado
+// Optimized products hook with search support
 export const useOptimizedProducts = (searchTerm?: string) => {
-  return useCachedQuery(
-    searchTerm ? ['products', 'search', searchTerm] : QUERY_KEYS.products,
-    () => searchTerm ? productService.searchProducts(searchTerm) : productService.getProducts(),
-    {
-      staleTime: 15 * 60 * 1000, // 15 minutos
-      enabled: true,
-    }
-  );
+  return useQuery({
+    queryKey: ['products', searchTerm],
+    queryFn: () => searchTerm ? 
+      productService.searchProducts(searchTerm) : 
+      productService.getProducts(),
+    staleTime: 15 * 60 * 1000, // 15 minutes
+  });
 };
 
-// Hook para buscar comparações do usuário com cache otimizado
+// Optimized user comparisons hook
 export const useOptimizedUserComparisons = () => {
   const { user } = useAuth();
   
-  return useCachedQuery(
-    QUERY_KEYS.userComparisons(user?.id || 'anonymous'),
-    async () => {
-      if (!user?.id) return [];
-      // Usar o service existente que foi corrigido
-      const { getUserComparisons } = await import('@/services/comparisonService');
-      return await getUserComparisons(user.id);
-    },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      enabled: !!user?.id,
-    }
-  );
+  return useQuery({
+    queryKey: ['userComparisons', user?.id],
+    queryFn: () => user ? 
+      comparisonService.getUserComparisons(user.id) : 
+      Promise.resolve([]),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 };
 
-// Hook para buscar ofertas diárias com cache otimizado
+// Optimized daily offers hook
 export const useOptimizedDailyOffers = () => {
-  return useCachedQuery(
-    ['daily-offers'],
-    async () => {
-      try {
-        const { supabase } = await import('@/integrations/supabase/client');
-        const { data, error } = await supabase
-          .from('daily_offers')
-          .select('*')
-          .eq('verified', true)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(20);
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('Error fetching daily offers:', error);
-        return [];
-      }
+  return useQuery({
+    queryKey: ['dailyOffers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .eq('status', 'approved')
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
-    {
-      staleTime: 2 * 60 * 1000, // 2 minutos (dados mais voláteis)
-      enabled: true,
-    }
-  );
+    staleTime: 2 * 60 * 1000, // 2 minutes - more volatile data
+    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
+  });
 };
 
-// Hook para preload de dados críticos
+// Data preloader hook for critical resources
 export const useDataPreloader = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-  // Preload após 1 segundo para não bloquear a renderização inicial
-    const timeoutId = setTimeout(() => {
-      Promise.allSettled([
-        productService.getProducts(),
-        storeService.getStores()
-      ]);
-    }, 1000);
+    // Preload critical data after initial render
+    const preloadData = () => {
+      // Use setTimeout to avoid blocking initial render
+      setTimeout(() => {
+        // Use requestIdleCallback if available for better performance
+        const callback = () => {
+          // Preload products and stores in background
+          productService.getProducts().catch(() => {
+            // Silently fail - this is just preloading
+          });
+          
+          storeService.getStores().catch(() => {
+            // Silently fail - this is just preloading
+          });
+        };
 
-    return () => clearTimeout(timeoutId);
-  }, [user?.id]);
-
-  // Preload em idle callback se disponível
-  useEffect(() => {
-    if ('requestIdleCallback' in window) {
-      const idleId = (window as any).requestIdleCallback(() => {
-        Promise.allSettled([
-          productService.getProducts(),
-          storeService.getStores()
-        ]);
-      }, { timeout: 5000 });
-
-      return () => {
-        if ('cancelIdleCallback' in window) {
-          (window as any).cancelIdleCallback(idleId);
+        if (window.requestIdleCallback) {
+          window.requestIdleCallback(callback);
+        } else {
+          callback();
         }
-      };
+      }, 1000);
+    };
+
+    preloadData();
+  }, []);
+
+  // Preload user-specific data when user logs in
+  useEffect(() => {
+    if (user) {
+      setTimeout(() => {
+        comparisonService.getUserComparisons(user.id).catch(() => {
+          // Silently fail - this is just preloading
+        });
+      }, 500);
     }
-  }, [user?.id]);
+  }, [user]);
 };

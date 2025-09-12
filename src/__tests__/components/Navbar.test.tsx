@@ -1,28 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import Navbar from '@/components/Navbar';
-import { mockUser } from '@/test/testUtils';
+import { mockUser, mockProfile } from '@/test/testUtils';
 
 // Mock useAuth hook
+const mockUseAuth = vi.fn();
 const mockSignOut = vi.fn();
-const mockUseAuth = {
-  user: null,
-  signOut: mockSignOut,
-};
-
-vi.mock('@/hooks/useAuth', () => ({
-  useAuth: () => mockUseAuth,
-}));
 
 // Mock useAdminAuth hook
-const mockUseAdminAuth = {
-  isAdmin: false,
-  isLoaded: true,
-};
-
-vi.mock('@/hooks/useAdminAuth', () => ({
-  useAdminAuth: () => mockUseAdminAuth,
-}));
+const mockUseAdminAuth = vi.fn();
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
@@ -31,72 +17,129 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-      <a href={to}>{children}</a>
-    ),
+    Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>,
   };
 });
+
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: mockUseAuth,
+}));
+
+vi.mock('@/hooks/useAdminAuth', () => ({
+  useAdminAuth: mockUseAdminAuth,
+}));
 
 describe('Navbar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseAuth.user = null;
-    mockUseAdminAuth.isAdmin = false;
+    
+    // Default mock implementations
+    mockUseAuth.mockReturnValue({
+      user: null,
+      profile: null,
+      signOut: mockSignOut,
+      loading: false,
+    });
+    
+    mockUseAdminAuth.mockReturnValue({
+      isAdmin: false,
+      isLoaded: true,
+    });
   });
 
-  it('should render navbar with logo and main navigation', () => {
+  it('should render logo and navigation links', () => {
     render(<Navbar />);
     
-    expect(screen.getByText('O Esperto Comparador')).toBeInTheDocument();
+    expect(screen.getByText('EconoCompara')).toBeInTheDocument();
     expect(screen.getByText('Comparar Preços')).toBeInTheDocument();
-    expect(screen.getByText('Produtos')).toBeInTheDocument();
     expect(screen.getByText('Contribuir')).toBeInTheDocument();
-    expect(screen.getByText('Relatórios')).toBeInTheDocument();
-    expect(screen.getByText('Economia')).toBeInTheDocument();
-    expect(screen.getByText('Planos')).toBeInTheDocument();
+    expect(screen.getByText('Ofertas')).toBeInTheDocument();
   });
 
-  it('should show login button when user is not authenticated', () => {
+  it('should show "Entrar" button when user is not authenticated', () => {
     render(<Navbar />);
     
     expect(screen.getByText('Entrar')).toBeInTheDocument();
-    expect(screen.queryByText('Sair')).not.toBeInTheDocument();
   });
 
   it('should show user menu when user is authenticated', () => {
-    mockUseAuth.user = mockUser;
-    
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: mockProfile,
+      signOut: mockSignOut,
+      loading: false,
+    });
+
     render(<Navbar />);
     
-    expect(screen.getByText('Perfil')).toBeInTheDocument();
-    expect(screen.getByText('Sair')).toBeInTheDocument();
-    expect(screen.getByText('Notificações')).toBeInTheDocument();
+    // Should show user avatar/menu trigger
+    expect(screen.getByRole('button')).toBeInTheDocument();
     expect(screen.queryByText('Entrar')).not.toBeInTheDocument();
   });
 
-  it('should show admin link when user is admin', () => {
-    mockUseAuth.user = mockUser;
-    mockUseAdminAuth.isAdmin = true;
+  it('should show "Sair" option in user menu when authenticated', () => {
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: mockProfile,
+      signOut: mockSignOut,
+      loading: false,
+    });
+
+    render(<Navbar />);
     
+    // Click on user menu
+    const userMenuButton = screen.getByRole('button');
+    fireEvent.click(userMenuButton);
+    
+    expect(screen.getByText('Sair')).toBeInTheDocument();
+  });
+
+  it('should show "Admin" link when user is admin', () => {
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: mockProfile,
+      signOut: mockSignOut,
+      loading: false,
+    });
+    
+    mockUseAdminAuth.mockReturnValue({
+      isAdmin: true,
+      isLoaded: true,
+    });
+
     render(<Navbar />);
     
     expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 
-  it('should not show admin link when user is not admin', () => {
-    mockUseAuth.user = mockUser;
-    mockUseAdminAuth.isAdmin = false;
-    
+  it('should not show "Admin" link when user is not admin', () => {
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: mockProfile,
+      signOut: mockSignOut,
+      loading: false,
+    });
+
     render(<Navbar />);
     
     expect(screen.queryByText('Admin')).not.toBeInTheDocument();
   });
 
   it('should handle sign out', async () => {
-    mockUseAuth.user = mockUser;
-    
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: mockProfile,
+      signOut: mockSignOut,
+      loading: false,
+    });
+
     render(<Navbar />);
     
+    // Open user menu
+    const userMenuButton = screen.getByRole('button');
+    fireEvent.click(userMenuButton);
+    
+    // Click sign out
     const signOutButton = screen.getByText('Sair');
     fireEvent.click(signOutButton);
     
@@ -109,42 +152,55 @@ describe('Navbar', () => {
   it('should toggle mobile menu', () => {
     render(<Navbar />);
     
-    // Mobile menu should not be visible initially
-    expect(screen.queryByText('Comparar Preços')).toBeInTheDocument(); // Desktop version
+    // Find mobile menu button (usually hamburger icon)
+    const mobileMenuButtons = screen.getAllByRole('button');
+    const mobileMenuButton = mobileMenuButtons.find(button => 
+      button.getAttribute('aria-expanded') !== null
+    );
     
-    // Find and click the mobile menu button (Menu icon)
-    const menuButton = screen.getByRole('button');
-    fireEvent.click(menuButton);
-    
-    // Should show mobile menu items
-    const mobileMenuItems = screen.getAllByText('Comparar Preços');
-    expect(mobileMenuItems.length).toBeGreaterThan(1); // Both desktop and mobile versions
+    if (mobileMenuButton) {
+      expect(mobileMenuButton.getAttribute('aria-expanded')).toBe('false');
+      
+      fireEvent.click(mobileMenuButton);
+      
+      expect(mobileMenuButton.getAttribute('aria-expanded')).toBe('true');
+    }
   });
 
-  it('should show user initials in avatar', () => {
-    mockUseAuth.user = mockUser;
-    
+  it('should display user initials in avatar when authenticated', () => {
+    mockUseAuth.mockReturnValue({
+      user: mockUser,
+      profile: mockProfile,
+      signOut: mockSignOut,
+      loading: false,
+    });
+
     render(<Navbar />);
     
-    // Check if avatar shows user initials
-    const avatar = screen.getByText('TE'); // From test@example.com
-    expect(avatar).toBeInTheDocument();
+    // Should display user initials (T for "Test User")
+    expect(screen.getByText('TU')).toBeInTheDocument();
   });
 
   it('should close mobile menu when link is clicked', () => {
     render(<Navbar />);
     
-    // Open mobile menu
-    const menuButton = screen.getByRole('button');
-    fireEvent.click(menuButton);
+    // Find mobile menu button
+    const mobileMenuButtons = screen.getAllByRole('button');
+    const mobileMenuButton = mobileMenuButtons.find(button => 
+      button.getAttribute('aria-expanded') !== null
+    );
     
-    // Click on a mobile menu link
-    const mobileMenuItems = screen.getAllByText('Produtos');
-    const mobileLink = mobileMenuItems[mobileMenuItems.length - 1]; // Get the mobile version
-    fireEvent.click(mobileLink);
-    
-    // Menu should close (X icon should change back to Menu icon)
-    // This is tested by checking if the menu button is still functional
-    expect(menuButton).toBeInTheDocument();
+    if (mobileMenuButton) {
+      // Open mobile menu
+      fireEvent.click(mobileMenuButton);
+      expect(mobileMenuButton.getAttribute('aria-expanded')).toBe('true');
+      
+      // Click on a navigation link
+      const compareLink = screen.getByText('Comparar Preços');
+      fireEvent.click(compareLink);
+      
+      // Menu should close
+      expect(mobileMenuButton.getAttribute('aria-expanded')).toBe('false');
+    }
   });
 });

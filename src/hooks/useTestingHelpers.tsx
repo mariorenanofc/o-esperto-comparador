@@ -1,178 +1,158 @@
-import { useEffect, useRef } from 'react';
-import { logger } from '@/lib/logger';
+import { useRef, useCallback, useEffect } from 'react';
 
-// Test utilities and helpers for development and testing
-
-export const useTestingHelpers = (options?: {
-  enableDataTestIds?: boolean;
+interface TestingOptions {
+  enableTestIds?: boolean;
   enableAccessibilityChecks?: boolean;
   enablePerformanceLogging?: boolean;
-}) => {
+}
+
+export const useTestingHelpers = (options: TestingOptions = {}) => {
   const {
-    enableDataTestIds = process.env.NODE_ENV !== 'production',
+    enableTestIds = process.env.NODE_ENV === 'test',
     enableAccessibilityChecks = process.env.NODE_ENV === 'development',
-    enablePerformanceLogging = process.env.NODE_ENV === 'development',
-  } = options || {};
+    enablePerformanceLogging = process.env.NODE_ENV === 'development'
+  } = options;
+
+  const testRef = useRef<HTMLElement>(null);
 
   // Generate unique test IDs
-  const generateTestId = (prefix: string) => {
-    return enableDataTestIds ? `${prefix}-${Date.now()}` : undefined;
-  };
+  const generateTestId = useCallback((prefix: string) => {
+    if (!enableTestIds) return undefined;
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }, [enableTestIds]);
 
-  // Check for common accessibility issues
-  const checkAccessibility = (element: HTMLElement) => {
+  // Basic accessibility checks
+  const checkAccessibility = useCallback((element: HTMLElement) => {
     if (!enableAccessibilityChecks) return;
 
     const issues: string[] = [];
 
-    // Check for images without alt text
-    const images = element.querySelectorAll('img:not([alt])');
-    if (images.length > 0) {
-      issues.push(`${images.length} image(s) missing alt attribute`);
-    }
-
-    // Check for buttons without accessible names
-    const buttons = element.querySelectorAll('button:not([aria-label]):not([title])');
-    const buttonsWithoutText = Array.from(buttons).filter(btn => !btn.textContent?.trim());
-    if (buttonsWithoutText.length > 0) {
-      issues.push(`${buttonsWithoutText.length} button(s) without accessible names`);
-    }
-
-    // Check for form inputs without labels
-    const inputs = element.querySelectorAll('input:not([aria-label]):not([aria-labelledby])');
-    const inputsWithoutLabels = Array.from(inputs).filter(input => {
-      const id = input.getAttribute('id');
-      return !id || !element.querySelector(`label[for="${id}"]`);
-    });
-    if (inputsWithoutLabels.length > 0) {
-      issues.push(`${inputsWithoutLabels.length} input(s) without proper labels`);
-    }
-
-    // Check for poor color contrast (basic check)
-    const elementsWithText = element.querySelectorAll('*');
-    let lowContrastElements = 0;
-    Array.from(elementsWithText).forEach(el => {
-      if (el.textContent?.trim()) {
-        const styles = window.getComputedStyle(el);
-        const color = styles.color;
-        const backgroundColor = styles.backgroundColor;
-        
-        // Simple check - if both are very light or very dark
-        if (color === backgroundColor || 
-            (color.includes('rgb(255') && backgroundColor.includes('rgb(255')) ||
-            (color.includes('rgb(0') && backgroundColor.includes('rgb(0'))) {
-          lowContrastElements++;
-        }
+    // Check for missing alt text on images
+    const images = element.querySelectorAll('img');
+    images.forEach((img, index) => {
+      if (!img.alt && !img.getAttribute('aria-hidden')) {
+        issues.push(`Image ${index + 1} missing alt text`);
       }
     });
-    if (lowContrastElements > 0) {
-      issues.push(`${lowContrastElements} element(s) may have low color contrast`);
-    }
+
+    // Check for buttons without accessible names
+    const buttons = element.querySelectorAll('button');
+    buttons.forEach((button, index) => {
+      const hasText = button.textContent?.trim();
+      const hasAriaLabel = button.getAttribute('aria-label');
+      const hasAriaLabelledBy = button.getAttribute('aria-labelledby');
+      
+      if (!hasText && !hasAriaLabel && !hasAriaLabelledBy) {
+        issues.push(`Button ${index + 1} missing accessible name`);
+      }
+    });
+
+    // Check for proper heading hierarchy
+    const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    let previousLevel = 0;
+    headings.forEach((heading, index) => {
+      const currentLevel = parseInt(heading.tagName.charAt(1));
+      if (index === 0 && currentLevel !== 1) {
+        issues.push('Page should start with h1');
+      }
+      if (currentLevel > previousLevel + 1) {
+        issues.push(`Heading level jumps from h${previousLevel} to h${currentLevel}`);
+      }
+      previousLevel = currentLevel;
+    });
 
     if (issues.length > 0) {
-      logger.warn('Accessibility issues detected', {
-        issues,
-        element: element.tagName,
-        className: element.className,
-      });
+      console.warn('Accessibility issues found:', issues);
     }
-  };
+  }, [enableAccessibilityChecks]);
 
-  // Performance measurement wrapper
-  const measureAsync = async <T extends any>(
+  // Performance measurement helper
+  const measureAsync = useCallback(async <T,>(
     name: string,
     fn: () => Promise<T>,
     context?: Record<string, any>
   ): Promise<T> => {
     if (!enablePerformanceLogging) {
-      return await fn();
+      return fn();
     }
 
     const start = performance.now();
     try {
       const result = await fn();
-      const duration = performance.now() - start;
-      logger.performance(name, duration, context);
+      const end = performance.now();
+      console.log(`⚡ ${name}: ${(end - start).toFixed(2)}ms`, context || '');
       return result;
     } catch (error) {
-      const duration = performance.now() - start;
-      logger.error(`Performance measurement failed: ${name}`, error as Error, {
-        duration,
-        ...context,
-      });
+      const end = performance.now();
+      console.error(`❌ ${name} failed after ${(end - start).toFixed(2)}ms:`, error);
       throw error;
     }
-  };
+  }, [enablePerformanceLogging]);
 
   // Simulate slow network for testing
-  const simulateSlowNetwork = (delay: number = 2000) => {
-    if (process.env.NODE_ENV !== 'development') return;
-    
-    return new Promise(resolve => {
-      logger.debug(`Simulating slow network: ${delay}ms delay`);
-      setTimeout(resolve, delay);
-    });
-  };
+  const simulateSlowNetwork = useCallback(async (delay: number = 2000) => {
+    if (process.env.NODE_ENV === 'test') {
+      return; // Don't delay in tests
+    }
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }, []);
 
-  // Mock API responses for testing
-  const createMockResponse = <T extends any>(data: T, delay?: number) => {
-    return new Promise<T>((resolve) => {
-      const resolveData = () => {
-        logger.debug('Mock API response', { data });
-        resolve(data);
-      };
-      
-      if (delay) {
-        setTimeout(resolveData, delay);
-      } else {
-        resolveData();
-      }
+  // Mock API response helper
+  const createMockResponse = useCallback(<T,>(data: T, delay?: number): Promise<T> => {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(data), delay || 0);
     });
-  };
+  }, []);
 
-  // Test data generators
+  // Generate test data
   const generateTestData = {
-    user: (overrides?: Partial<any>) => ({
-      id: `test-user-${Math.random().toString(36).substr(2, 9)}`,
-      email: `test@example.com`,
-      name: `Test User`,
-      plan: 'free',
-      ...overrides,
-    }),
-    
-    product: (overrides?: Partial<any>) => ({
-      id: `test-product-${Math.random().toString(36).substr(2, 9)}`,
-      name: `Test Product ${Math.random().toString(36).substr(2, 5)}`,
-      category: 'test',
-      unit: 'unidade',
-      quantity: 1,
-      ...overrides,
-    }),
-    
-    comparison: (overrides?: Partial<any>) => ({
-      id: `test-comparison-${Math.random().toString(36).substr(2, 9)}`,
-      title: `Test Comparison ${Math.random().toString(36).substr(2, 5)}`,
-      user_id: 'test-user',
+    user: () => ({
+      id: `user-${Math.random().toString(36).substr(2, 9)}`,
+      email: `test${Math.random().toString(36).substr(2, 5)}@example.com`,
+      name: `Test User ${Math.floor(Math.random() * 1000)}`,
+      plan: Math.random() > 0.5 ? 'premium' : 'free',
       created_at: new Date().toISOString(),
-      ...overrides,
+    }),
+    product: () => ({
+      id: `product-${Math.random().toString(36).substr(2, 9)}`,
+      name: `Test Product ${Math.floor(Math.random() * 1000)}`,
+      category: ['graos', 'laticinios', 'carnes', 'higiene'][Math.floor(Math.random() * 4)],
+      unit: ['kg', 'litro', 'unidade'][Math.floor(Math.random() * 3)],
+      price: Math.random() * 50 + 1,
+    }),
+    comparison: () => ({
+      id: `comparison-${Math.random().toString(36).substr(2, 9)}`,
+      products: Array.from({ length: Math.floor(Math.random() * 5) + 1 }, () => 
+        generateTestData.product()
+      ),
+      stores: ['Store A', 'Store B', 'Store C'].map(name => ({
+        id: `store-${name.toLowerCase().replace(' ', '-')}`,
+        name,
+      })),
+      totalSavings: Math.random() * 100,
+      created_at: new Date().toISOString(),
     }),
   };
 
-  // Ref para DOM testing
-  const testRef = useRef<HTMLDivElement | null>(null);
+  // Environment checks
+  const isTestEnvironment = process.env.NODE_ENV === 'test';
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isProduction = process.env.NODE_ENV === 'production';
 
+  // Auto-run accessibility checks in development
   useEffect(() => {
     if (enableAccessibilityChecks && testRef.current) {
-      // Check accessibility issues after render
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         if (testRef.current) {
           checkAccessibility(testRef.current);
         }
-      }, 100);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  });
+  }, [checkAccessibility, enableAccessibilityChecks]);
 
   return {
+    // Test utilities
     generateTestId,
     checkAccessibility,
     measureAsync,
@@ -181,72 +161,59 @@ export const useTestingHelpers = (options?: {
     generateTestData,
     testRef,
     
-    // Testing utilities
-    isTestEnvironment: process.env.NODE_ENV === 'test',
-    isDevelopment: process.env.NODE_ENV === 'development',
-    isProduction: process.env.NODE_ENV === 'production',
+    // Environment flags
+    isTestEnvironment,
+    isDevelopment,
+    isProduction,
   };
 };
 
-// Component wrapper for testing
-export const TestWrapper: React.FC<{
+// Test wrapper component
+interface TestWrapperProps {
   children: React.ReactNode;
   testId?: string;
-  enableA11yChecks?: boolean;
-}> = ({ 
-  children, 
-  testId, 
-  enableA11yChecks = process.env.NODE_ENV === 'development' 
-}) => {
-  const { testRef, checkAccessibility } = useTestingHelpers({
-    enableAccessibilityChecks: enableA11yChecks,
-  });
+}
+
+export const TestWrapper: React.FC<TestWrapperProps> = ({ children, testId }) => {
+  const { checkAccessibility, testRef } = useTestingHelpers();
 
   useEffect(() => {
-    if (enableA11yChecks && testRef.current) {
+    if (testRef.current) {
       checkAccessibility(testRef.current);
     }
-  }, [enableA11yChecks]);
+  }, [checkAccessibility]);
 
   return (
-    <div 
-      ref={testRef}
-      data-testid={testId}
-      data-test-wrapper="true"
-    >
+    <div data-testid={testId}>
       {children}
     </div>
   );
 };
 
-// Hook para simular estados de loading/error em desenvolvimento
+// Development simulation helpers
 export const useDevSimulation = () => {
+  const isDev = process.env.NODE_ENV === 'development';
+  
   const simulateStates = {
     loading: (duration: number = 2000) => {
-      if (process.env.NODE_ENV !== 'development') return Promise.resolve();
-      
-      logger.debug(`Simulating loading state for ${duration}ms`);
+      if (!isDev) return Promise.resolve();
       return new Promise(resolve => setTimeout(resolve, duration));
     },
     
-    error: (message: string = 'Simulated error') => {
-      if (process.env.NODE_ENV !== 'development') return Promise.resolve();
-      
-      logger.debug(`Simulating error: ${message}`);
-      return Promise.reject(new Error(message));
+    error: (probability: number = 0.1) => {
+      if (!isDev) return false;
+      return Math.random() < probability;
     },
     
-    randomDelay: (min: number = 500, max: number = 2000) => {
-      if (process.env.NODE_ENV !== 'development') return Promise.resolve();
-      
+    randomDelay: (min: number = 100, max: number = 1000) => {
+      if (!isDev) return Promise.resolve();
       const delay = Math.random() * (max - min) + min;
-      logger.debug(`Random delay: ${delay}ms`);
       return new Promise(resolve => setTimeout(resolve, delay));
     },
   };
 
   return {
     simulateStates,
-    isDev: process.env.NODE_ENV === 'development',
+    isDev,
   };
 };
