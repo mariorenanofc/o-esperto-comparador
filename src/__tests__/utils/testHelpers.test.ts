@@ -135,9 +135,13 @@ describe('useDevSimulation', () => {
   it('should simulate error state', () => {
     const { result } = renderHook(() => useDevSimulation());
 
-    expect(() => {
-      result.current.simulateStates.error(new Error('Test error'));
-    }).toThrow('Test error');
+    // Test the error probability function
+    const errorResult = result.current.simulateStates.error(1.0); // 100% probability
+    expect(typeof errorResult).toBe('boolean');
+    expect(errorResult).toBe(true);
+
+    const noErrorResult = result.current.simulateStates.error(0.0); // 0% probability  
+    expect(noErrorResult).toBe(false);
   });
 
   it('should simulate random delay', async () => {

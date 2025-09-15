@@ -145,15 +145,15 @@ describe('comparisonService', () => {
 
   describe('canMakeComparison', () => {
     it('should delegate to enhanced service', async () => {
-      const userId = 'user123';
-      const plan = 'premium';
+      const userPlan = 'premium';
+      const monthlyLimit = 10;
       const mockResult = true;
 
-      (enhancedComparisonService.canMakeComparison as any).mockResolvedValue(mockResult);
+      (enhancedComparisonService.canMakeComparison as any).mockReturnValue(mockResult);
 
-      const result = await comparisonService.canMakeComparison(userId);
+      const result = comparisonService.canMakeComparison(userPlan, monthlyLimit);
 
-      expect(enhancedComparisonService.canMakeComparison).toHaveBeenCalledWith(userId);
+      expect(enhancedComparisonService.canMakeComparison).toHaveBeenCalledWith(userPlan, monthlyLimit);
       expect(result).toBe(mockResult);
     });
   });

@@ -157,9 +157,11 @@ describe('dailyOffersService', () => {
       };
       const userId = 'user123';
 
-      dailyOffersService.validatePriceContribution(mockContribution, userId);
+      const existingOffers: any[] = [];
 
-      expect(validationService.validatePriceContribution).toHaveBeenCalledWith(mockContribution, userId);
+      dailyOffersService.validatePriceContribution(mockContribution, existingOffers);
+
+      expect(validationService.validatePriceContribution).toHaveBeenCalledWith(mockContribution, existingOffers);
     });
   });
 
