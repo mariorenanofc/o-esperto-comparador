@@ -21,10 +21,23 @@ export default defineConfig({
       ],
       thresholds: {
         global: {
-          branches: 70,
-          functions: 70,
-          lines: 70,
-          statements: 70
+          branches: 85,
+          functions: 85,
+          lines: 85,
+          statements: 85
+        },
+        // Specific thresholds for critical components
+        './src/hooks/': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90
+        },
+        './src/services/': {
+          branches: 90,
+          functions: 90,
+          lines: 90,
+          statements: 90
         }
       }
     },
