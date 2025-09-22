@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi, beforeAll, afterAll } from 'vitest';
+import { vi, beforeAll, afterAll, beforeEach } from 'vitest';
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
@@ -80,6 +80,22 @@ Object.defineProperty(window, 'location', {
     hash: '',
   },
   writable: true,
+});
+
+// Setup DOM environment
+beforeEach(() => {
+  // Create a container for each test
+  const container = document.createElement('div');
+  container.setAttribute('id', 'test-container');
+  document.body.appendChild(container);
+  
+  // Clean up after each test
+  return () => {
+    const testContainer = document.getElementById('test-container');
+    if (testContainer) {
+      document.body.removeChild(testContainer);
+    }
+  };
 });
 
 // Suppress console errors in tests unless explicitly needed

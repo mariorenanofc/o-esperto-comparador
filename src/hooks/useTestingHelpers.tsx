@@ -62,7 +62,9 @@ export const useTestingHelpers = (options: TestingOptions = {}) => {
     });
 
     if (issues.length > 0) {
-      console.warn('Accessibility issues found:', issues);
+      issues.forEach(issue => {
+        console.warn('A11y Check: Interactive element missing accessible name', element);
+      });
     }
   }, [enableAccessibilityChecks]);
 
@@ -91,9 +93,7 @@ export const useTestingHelpers = (options: TestingOptions = {}) => {
 
   // Simulate slow network for testing
   const simulateSlowNetwork = useCallback(async (delay: number = 2000) => {
-    if (process.env.NODE_ENV === 'test') {
-      return; // Don't delay in tests
-    }
+    // Always apply delay if explicitly called, even in tests
     await new Promise(resolve => setTimeout(resolve, delay));
   }, []);
 
@@ -196,17 +196,17 @@ export const useDevSimulation = () => {
   
   const simulateStates = {
     loading: (duration: number = 2000) => {
-      if (!isDev) return Promise.resolve();
+      // Always apply delay if explicitly called, even in tests
       return new Promise(resolve => setTimeout(resolve, duration));
     },
     
     error: (probability: number = 0.1) => {
-      if (!isDev) return false;
+      // Always evaluate probability, even in tests
       return Math.random() < probability;
     },
     
     randomDelay: (min: number = 100, max: number = 1000) => {
-      if (!isDev) return Promise.resolve();
+      // Always apply delay if explicitly called, even in tests
       const delay = Math.random() * (max - min) + min;
       return new Promise(resolve => setTimeout(resolve, delay));
     },

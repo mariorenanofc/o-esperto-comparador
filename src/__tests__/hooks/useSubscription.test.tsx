@@ -7,7 +7,13 @@ import { toast } from 'sonner';
 
 // Mock dependencies
 vi.mock('@/hooks/useAuth');
-vi.mock('@/integrations/supabase/client');
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    functions: {
+      invoke: vi.fn()
+    }
+  }
+}));
 vi.mock('sonner');
 
 // Mock window.open
@@ -30,7 +36,7 @@ describe('useSubscription', () => {
       updateProfile: mockUpdateProfile
     });
 
-    (supabase.functions.invoke as any).mockResolvedValue({
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
       data: null,
       error: null
     });
@@ -65,7 +71,7 @@ describe('useSubscription', () => {
 
   describe('checkSubscription', () => {
     it('should check subscription and update plan if different', async () => {
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: { subscription_tier: 'premium' },
         error: null
       });
@@ -81,7 +87,7 @@ describe('useSubscription', () => {
     });
 
     it('should not update plan if same as current', async () => {
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: { subscription_tier: 'free' },
         error: null
       });
@@ -96,7 +102,7 @@ describe('useSubscription', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: null,
         error: { message: 'Service error' }
       });
@@ -130,7 +136,7 @@ describe('useSubscription', () => {
   describe('createCheckout', () => {
     it('should create checkout successfully', async () => {
       const mockUrl = 'https://checkout.stripe.com/test';
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: { url: mockUrl },
         error: null
       });
@@ -165,7 +171,7 @@ describe('useSubscription', () => {
     });
 
     it('should handle checkout errors', async () => {
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: null,
         error: { message: 'Payment failed' }
       });
@@ -180,7 +186,7 @@ describe('useSubscription', () => {
     });
 
     it('should handle missing checkout URL', async () => {
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: {},
         error: null
       });
@@ -198,7 +204,7 @@ describe('useSubscription', () => {
   describe('manageSubscription', () => {
     it('should open customer portal successfully', async () => {
       const mockUrl = 'https://billing.stripe.com/portal';
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: { url: mockUrl },
         error: null
       });
@@ -230,7 +236,7 @@ describe('useSubscription', () => {
     });
 
     it('should handle portal errors', async () => {
-      (supabase.functions.invoke as any).mockResolvedValue({
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({
         data: null,
         error: { message: 'Portal error' }
       });
@@ -274,7 +280,7 @@ describe('useSubscription', () => {
 
   it('should check subscription on mount when user exists', async () => {
     const checkSubscriptionSpy = vi.fn();
-    (supabase.functions.invoke as any).mockImplementation(checkSubscriptionSpy);
+    vi.mocked(supabase.functions.invoke).mockImplementation(checkSubscriptionSpy);
 
     renderHook(() => useSubscription(), { wrapper });
 
