@@ -122,6 +122,54 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          permissions: Json
+          rate_limit_per_hour: number
+          updated_at: string
+          usage_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          permissions?: Json
+          rate_limit_per_hour?: number
+          updated_at?: string
+          usage_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          permissions?: Json
+          rate_limit_per_hour?: number
+          updated_at?: string
+          usage_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_performance_logs: {
         Row: {
           created_at: string
@@ -160,6 +208,41 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      api_rate_limits: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          requests_count: number
+          window_start: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          requests_count?: number
+          window_start?: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          requests_count?: number
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_rate_limits_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -1042,6 +1125,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_api_rate_limit: {
+        Args: {
+          api_key_input: string
+          endpoint_name: string
+          max_requests_per_hour?: number
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           block_minutes?: number
@@ -1078,6 +1169,10 @@ export type Database = {
       enhanced_sanitize_text_input: {
         Args: { input_text: string }
         Returns: string
+      }
+      generate_api_key: {
+        Args: { expires_in_days?: number; key_name: string }
+        Returns: Json
       }
       get_db_usage: {
         Args: { limit_bytes?: number }
@@ -1191,6 +1286,10 @@ export type Database = {
       user_plan_access: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      validate_api_key: {
+        Args: { api_key_input: string }
+        Returns: Json
       }
       validate_email: {
         Args: { email_input: string }

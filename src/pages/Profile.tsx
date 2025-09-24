@@ -594,7 +594,18 @@ export default function Profile() {
                 </div>
 
                 {/* Link para página de planos */}
-                <div className="pt-2 border-t border-border/50">
+                <div className="pt-2 border-t border-border/50 space-y-3">
+                  {(currentPlan === 'premium' || currentPlan === 'pro') && (
+                    <Link to="/admin" className="block">
+                      <Button 
+                        variant="outline" 
+                        className="w-full text-foreground hover:text-primary transition-colors duration-300 border-primary/30 hover:border-primary"
+                      >
+                        <Activity className="w-4 h-4 mr-2" />
+                        Gerenciar API Keys
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/plans">
                     <Button 
                       variant="ghost" 

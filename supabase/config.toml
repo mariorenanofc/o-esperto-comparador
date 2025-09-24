@@ -29,3 +29,12 @@ verify_jwt = true
 
 [functions.cleanup-old-offers]
 verify_jwt = true
+
+[functions.api-products]
+verify_jwt = false
+
+[functions.api-comparisons]
+verify_jwt = false
+
+[functions.api-docs]
+verify_jwt = false

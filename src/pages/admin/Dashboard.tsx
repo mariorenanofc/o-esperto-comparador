@@ -4,10 +4,12 @@ import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
 import { AnalyticsSection } from "@/components/admin/AnalyticsSection";
 import { ActiveUsersSection } from "@/components/admin/ActiveUsersSection";
 import { PendingContributionsSection } from "@/components/admin/PendingContributionsSection";
+import { ApiKeysManager } from "@/components/admin/ApiKeysManager";
 import { supabaseAdminService } from "@/services/supabase/adminService";
 import { toast } from "sonner";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -61,17 +63,30 @@ const Dashboard: React.FC = () => {
 
       <PlatformStatsCards analytics={analytics} dbUsage={dbUsage} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="lg:col-span-1">
-          <AnalyticsSection />
-        </div>
-        <div className="lg:col-span-1">
-          <ActiveUsersSection />
-        </div>
-        <div className="lg:col-span-2">
-          <PendingContributionsSection />
-        </div>
-      </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="api">API Pública</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="lg:col-span-1">
+              <AnalyticsSection />
+            </div>
+            <div className="lg:col-span-1">
+              <ActiveUsersSection />
+            </div>
+            <div className="lg:col-span-2">
+              <PendingContributionsSection />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="api">
+          <ApiKeysManager />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
