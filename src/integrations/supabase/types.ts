@@ -1178,6 +1178,10 @@ export type Database = {
         Args: { limit_bytes?: number }
         Returns: Json
       }
+      get_masked_profile_data: {
+        Args: { target_user_id: string }
+        Returns: Json
+      }
       get_offers_by_location: {
         Args: { city_param?: string; hours_back?: number; state_param?: string }
         Returns: {
@@ -1197,26 +1201,6 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       is_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1227,6 +1211,10 @@ export type Database = {
           action_type: string
           target_user?: string
         }
+        Returns: undefined
+      }
+      log_critical_security_event: {
+        Args: { details?: Json; event_type: string; severity?: string }
         Returns: undefined
       }
       log_security_event: {
@@ -1271,18 +1259,6 @@ export type Database = {
           unit: string
         }[]
       }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
       user_plan_access: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1297,6 +1273,10 @@ export type Database = {
       }
       validate_price: {
         Args: { price_input: number }
+        Returns: boolean
+      }
+      verify_admin_with_logging: {
+        Args: { operation_type?: string }
         Returns: boolean
       }
     }
