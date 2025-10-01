@@ -1113,6 +1113,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advanced_security_audit: {
+        Args: {
+          additional_details?: Json
+          event_type: string
+          severity?: string
+          system_context?: Json
+          user_context?: Json
+        }
+        Returns: undefined
+      }
       can_send_notification: {
         Args: {
           channel_type?: string
@@ -1166,6 +1176,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      detect_security_anomalies: {
+        Args: { check_type?: string }
+        Returns: Json
+      }
+      enhanced_mask_sensitive_data: {
+        Args: { data_input: Json; mask_level?: string }
+        Returns: Json
+      }
       enhanced_sanitize_text_input: {
         Args: { input_text: string }
         Returns: string
@@ -1215,6 +1233,16 @@ export type Database = {
       }
       log_critical_security_event: {
         Args: { details?: Json; event_type: string; severity?: string }
+        Returns: undefined
+      }
+      log_critical_security_event_enhanced: {
+        Args: {
+          auto_block?: boolean
+          details?: Json
+          event_type: string
+          severity?: string
+          threat_level?: string
+        }
         Returns: undefined
       }
       log_security_event: {
@@ -1274,6 +1302,14 @@ export type Database = {
       validate_price: {
         Args: { price_input: number }
         Returns: boolean
+      }
+      verify_admin_with_enhanced_logging: {
+        Args: {
+          log_attempt?: boolean
+          operation_type?: string
+          required_permissions?: string[]
+        }
+        Returns: Json
       }
       verify_admin_with_logging: {
         Args: { operation_type?: string }
