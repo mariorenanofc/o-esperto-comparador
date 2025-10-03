@@ -81,7 +81,11 @@ const supportMenuItems = [
   }
 ];
 
-export const AdminSidebar: React.FC = () => {
+interface AdminSidebarProps {
+  onNavigate?: () => void;
+}
+
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
@@ -143,6 +147,7 @@ export const AdminSidebar: React.FC = () => {
                       to={item.url} 
                       end={item.end}
                       className={getNavClasses(item.url, item.end)}
+                      onClick={onNavigate}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -167,6 +172,7 @@ export const AdminSidebar: React.FC = () => {
                     <NavLink 
                       to={item.url}
                       className={getNavClasses(item.url)}
+                      onClick={onNavigate}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
@@ -191,6 +197,7 @@ export const AdminSidebar: React.FC = () => {
                     <NavLink 
                       to={item.url}
                       className={getNavClasses(item.url)}
+                      onClick={onNavigate}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}

@@ -47,15 +47,15 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       <AdminBreadcrumbs />
       
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2 truncate">
             Dashboard Administrativo
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
             Visão geral da plataforma e métricas principais
           </p>
         </div>
@@ -63,14 +63,18 @@ const Dashboard: React.FC = () => {
 
       <PlatformStatsCards analytics={analytics} dbUsage={dbUsage} />
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="api">API Pública</TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm py-2">
+            Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="api" className="text-xs sm:text-sm py-2">
+            API Pública
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="overview" className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6 md:space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             <div className="lg:col-span-1">
               <AnalyticsSection />
             </div>
