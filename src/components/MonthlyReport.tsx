@@ -305,7 +305,7 @@ const MonthlyReport: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <ReportFilters
         filters={filters}
         onFiltersChange={setFilters}
@@ -315,13 +315,13 @@ const MonthlyReport: React.FC = () => {
         totalSavings={totals.totalSavings}
       />
       
-      <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Relatórios Mensais</h2>
+      <div className="bg-white dark:bg-gray-950 p-4 sm:p-6 rounded-lg shadow">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Relatórios Mensais</h2>
 
         {selectedReport ? (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+              <h3 className="text-base sm:text-lg font-medium">
                 Detalhes - {getMonthName(selectedReport.month)} {selectedReport.year}
               </h3>
               <Button
@@ -330,6 +330,7 @@ const MonthlyReport: React.FC = () => {
                   setSelectedReport(null);
                   setSelectedComparisonIndex(null);
                 }}
+                className="w-full sm:w-auto text-sm sm:text-base"
               >
                 Voltar para Lista
               </Button>
@@ -365,67 +366,67 @@ const MonthlyReport: React.FC = () => {
               }
             />
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 mb-4 sm:mb-6">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-sm sm:text-base lg:text-lg">
                     Comparações Realizadas
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-app-blue">
+                  <p className="text-xl sm:text-2xl font-bold text-app-blue">
                     {selectedReport.comparison_count}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-sm sm:text-base lg:text-lg">
                     Total Gasto (Estimado)
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-2xl font-bold text-app-green">
+                  <p className="text-xl sm:text-2xl font-bold text-app-green">
                     R$ {selectedReport.total_spent.toFixed(2).replace(".", ",")}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     Soma das melhores ofertas encontradas por comparação
                   </p>
                 </CardContent>
               </Card>
             </div>
 
-            <h3 className="text-lg font-medium mt-8 mb-4">
+            <h3 className="text-base sm:text-lg font-medium mt-6 sm:mt-8 mb-3 sm:mb-4">
               Comparações do Mês
             </h3>
 
             {selectedReport.comparisons?.map((comparison, index) => (
               <div
                 key={comparison.id}
-                className="border rounded-md p-4 mb-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="border rounded-md p-3 sm:p-4 mb-3 sm:mb-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() =>
                   setSelectedComparisonIndex(
                     selectedComparisonIndex === index ? null : index
                   )
                 }
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+                  <div className="flex-1">
+                    <p className="text-sm sm:text-base font-medium">
                       {comparison.title ||
                         `Comparação ${new Date(
                           comparison.created_at
                         ).toLocaleDateString()}`}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       Data:{" "}
                       {new Date(comparison.created_at).toLocaleDateString()}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       {comparison.comparison_products?.length || 0} produtos
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm w-full sm:w-auto">
                     {selectedComparisonIndex === index
                       ? "Ocultar"
                       : "Ver Detalhes"}
@@ -446,7 +447,7 @@ const MonthlyReport: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {filteredReports.length === 0 ? (
               <div className="col-span-full text-center p-8">
                 <p className="text-gray-500 dark:text-gray-400">

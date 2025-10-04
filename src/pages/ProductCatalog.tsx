@@ -43,7 +43,7 @@ const ProductCatalog: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-secondary/20 dark:from-background dark:via-muted/10 dark:to-accent/5">
       <Navbar />
       
-      <div className="container mx-auto py-12 px-6">
+      <div className="container mx-auto py-4 sm:py-6 md:py-12 px-3 sm:px-4 md:px-6">
         <ProductCatalogHeader />
 
         <ProductFiltersSection
@@ -58,7 +58,7 @@ const ProductCatalog: React.FC = () => {
         />
 
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-8 sm:py-12">
             <LoadingSpinner size="lg" text="Carregando produtos..." />
           </div>
         ) : (

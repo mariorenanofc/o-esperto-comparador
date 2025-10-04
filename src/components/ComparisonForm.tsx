@@ -529,25 +529,26 @@ const ComparisonForm: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Seção de Adicionar Mercados e Produtos - Visível apenas em modo de edição */}
       {isEditingMode && (
         <>
-          <div className="bg-card p-6 rounded-lg shadow border">
-            <h2 className="text-xl font-semibold mb-4">Adicionar Mercados</h2>
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="flex-1 min-w-[220px]">
-                <Label htmlFor="storeName">Nome do Mercado</Label>
+          <div className="bg-card p-4 sm:p-6 rounded-lg shadow border">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Adicionar Mercados</h2>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-2 sm:gap-3">
+              <div className="flex-1 w-full sm:min-w-[220px]">
+                <Label htmlFor="storeName" className="text-sm sm:text-base">Nome do Mercado</Label>
                 <Input
                   id="storeName"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                   placeholder="Ex: Mercado Bom Preço"
+                  className="text-sm sm:text-base"
                 />
               </div>
               <Button
                 onClick={handleAddStore}
-                className="bg-app-primary hover:bg-app-primary/90 text-white w-full sm:w-auto"
+                className="bg-app-primary hover:bg-app-primary/90 text-white w-full sm:w-auto text-sm sm:text-base"
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Mercado
               </Button>
@@ -555,7 +556,7 @@ const ComparisonForm: React.FC = () => {
                 variant="outline"
                 onClick={() => setIsLoadDrawerOpen(true)}
                 disabled={!isSignedIn}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto text-sm sm:text-base"
                 title={!isSignedIn ? "Faça login para carregar comparações salvas" : undefined}
               >
                 <History className="mr-2 h-4 w-4" /> Reaproveitar Salvas
@@ -563,11 +564,11 @@ const ComparisonForm: React.FC = () => {
             </div>
 
             {comparisonData.stores.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-md font-medium mb-2">
+              <div className="mt-3 sm:mt-4">
+                <h3 className="text-sm sm:text-md font-medium mb-2">
                   Mercados Adicionados:
                 </h3>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {comparisonData.stores.map((store) => (
                     <div
                       key={store.id}
@@ -589,14 +590,14 @@ const ComparisonForm: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-card p-6 rounded-lg shadow border">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
+          <div className="bg-card p-4 sm:p-6 rounded-lg shadow border">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold">
                 Produtos para Comparação
               </h2>
               <Button
                 onClick={handleOpenProductModal}
-                className="bg-app-secondary hover:bg-app-secondary/90 text-white"
+                className="bg-app-secondary hover:bg-app-secondary/90 text-white w-full sm:w-auto text-sm sm:text-base"
                 disabled={comparisonData.stores.length === 0}
               >
                 <Plus className="mr-2 h-4 w-4" /> Adicionar Produto
@@ -604,8 +605,8 @@ const ComparisonForm: React.FC = () => {
             </div>
 
             {comparisonData.products.length > 0 && (
-              <div className="mb-4 space-y-4">
-                <div className="flex flex-col md:flex-row gap-4">
+              <div className="mb-3 sm:mb-4 space-y-3 sm:space-y-4">
+                <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
                   <div className="flex-1 space-y-2">
                     <ProductSearchSuggestions
                       value={globalSearchTerm}
@@ -656,34 +657,35 @@ const ComparisonForm: React.FC = () => {
             )}
 
             {comparisonData.products.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-muted/50">
-                      <th className="py-2 px-4 border text-left">Produto</th>
-                      <th className="py-2 px-4 border text-left">Quantidade</th>
-                      <th className="py-2 px-4 border text-left">Unidade</th>
-                      {comparisonData.stores.map((store) => (
-                        <th
-                          key={store.id}
-                          className="py-2 px-4 border text-left"
-                        >
-                          {store.name}
-                        </th>
-                      ))}
-                      <th className="py-2 px-4 border text-center">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map((product, index) => {
-                      const originalIndex = comparisonData.products.findIndex(p => p.id === product.id);
-                      return (
-                        <tr key={product.id}>
-                          <td className="py-2 px-4 border">{product.name}</td>
-                          <td className="py-2 px-4 border">{product.quantity}</td>
-                          <td className="py-2 px-4 border">{product.unit}</td>
-                          {comparisonData.stores.map((store) => (
-                            <td key={store.id} className="py-2 px-4 border">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="min-w-full border-collapse">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="py-2 px-2 sm:px-4 border text-left text-xs sm:text-sm">Produto</th>
+                        <th className="py-2 px-2 sm:px-4 border text-left text-xs sm:text-sm">Qtd</th>
+                        <th className="py-2 px-2 sm:px-4 border text-left text-xs sm:text-sm">Un.</th>
+                        {comparisonData.stores.map((store) => (
+                          <th
+                            key={store.id}
+                            className="py-2 px-2 sm:px-4 border text-left text-xs sm:text-sm whitespace-nowrap"
+                          >
+                            {store.name}
+                          </th>
+                        ))}
+                        <th className="py-2 px-2 sm:px-4 border text-center text-xs sm:text-sm">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map((product, index) => {
+                        const originalIndex = comparisonData.products.findIndex(p => p.id === product.id);
+                        return (
+                          <tr key={product.id}>
+                            <td className="py-2 px-2 sm:px-4 border text-xs sm:text-sm">{product.name}</td>
+                            <td className="py-2 px-2 sm:px-4 border text-xs sm:text-sm">{product.quantity}</td>
+                            <td className="py-2 px-2 sm:px-4 border text-xs sm:text-sm">{product.unit}</td>
+                            {comparisonData.stores.map((store) => (
+                              <td key={store.id} className="py-2 px-2 sm:px-4 border text-xs sm:text-sm whitespace-nowrap">
                               {product.prices[store.id] ? (
                                 `R$ ${product.prices[store.id].toFixed(2)}`
                               ) : (
@@ -691,8 +693,8 @@ const ComparisonForm: React.FC = () => {
                               )}
                             </td>
                           ))}
-                          <td className="py-2 px-4 border text-center">
-                            <div className="flex justify-center space-x-2">
+                          <td className="py-2 px-2 sm:px-4 border text-center">
+                            <div className="flex justify-center space-x-1 sm:space-x-2">
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -714,16 +716,17 @@ const ComparisonForm: React.FC = () => {
                         </tr>
                       );
                     })}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
             {comparisonData.products.length > 0 && (
-              <div className="mt-6">
+              <div className="mt-4 sm:mt-6">
                 <Button
                   onClick={doComparison} // Chamada para a função "Fazer Comparação"
-                  className="bg-app-success hover:bg-app-success/90 text-white"
+                  className="bg-app-success hover:bg-app-success/90 text-white w-full sm:w-auto text-sm sm:text-base"
                   disabled={isProcessingComparison} // Usa o novo estado de loading
                 >
                   {isProcessingComparison
@@ -731,7 +734,7 @@ const ComparisonForm: React.FC = () => {
                     : "Fazer Comparação"}
                 </Button>
                 {!isSignedIn && (
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                     * Faça login para salvar suas comparações
                   </p>
                 )}
@@ -757,60 +760,65 @@ const ComparisonForm: React.FC = () => {
           <BestPricesByStore comparisonData={comparisonData} />
           {/* A PriceTable foi movida para DENTRO da div de "Salvar esta Comparação" */}
 
-          <div className="mt-6 p-6 bg-card rounded-lg shadow border">
-            <h3 className="text-xl font-semibold mb-4">
+          <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-card rounded-lg shadow border">
+            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
               Salvar esta Comparação
             </h3>
             <PriceTable comparisonData={comparisonData} />{" "}
             {/* <-- MOVIDO AQUI */}
-            <Button
-              onClick={saveComparisonData}
-              className="bg-app-primary hover:bg-app-primary/90 text-white mr-3"
-              disabled={
-                isSavingComparison ||
-                !isSignedIn ||
-                comparisonData.products.length === 0
-              }
-            >
-              {isSavingComparison ? "Salvando..." : "Salvar Comparação"}
-            </Button>
-            <Button
-              onClick={handleExportPdf}
-              variant="outline"
-              disabled={!isSignedIn}
-              title={!isSignedIn ? "Faça login para baixar o PDF" : undefined}
-            >
-              <Download className="mr-2 h-4 w-4" /> Baixar PDF
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
+              <Button
+                onClick={saveComparisonData}
+                className="bg-app-primary hover:bg-app-primary/90 text-white w-full sm:w-auto text-sm sm:text-base"
+                disabled={
+                  isSavingComparison ||
+                  !isSignedIn ||
+                  comparisonData.products.length === 0
+                }
+              >
+                {isSavingComparison ? "Salvando..." : "Salvar Comparação"}
+              </Button>
+              <Button
+                onClick={handleExportPdf}
+                variant="outline"
+                disabled={!isSignedIn}
+                title={!isSignedIn ? "Faça login para baixar o PDF" : undefined}
+                className="w-full sm:w-auto text-sm sm:text-base"
+              >
+                <Download className="mr-2 h-4 w-4" /> Baixar PDF
+              </Button>
+            </div>
             {!isSignedIn && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 Faça login para salvar ou exportar suas comparações.
               </p>
             )}
           </div>
 
           {/* Botões para Editar ou Iniciar Nova Comparação */}
-          <div className="mt-6 p-6 bg-card rounded-lg shadow border flex justify-center space-x-4">
-            <Button
-              onClick={() => {
-                setIsEditingMode(true);
-                setShowResults(false);
-              }}
-              className="bg-app-warning hover:bg-app-warning/90 text-white"
-            >
-              <Edit className="mr-2 h-4 w-4" /> Editar Comparação
-            </Button>
-            <Button
-              onClick={() => {
-                setComparisonData({ products: [], stores: [] });
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
-                setShowResults(false);
-                setIsEditingMode(true);
-              }}
-              className="bg-app-error hover:bg-app-error/90 text-white"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Nova Comparação
-            </Button>
+          <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-card rounded-lg shadow border">
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+              <Button
+                onClick={() => {
+                  setIsEditingMode(true);
+                  setShowResults(false);
+                }}
+                className="bg-app-warning hover:bg-app-warning/90 text-white w-full sm:w-auto text-sm sm:text-base"
+              >
+                <Edit className="mr-2 h-4 w-4" /> Editar Comparação
+              </Button>
+              <Button
+                onClick={() => {
+                  setComparisonData({ products: [], stores: [] });
+                  localStorage.removeItem(LOCAL_STORAGE_KEY);
+                  setShowResults(false);
+                  setIsEditingMode(true);
+                }}
+                className="bg-app-error hover:bg-app-error/90 text-white w-full sm:w-auto text-sm sm:text-base"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Nova Comparação
+              </Button>
+            </div>
           </div>
         </>
       )}

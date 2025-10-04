@@ -84,8 +84,8 @@ const PriceTable: React.FC<PriceTableProps> = ({ comparisonData }) => {
   }, undefined);
 
   return (
-    <div className="bg-white dark:bg-gray-950 p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Resultados da Comparação</h2>
+    <div className="bg-white dark:bg-gray-950 p-4 sm:p-6 rounded-lg shadow">
+      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Resultados da Comparação</h2>
       <PriceTableResultCards
         products={products}
         stores={stores}
