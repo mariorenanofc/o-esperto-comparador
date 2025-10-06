@@ -1,62 +1,65 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { errorHandler } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
 
 export const adminService = {
   async approveContribution(contributionId: string): Promise<void> {
-    console.log('Approving contribution:', contributionId);
-    
-    try {
-      // First get the contribution details to notify the user
-      const { data: contribution, error: fetchError } = await supabase
-        .from('daily_offers')
-        .select('user_id, product_name, store_name, contributor_name')
-        .eq('id', contributionId)
-        .single();
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Approving contribution', { contributionId });
+        
+        // First get the contribution details to notify the user
+        const { data: contribution, error: fetchError } = await supabase
+          .from('daily_offers')
+          .select('user_id, product_name, store_name, contributor_name')
+          .eq('id', contributionId)
+          .single();
 
-      if (fetchError) {
-        console.error('Error fetching contribution details:', fetchError);
-        throw new Error(`Erro ao buscar contribuição: ${fetchError.message}`);
-      }
+        if (fetchError) throw fetchError;
 
-      // Update the contribution as verified
-      const { error } = await supabase
-        .from('daily_offers')
-        .update({ verified: true })
-        .eq('id', contributionId);
+        // Update the contribution as verified
+        const { error } = await supabase
+          .from('daily_offers')
+          .update({ verified: true })
+          .eq('id', contributionId);
 
-      if (error) {
-        console.error('Error approving contribution:', error);
-        throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
-      }
+        if (error) throw error;
 
-      console.log('Contribution approved successfully');
-
-      // Real-time notification will be triggered automatically by database UPDATE
-      console.log('Real-time notification will be sent via Supabase realtime');
-    } catch (error) {
-      console.error('Error in approveContribution:', error);
-      throw error;
-    }
+        logger.info('Contribution approved successfully', { 
+          contributionId, 
+          contributor: contribution.contributor_name 
+        });
+      },
+      { 
+        component: 'adminService', 
+        action: 'aprovar contribuição',
+        metadata: { contributionId }
+      },
+      { severity: 'high', showToast: true }
+    ) as Promise<void>;
   },
 
   async rejectContribution(contributionId: string): Promise<void> {
-    console.log('Rejecting contribution:', contributionId);
-    
-    try {
-      const { error } = await supabase
-        .from('daily_offers')
-        .delete()
-        .eq('id', contributionId);
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Rejecting contribution', { contributionId });
+        
+        const { error } = await supabase
+          .from('daily_offers')
+          .delete()
+          .eq('id', contributionId);
 
-      if (error) {
-        console.error('Error rejecting contribution:', error);
-        throw new Error(`Erro ao rejeitar contribuição: ${error.message}`);
-      }
+        if (error) throw error;
 
-      console.log('Contribution rejected successfully');
-    } catch (error) {
-      console.error('Error in rejectContribution:', error);
-      throw error;
-    }
+        logger.info('Contribution rejected successfully', { contributionId });
+      },
+      { 
+        component: 'adminService', 
+        action: 'rejeitar contribuição',
+        metadata: { contributionId }
+      },
+      { severity: 'high', showToast: true }
+    ) as Promise<void>;
   }
 };
