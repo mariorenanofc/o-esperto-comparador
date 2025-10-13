@@ -3,6 +3,8 @@ import { PlanTier } from "@/lib/plans";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { errorHandler } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
 
 interface SubscriptionContextType {
   currentPlan: PlanTier;
@@ -27,23 +29,32 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const checkSubscription = async () => {
     if (!user) return;
     
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      
-      if (error) {
-        console.error('Error checking subscription:', error);
-        return;
-      }
+    setIsLoading(true);
+    
+    await errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase.functions.invoke('check-subscription');
+        
+        if (error) throw error;
 
-      if (data?.subscription_tier && data.subscription_tier !== currentPlan) {
-        await updateProfile({ plan: data.subscription_tier });
+        if (data?.subscription_tier && data.subscription_tier !== currentPlan) {
+          await updateProfile({ plan: data.subscription_tier });
+          logger.info('Subscription tier updated', { 
+            oldPlan: currentPlan, 
+            newPlan: data.subscription_tier 
+          });
+        }
+      },
+      3, // 3 retry attempts
+      2000, // 2s delay
+      { 
+        component: 'useSubscription', 
+        action: 'checkSubscription', 
+        userId: user.id 
       }
-    } catch (error) {
-      console.error('Error in checkSubscription:', error);
-    } finally {
+    ).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   const createCheckout = async (planId: PlanTier) => {
@@ -52,29 +63,34 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { planId }
-      });
+    setIsLoading(true);
+    
+    await errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: { planId }
+        });
 
-      if (error) {
-        toast.error(`Erro ao criar checkout: ${error.message || 'Erro desconhecido'}`);
-        console.error('Checkout error:', error);
-        return;
-      }
+        if (error) throw new Error(error.message || 'Erro ao criar checkout');
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else {
-        toast.error("Nenhuma URL de checkout foi retornada");
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          logger.info('Checkout created', { planId, userId: user.id });
+        } else {
+          throw new Error("Nenhuma URL de checkout foi retornada");
+        }
+      },
+      2, // 2 retry attempts
+      3000, // 3s delay
+      { 
+        component: 'useSubscription', 
+        action: 'createCheckout',
+        userId: user.id,
+        metadata: { planId }
       }
-    } catch (error) {
-      toast.error(`Erro ao processar pagamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      console.error('Error in createCheckout:', error);
-    } finally {
+    ).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   const manageSubscription = async () => {
@@ -83,35 +99,48 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase.functions.invoke('customer-portal');
+    setIsLoading(true);
+    
+    await errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase.functions.invoke('customer-portal');
 
-      if (error) {
-        toast.error("Erro ao abrir portal de gerenciamento");
-        console.error('Portal error:', error);
-        return;
-      }
+        if (error) throw new Error('Erro ao abrir portal de gerenciamento');
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          logger.info('Customer portal opened', { userId: user.id });
+        }
+      },
+      2, // 2 retry attempts
+      2000, // 2s delay
+      { 
+        component: 'useSubscription', 
+        action: 'manageSubscription',
+        userId: user.id 
       }
-    } catch (error) {
-      toast.error("Erro ao abrir portal");
-      console.error('Error in manageSubscription:', error);
-    } finally {
+    ).finally(() => {
       setIsLoading(false);
-    }
+    });
   };
 
   const updateUserPlan = async (planId: PlanTier) => {
-    const { error } = await updateProfile({ plan: planId });
+    await errorHandler.handleAsync(
+      async () => {
+        const { error } = await updateProfile({ plan: planId });
 
-    if (error) {
-      toast.error("Não foi possível atualizar o plano");
-    } else {
-      toast.success(`Seu plano foi atualizado para ${planId}`);
-    }
+        if (error) throw new Error('Não foi possível atualizar o plano');
+
+        toast.success(`Seu plano foi atualizado para ${planId}`);
+        logger.info('User plan updated', { planId, userId: user?.id });
+      },
+      { 
+        component: 'useSubscription', 
+        action: 'updateUserPlan',
+        userId: user?.id,
+        metadata: { planId }
+      }
+    );
   };
 
   // Check subscription on mount and when user changes

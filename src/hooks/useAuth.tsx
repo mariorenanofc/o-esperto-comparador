@@ -3,6 +3,8 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PlanTier } from "@/lib/plans";
 import { analytics } from '@/lib/analytics';
+import { errorHandler } from '@/lib/errorHandler';
+import { logger } from '@/lib/logger';
 
 type UserProfile = {
   id: string;
@@ -48,68 +50,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+    await errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return;
-      }
+        if (error) throw error;
 
-      setProfile(data as UserProfile);
-    } catch (error) {
-      console.error("Error in fetchProfile:", error);
-    }
+        setProfile(data as UserProfile);
+        logger.info('Profile fetched successfully', { userId });
+      },
+      3, // 3 retry attempts
+      1000, // 1s delay
+      { component: 'useAuth', action: 'fetchProfile', userId }
+    );
   };
 
   const updateActivity = async () => {
     if (user) {
-      try {
-        await supabase.from("profiles").upsert(
-          {
-            id: user.id,
-            email: user.email || "",
-            name:
-              user.user_metadata?.name || user.user_metadata?.full_name || "",
-            last_activity: new Date().toISOString(),
-            is_online: true,
-          },
-          {
-            onConflict: "id",
-          }
-        );
-        console.log("Activity updated for user:", user.id);
-      } catch (error) {
-        console.error("Error updating activity:", error);
-      }
+      await errorHandler.retry(
+        async () => {
+          await supabase.from("profiles").upsert(
+            {
+              id: user.id,
+              email: user.email || "",
+              name:
+                user.user_metadata?.name || user.user_metadata?.full_name || "",
+              last_activity: new Date().toISOString(),
+              is_online: true,
+            },
+            {
+              onConflict: "id",
+            }
+          );
+          logger.debug('Activity updated', { userId: user.id });
+        },
+        2, // 2 retry attempts
+        1000, // 1s delay
+        { component: 'useAuth', action: 'updateActivity', userId: user.id }
+      );
     }
   };
 
   const signOut = async () => {
-    try {
-      // Track logout before signing out
-      await analytics.trackUserAction('logout');
-      
-      // Mark user as offline before signing out
-      if (user) {
-        await supabase
-          .from("profiles")
-          .update({ is_online: false })
-          .eq("id", user.id);
-      }
+    await errorHandler.handleAsync(
+      async () => {
+        // Track logout before signing out
+        await analytics.trackUserAction('logout');
+        
+        // Mark user as offline before signing out
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ is_online: false })
+            .eq("id", user.id);
+        }
 
-      // Import and use robust sign out
-      const { robustSignOut } = await import('@/lib/authCleanup');
-      await robustSignOut();
-    } catch (error) {
-      console.error("Error in signOut:", error);
+        // Import and use robust sign out
+        const { robustSignOut } = await import('@/lib/authCleanup');
+        await robustSignOut();
+        
+        logger.info('User signed out successfully', { userId: user?.id });
+      },
+      { component: 'useAuth', action: 'signOut', userId: user?.id },
+      { 
+        showToast: false, // Don't show toast on error, just force redirect
+        retry: { enabled: true, maxAttempts: 1 }
+      }
+    ).catch(() => {
       // Force reload even if there's an error
+      logger.warn('Sign out failed, forcing redirect');
       window.location.href = '/';
-    }
+    });
   };
 
   const signInWithGoogle = async () => {
@@ -117,56 +132,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signInWithGoogleWithRedirect = async (redirectPath: string) => {
-    try {
-      // Prepare for sign in by cleaning up existing state
-      const { prepareForSignIn } = await import('@/lib/authCleanup');
-      await prepareForSignIn();
+    const result = await errorHandler.retry(
+      async () => {
+        // Prepare for sign in by cleaning up existing state
+        const { prepareForSignIn } = await import('@/lib/authCleanup');
+        await prepareForSignIn();
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}${redirectPath}`,
-        },
-      });
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}${redirectPath}`,
+          },
+        });
 
-      // Track Google sign-in attempt
-      if (data && !error) {
+        if (error) throw error;
+
+        // Track Google sign-in attempt
         await analytics.trackUserAction('login', {
           loginMethod: 'google_oauth',
           redirectPath
         });
-      }
+        
+        logger.info('Google sign-in initiated', { redirectPath });
 
-      return { error };
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-      return { error };
-    }
+        return { error: null };
+      },
+      2, // 2 retry attempts
+      2000, // 2s delay
+      { component: 'useAuth', action: 'signInWithGoogle', metadata: { redirectPath } }
+    );
+
+    return { error: result ? null : new Error('Sign in failed') };
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) {
+      logger.warn('Attempted to update profile without user');
       return { error: "No user logged in" };
     }
 
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", user.id);
+    const result = await errorHandler.retry(
+      async () => {
+        const { error } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("id", user.id);
 
-      if (error) {
-        console.error("Error updating profile:", error);
-        return { error };
-      }
+        if (error) throw error;
 
-      // Update local profile state
-      setProfile((prev) => (prev ? { ...prev, ...updates } : null));
-      return { error: null };
-    } catch (error) {
-      console.error("Error in updateProfile:", error);
-      return { error };
-    }
+        // Update local profile state
+        setProfile((prev) => (prev ? { ...prev, ...updates } : null));
+        
+        logger.info('Profile updated successfully', { 
+          userId: user.id, 
+          updatedFields: Object.keys(updates) 
+        });
+        
+        return { error: null };
+      },
+      3, // 3 retry attempts
+      1000, // 1s delay
+      { component: 'useAuth', action: 'updateProfile', userId: user.id }
+    );
+
+    return result ? { error: null } : { error: 'Update failed after retries' };
   };
 
   useEffect(() => {
@@ -174,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
+      logger.debug("Auth state changed", { event, userId: session?.user?.id });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
