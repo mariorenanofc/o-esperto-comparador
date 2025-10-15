@@ -15,6 +15,9 @@ import { supabaseAdminService } from "@/services/supabase/adminService";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { ErrorBoundaryWithRetry } from "@/components/ErrorBoundaryWithRetry";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 interface UserProfile {
   id: string;
@@ -26,27 +29,31 @@ interface UserProfile {
   last_activity: string | null;
 }
 
-export const UserManagementSection = () => {
+const UserManagementSectionContent = () => {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const { retry, handleAsync } = useErrorHandler({ component: 'UserManagementSection' });
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      console.log("Fetching all users...");
-
-      const data = await supabaseAdminService.getAllUsers();
-      console.log("Users data received:", data);
-      setUsers(data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Erro ao carregar usuários");
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    const result = await retry(
+      async () => {
+        logger.info('Fetching users list', { component: 'UserManagementSection' });
+        const data = await supabaseAdminService.getAllUsers();
+        logger.info('Users fetched successfully', { count: data?.length || 0 });
+        return data || [];
+      },
+      3, // max attempts
+      2000 // 2s delay
+    );
+    
+    if (result) {
+      setUsers(result);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -55,35 +62,37 @@ export const UserManagementSection = () => {
     // Auto refresh every 20 seconds for real-time status updates
     const interval = setInterval(fetchUsers, 20000);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUpdatePlan = async (userId: string, newPlan: string) => {
     if (currentUser && userId === currentUser.id) {
-      toast.error("Você não pdoe alterar o seu próprio plano por aqui.");
+      toast.error("Você não pode alterar o seu próprio plano por aqui.");
       return;
     }
 
-    try {
-      setActionLoading(userId);
-      console.log("Updating user plan:", { userId, newPlan });
-
-      await supabaseAdminService.updateUserPlan(userId, newPlan);
-      toast.success(`Plano atualizado para ${newPlan}`);
-
-      // Update local state
-      setUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId ? { ...user, plan: newPlan } : user
-        )
-      );
-    } catch (error) {
-      console.error("Error updating user plan:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error(`Erro ao atualizar plano: ${errorMessage}`);
-    } finally {
-      setActionLoading(null);
-    }
+    setActionLoading(userId);
+    
+    const result = await handleAsync(
+      async () => {
+        logger.info('Updating user plan', { userId, newPlan });
+        await supabaseAdminService.updateUserPlan(userId, newPlan);
+        
+        // Update local state
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.id === userId ? { ...user, plan: newPlan } : user
+          )
+        );
+        
+        toast.success(`Plano atualizado para ${newPlan}`);
+        logger.info('User plan updated successfully', { userId, newPlan });
+      },
+      { component: 'UserManagementSection', action: 'updateUserPlan', userId },
+      { severity: 'medium' }
+    );
+    
+    setActionLoading(null);
   };
 
   const getPlanBadge = (plan: string | null) => {
@@ -209,5 +218,18 @@ export const UserManagementSection = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+export const UserManagementSection = () => {
+  return (
+    <ErrorBoundaryWithRetry
+      context={{
+        component: 'UserManagementSection',
+        feature: 'user-management'
+      }}
+    >
+      <UserManagementSectionContent />
+    </ErrorBoundaryWithRetry>
   );
 };
