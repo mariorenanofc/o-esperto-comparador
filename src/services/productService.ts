@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
+import { errorHandler } from "@/lib/errorHandler";
 
 export interface ProductData {
   name: string;
@@ -9,107 +11,161 @@ export interface ProductData {
 
 export const productService = {
   async getProducts() {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("name");
+    return errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("name");
 
-    if (error) {
-      console.error("Error fetching products:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error fetching products", error);
+          throw error;
+        }
 
-    return data || [];
+        logger.info("Products fetched successfully", { count: data?.length || 0 });
+        return data || [];
+      },
+      3,
+      1000,
+      { component: "productService", action: "getProducts" }
+    );
   },
 
   async getProductsByCategory(category: string) {
-    // Usar função otimizada para busca por categoria
-    const { data, error } = await supabase
-      .rpc("search_products_optimized", {
-        search_term: null,
-        category_filter: category,
-        limit_count: 100
-      });
+    return errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .rpc("search_products_optimized", {
+            search_term: null,
+            category_filter: category,
+            limit_count: 100
+          });
 
-    if (error) {
-      console.error("Error fetching products by category:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error fetching products by category", error, { category });
+          throw error;
+        }
 
-    return data || [];
+        logger.info("Products by category fetched", { category, count: data?.length || 0 });
+        return data || [];
+      },
+      3,
+      1000,
+      { component: "productService", action: "getProductsByCategory" }
+    );
   },
 
   async searchProducts(searchTerm: string, category?: string) {
-    // Usar função otimizada com busca fuzzy
-    const { data, error } = await supabase
-      .rpc("search_products_optimized", {
-        search_term: searchTerm.trim(),
-        category_filter: category || null,
-        limit_count: 100
-      });
+    return errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .rpc("search_products_optimized", {
+            search_term: searchTerm.trim(),
+            category_filter: category || null,
+            limit_count: 100
+          });
 
-    if (error) {
-      console.error("Error searching products:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error searching products", error, { searchTerm, category });
+          throw error;
+        }
 
-    return data || [];
+        logger.info("Products search completed", { searchTerm, category, count: data?.length || 0 });
+        return data || [];
+      },
+      3,
+      1000,
+      { component: "productService", action: "searchProducts" }
+    );
   },
 
   async searchProductsWithSimilarity(searchTerm: string, category?: string) {
-    // Nova função para busca com score de similaridade
-    const { data, error } = await supabase
-      .rpc("search_products_optimized", {
-        search_term: searchTerm.trim(),
-        category_filter: category || null,
-        limit_count: 50
-      });
+    return errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .rpc("search_products_optimized", {
+            search_term: searchTerm.trim(),
+            category_filter: category || null,
+            limit_count: 50
+          });
 
-    if (error) {
-      console.error("Error searching products with similarity:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error searching products with similarity", error, { searchTerm, category });
+          throw error;
+        }
 
-    return data || [];
+        logger.info("Products similarity search completed", { searchTerm, count: data?.length || 0 });
+        return data || [];
+      },
+      3,
+      1000,
+      { component: "productService", action: "searchProductsWithSimilarity" }
+    );
   },
 
   async createProduct(productData: ProductData) {
-    const { data, error } = await supabase
-      .from("products")
-      .insert(productData)
-      .select()
-      .single();
+    return errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .from("products")
+          .insert(productData)
+          .select()
+          .single();
 
-    if (error) {
-      console.error("Error creating product:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error creating product", error, { productData });
+          throw error;
+        }
 
-    return data;
+        logger.info("Product created successfully", { productId: data.id, name: data.name });
+        return data;
+      },
+      2,
+      1500,
+      { component: "productService", action: "createProduct" }
+    );
   },
 
   async updateProduct(id: string, productData: Partial<ProductData>) {
-    const { data, error } = await supabase
-      .from("products")
-      .update(productData)
-      .eq("id", id)
-      .select()
-      .single();
+    return errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase
+          .from("products")
+          .update(productData)
+          .eq("id", id)
+          .select()
+          .single();
 
-    if (error) {
-      console.error("Error updating product:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error updating product", error, { productId: id, productData });
+          throw error;
+        }
 
-    return data;
+        logger.info("Product updated successfully", { productId: id, name: data.name });
+        return data;
+      },
+      2,
+      1500,
+      { component: "productService", action: "updateProduct" }
+    );
   },
 
   async deleteProduct(id: string) {
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    return errorHandler.retry(
+      async () => {
+        const { error } = await supabase.from("products").delete().eq("id", id);
 
-    if (error) {
-      console.error("Error deleting product:", error);
-      throw error;
-    }
+        if (error) {
+          logger.error("Error deleting product", error, { productId: id });
+          throw error;
+        }
+
+        logger.info("Product deleted successfully", { productId: id });
+      },
+      2,
+      1000,
+      { component: "productService", action: "deleteProduct" }
+    );
   },
 };

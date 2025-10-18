@@ -1,8 +1,8 @@
-
 import { DailyOffer, PriceContribution } from "@/lib/types";
 import { enhancedDailyOffersService } from "./enhancedDailyOffersService";
 import { supabaseDailyOffersService } from "./supabase/dailyOffersService";
 import { validationService } from "./daily-offers/validationService";
+import { logger } from "@/lib/logger";
 
 export const dailyOffersService = {
   // Use enhanced service for offline-first functionality
@@ -33,11 +33,11 @@ export const dailyOffersService = {
   },
 
   markSimilarOffersAsVerified: () => {
-    console.log('markSimilarOffersAsVerified - handled by admin approval system');
+    logger.info('markSimilarOffersAsVerified - handled by admin approval system');
   },
 
   debugGetAllOffers: () => {
-    console.log('debugGetAllOffers - use Supabase dashboard for debugging');
+    logger.debug('debugGetAllOffers - use Supabase dashboard for debugging');
     return [];
   }
 };
