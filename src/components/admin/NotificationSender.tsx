@@ -22,7 +22,8 @@ import {
   CheckCircle
 } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 interface User {
   id: string;
@@ -42,17 +43,22 @@ export const NotificationSender: React.FC = () => {
   const [filterOnline, setFilterOnline] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const { handleAsync } = useErrorHandler({ component: 'NotificationSender' });
 
   const fetchUsers = async () => {
-    try {
-      const usersData = await supabaseAdminService.getAllUsers();
-      setUsers(usersData);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Erro ao carregar usuários");
-    } finally {
-      setLoading(false);
-    }
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching users for notification');
+        const usersData = await supabaseAdminService.getAllUsers();
+        logger.info('Users fetched', { count: usersData.length });
+        return usersData;
+      },
+      { action: 'fetch_users' },
+      { showToast: true, severity: 'low' }
+    );
+
+    if (result) setUsers(result);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -87,37 +93,44 @@ export const NotificationSender: React.FC = () => {
 
   const handleSendNotification = async () => {
     if (!title.trim() || !message.trim()) {
-      toast.error("Título e mensagem são obrigatórios");
+      logger.warn('Notification send attempted without title or message');
       return;
     }
 
     if (selectedUsers.length === 0) {
-      toast.error("Selecione pelo menos um usuário");
+      logger.warn('Notification send attempted without users');
       return;
     }
 
-    try {
-      setSending(true);
-      await supabaseAdminService.sendNotification(
-        selectedUsers,
-        title.trim(),
-        message.trim(),
-        notificationType
-      );
+    setSending(true);
+    await handleAsync(
+      async () => {
+        logger.info('Sending notification', { 
+          recipients: selectedUsers.length, 
+          type: notificationType 
+        });
+        
+        await supabaseAdminService.sendNotification(
+          selectedUsers,
+          title.trim(),
+          message.trim(),
+          notificationType
+        );
 
-      toast.success(`Notificação enviada para ${selectedUsers.length} usuários`);
-      
-      // Reset form
-      setTitle("");
-      setMessage("");
-      setSelectedUsers([]);
-      setNotificationType("admin_announcement");
-    } catch (error) {
-      console.error("Error sending notification:", error);
-      toast.error("Erro ao enviar notificação");
-    } finally {
-      setSending(false);
-    }
+        logger.info('Notification sent successfully', { 
+          recipients: selectedUsers.length 
+        });
+
+        // Reset form
+        setTitle("");
+        setMessage("");
+        setSelectedUsers([]);
+        setNotificationType("admin_announcement");
+      },
+      { action: 'send_notification' },
+      { showToast: true, severity: 'medium' }
+    );
+    setSending(false);
   };
 
   const getPlanBadge = (plan: string | null) => {

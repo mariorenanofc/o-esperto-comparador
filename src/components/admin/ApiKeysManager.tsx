@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Copy, Eye, EyeOff, Plus, Trash2, Calendar, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { logger } from '@/lib/logger';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,84 +42,99 @@ export const ApiKeysManager: React.FC = () => {
   const [newKeyName, setNewKeyName] = useState('');
   const [showNewKey, setShowNewKey] = useState(false);
   const [newKeyData, setNewKeyData] = useState<{ api_key: string; prefix: string } | null>(null);
+  const { handleAsync } = useErrorHandler({ component: 'ApiKeysManager' });
 
   useEffect(() => {
     fetchApiKeys();
   }, []);
 
   const fetchApiKeys = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('api_keys')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching API keys');
+        const { data, error } = await supabase
+          .from('api_keys')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      const formattedData = (data || []).map(key => ({
-        ...key,
-        permissions: Array.isArray(key.permissions) ? key.permissions : JSON.parse(key.permissions as string || '["read"]')
-      }));
-      setApiKeys(formattedData);
-    } catch (error) {
-      console.error('Error fetching API keys:', error);
-      toast.error('Erro ao carregar chaves de API');
-    } finally {
-      setLoading(false);
-    }
+        if (error) throw error;
+        
+        const formattedData = (data || []).map(key => ({
+          ...key,
+          permissions: Array.isArray(key.permissions) ? key.permissions : JSON.parse(key.permissions as string || '["read"]')
+        }));
+        
+        logger.info('API keys fetched', { count: formattedData.length });
+        return formattedData;
+      },
+      { action: 'fetch_api_keys' },
+      { showToast: true, severity: 'low' }
+    );
+
+    if (result) setApiKeys(result);
+    setLoading(false);
   };
 
   const generateApiKey = async () => {
     if (!newKeyName.trim()) {
-      toast.error('Nome da chave é obrigatório');
+      logger.warn('API key generation attempted without name');
       return;
     }
 
     setGenerating(true);
-    try {
-      const { data, error } = await supabase.rpc('generate_api_key', {
-        key_name: newKeyName.trim(),
-        expires_in_days: 365
-      });
+    const result = await handleAsync(
+      async () => {
+        logger.info('Generating API key', { name: newKeyName });
+        const { data, error } = await supabase.rpc('generate_api_key', {
+          key_name: newKeyName.trim(),
+          expires_in_days: 365
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+        logger.info('API key generated successfully');
+        return data;
+      },
+      { action: 'generate_api_key' },
+      { showToast: true, severity: 'medium' }
+    );
 
-      setNewKeyData(data as any);
+    if (result) {
+      setNewKeyData(result as any);
       setShowNewKey(true);
       setNewKeyName('');
       await fetchApiKeys();
-      toast.success('Chave de API gerada com sucesso!');
-    } catch (error) {
-      console.error('Error generating API key:', error);
-      toast.error('Erro ao gerar chave de API');
-    } finally {
-      setGenerating(false);
     }
+    setGenerating(false);
   };
 
   const revokeApiKey = async (keyId: string) => {
-    try {
-      const { error } = await supabase
-        .from('api_keys')
-        .update({ is_active: false })
-        .eq('id', keyId);
+    await handleAsync(
+      async () => {
+        logger.info('Revoking API key', { keyId });
+        const { error } = await supabase
+          .from('api_keys')
+          .update({ is_active: false })
+          .eq('id', keyId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      await fetchApiKeys();
-      toast.success('Chave de API revogada com sucesso');
-    } catch (error) {
-      console.error('Error revoking API key:', error);
-      toast.error('Erro ao revogar chave de API');
-    }
+        await fetchApiKeys();
+        logger.info('API key revoked successfully', { keyId });
+      },
+      { action: 'revoke_api_key' },
+      { showToast: true, severity: 'medium' }
+    );
   };
 
   const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success('Copiado para a área de transferência');
-    } catch (error) {
-      toast.error('Erro ao copiar');
-    }
+    await handleAsync(
+      async () => {
+        await navigator.clipboard.writeText(text);
+        logger.info('Copied to clipboard');
+      },
+      { action: 'copy_to_clipboard' },
+      { showToast: true, severity: 'low' }
+    );
   };
 
   if (loading) {

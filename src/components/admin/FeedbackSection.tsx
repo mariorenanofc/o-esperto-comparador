@@ -10,7 +10,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 interface Suggestion {
   id: string;
@@ -30,21 +31,23 @@ export const FeedbackSection = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { handleAsync } = useErrorHandler({ component: 'FeedbackSection' });
 
   const fetchSuggestions = async () => {
-    try {
-      setLoading(true);
-      console.log("Fetching all suggestions...");
+    setLoading(true);
+    const data = await handleAsync(
+      async () => {
+        logger.info('Fetching suggestions');
+        const result = await supabaseAdminService.getAllSuggestions();
+        logger.info('Suggestions fetched', { count: result?.length || 0 });
+        return result;
+      },
+      { action: 'fetch_suggestions' },
+      { showToast: true, severity: 'low' }
+    );
 
-      const data = await supabaseAdminService.getAllSuggestions();
-      console.log("Fetched suggestions:", data);
-      setSuggestions(data || []);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-      toast.error("Erro ao carregar sugestões");
-    } finally {
-      setLoading(false);
-    }
+    if (data) setSuggestions(data);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -55,32 +58,28 @@ export const FeedbackSection = () => {
     suggestionId: string,
     newStatus: string
   ) => {
-    try {
-      setActionLoading(suggestionId);
-      console.log("Updating suggestion status:", { suggestionId, newStatus });
+    setActionLoading(suggestionId);
+    
+    await handleAsync(
+      async () => {
+        logger.info('Updating suggestion status', { suggestionId, newStatus });
+        await supabaseAdminService.updateSuggestionStatus(suggestionId, newStatus);
 
-      await supabaseAdminService.updateSuggestionStatus(
-        suggestionId,
-        newStatus
-      );
-      toast.success(`Status da sugestão atualizado para ${newStatus}`);
-
-      // Update local state
-      setSuggestions((prev) =>
-        prev.map((suggestion) =>
-          suggestion.id === suggestionId
-            ? { ...suggestion, status: newStatus }
-            : suggestion
-        )
-      );
-    } catch (error) {
-      console.error("Error updating suggestion status:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error(`Erro ao atualizar status: ${errorMessage}`);
-    } finally {
-      setActionLoading(null);
-    }
+        setSuggestions((prev) =>
+          prev.map((suggestion) =>
+            suggestion.id === suggestionId
+              ? { ...suggestion, status: newStatus }
+              : suggestion
+          )
+        );
+        
+        logger.info('Suggestion status updated', { suggestionId, newStatus });
+      },
+      { action: 'update_suggestion_status' },
+      { showToast: true, severity: 'medium' }
+    );
+    
+    setActionLoading(null);
   };
 
   const getStatusBadge = (status: string) => {

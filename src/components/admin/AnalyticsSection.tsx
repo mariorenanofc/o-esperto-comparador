@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Users, CheckCircle, MessageSquare, RefreshCw, TrendingUp, Activity } from 'lucide-react';
-import { toast } from 'sonner';
 import { supabaseAdminService } from '@/services/supabase/adminService';
 import { DbUsageCard } from '@/components/admin/DbUsageCard';
 import { supabase } from '@/integrations/supabase/client';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { logger } from '@/lib/logger';
 
 interface AnalyticsData {
   totalContributions: number;
@@ -27,24 +28,26 @@ export const AnalyticsSection = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [kpis, setKpis] = useState<AnalyticsKPIs | null>(null);
   const [loading, setLoading] = useState(true);
+  const { handleAsync } = useErrorHandler({ component: 'AnalyticsSection' });
 
   const fetchAnalytics = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching analytics data...');
-      
-      const data = await supabaseAdminService.getAnalytics();
-      console.log('Analytics data received:', data);
-      setAnalytics(data);
+    setLoading(true);
+    const data = await handleAsync(
+      async () => {
+        logger.info('Fetching analytics data');
+        const result = await supabaseAdminService.getAnalytics();
+        logger.info('Analytics data received', { count: result?.totalUsers });
+        return result;
+      },
+      { action: 'fetch_analytics' },
+      { showToast: true, severity: 'medium' }
+    );
 
-      // Fetch KPIs from last 7 days
+    if (data) {
+      setAnalytics(data);
       await fetchKPIs();
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-      toast.error("Erro ao carregar dados analíticos");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const fetchKPIs = async () => {
@@ -81,14 +84,17 @@ export const AnalyticsSection = () => {
         errorRate = (errorCount / performanceData.length) * 100;
       }
 
-      setKpis({
+      const result = {
         pageViews7d: pageViewsData?.length || 0,
         featureUsage7d: featureUsageData?.length || 0,
         avgResponseTime7d: Math.round(avgResponseTime),
         errorRate7d: Math.round(errorRate * 100) / 100
-      });
+      };
+      
+      logger.info('KPIs fetched successfully', result);
+      setKpis(result);
     } catch (error) {
-      console.error('Error fetching KPIs:', error);
+      logger.error('Error fetching KPIs', error as Error);
     }
   };
 
