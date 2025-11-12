@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { useAuth } from "@/hooks/useAuth"; // <-- Importado para pegar o session/token
-import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 import { Loader2, ArrowLeft, Crown, Trash2, User, Calendar, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -69,10 +70,10 @@ interface PaymentHistory {
 const UserDetailPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  // --- INÍCIO DA MODIFICAÇÃO AQUI ---
-  const { user: currentUser, session } = useAuth(); // <-- Obtendo o session para pegar o token
-  const accessToken = session?.access_token || ""; // Extrai o token de acesso
-  // --- FIM DA MODIFICAÇÃO AQUI ---
+  const { user: currentUser, session } = useAuth();
+  const accessToken = session?.access_token || "";
+  const { handleAsync } = useErrorHandler({ component: 'UserDetailPage' });
+  
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [detailedSubscriptionData, setDetailedSubscriptionData] = useState<DetailedSubscriptionData | null>(null);
@@ -91,73 +92,79 @@ const UserDetailPage: React.FC = () => {
 
   const fetchUserProfile = async (id: string) => {
     setLoading(true);
-    try {
-      console.log(`Fetching user profile for: ${id}`);
-      const users = await supabaseAdminService.getAllUsers();
-      const foundUser = users.find((u) => u.id === id);
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching user profile', { userId: id });
+        const users = await supabaseAdminService.getAllUsers();
+        const foundUser = users.find((u) => u.id === id);
 
-      if (foundUser) {
-        setUserProfile(foundUser);
-        console.log("User profile fetched:", foundUser);
-      } else {
-        toast.error("Usuário não encontrado.");
-        navigate("/admin");
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      toast.error("Erro ao carregar perfil do usuário.");
-    } finally {
-      setLoading(false);
+        if (!foundUser) {
+          throw new Error('Usuário não encontrado');
+        }
+        
+        logger.info('User profile fetched', { userId: id });
+        return foundUser;
+      },
+      { action: 'fetch_user_profile' },
+      { showToast: true, severity: 'medium' }
+    );
+    
+    if (result) {
+      setUserProfile(result);
+    } else {
+      navigate("/admin");
     }
+    setLoading(false);
   };
 
   const fetchSubscriptionData = async (id: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('subscribers')
-        .select('subscribed, subscription_tier, subscription_end')
-        .eq('user_id', id)
-        .single();
+    await handleAsync(
+      async () => {
+        logger.info('Fetching subscription data', { userId: id });
+        const { data, error } = await supabase
+          .from('subscribers')
+          .select('subscribed, subscription_tier, subscription_end')
+          .eq('user_id', id)
+          .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao buscar dados de assinatura:', error);
-        return;
-      }
+        if (error && error.code !== 'PGRST116') throw error;
 
-      if (data) {
-        setSubscriptionData(data);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar dados de assinatura:', error);
-    }
+        if (data) {
+          setSubscriptionData(data);
+          logger.info('Subscription data fetched', { userId: id });
+        }
+      },
+      { action: 'fetch_subscription_data' },
+      { showToast: false, severity: 'low' }
+    );
   };
 
   const fetchDetailedSubscriptionData = async (id: string) => {
     if (!userId || !session?.access_token) return;
     
     setSubscriptionLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('subscription-management', {
-        body: { userId: id },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+    await handleAsync(
+      async () => {
+        logger.info('Fetching detailed subscription data', { userId: id });
+        const { data, error } = await supabase.functions.invoke('subscription-management', {
+          body: { userId: id },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          setDetailedSubscriptionData(data.accessControl);
+          setPaymentHistory(data.subscriptionHistory || []);
+          logger.info('Detailed subscription data fetched', { userId: id });
         }
-      });
-
-      if (error) {
-        console.error('Erro ao buscar dados detalhados de assinatura:', error);
-        return;
-      }
-
-      if (data?.success) {
-        setDetailedSubscriptionData(data.accessControl);
-        setPaymentHistory(data.subscriptionHistory || []);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar dados detalhados de assinatura:', error);
-    } finally {
-      setSubscriptionLoading(false);
-    }
+      },
+      { action: 'fetch_detailed_subscription' },
+      { showToast: false, severity: 'low' }
+    );
+    setSubscriptionLoading(false);
   };
 
   const handleRefreshSubscription = () => {
@@ -170,66 +177,53 @@ const UserDetailPage: React.FC = () => {
     if (!userProfile || !userId) return;
 
     if (currentUser && userId === currentUser.id) {
-      toast.error("Você não pode alterar o seu próprio plano por aqui.");
+      logger.warn('User tried to update their own plan');
       return;
     }
 
-    try {
-      setActionLoading("plan");
-      await supabaseAdminService.updateUserPlan(userId, newPlan);
-      toast.success(
-        `Plano de ${
-          userProfile.name || userProfile.email
-        } atualizado para ${newPlan}.`
-      );
-      setUserProfile((prev) => (prev ? { ...prev, plan: newPlan } : null));
-    } catch (error) {
-      console.error("Error updating user plan:", error);
-      toast.error("Erro ao atualizar plano.");
-    } finally {
-      setActionLoading(null);
-    }
+    setActionLoading("plan");
+    await handleAsync(
+      async () => {
+        logger.info('Updating user plan', { userId, newPlan });
+        await supabaseAdminService.updateUserPlan(userId, newPlan);
+        logger.info('User plan updated', { userId, newPlan });
+        setUserProfile((prev) => (prev ? { ...prev, plan: newPlan } : null));
+      },
+      { action: 'update_user_plan' },
+      { showToast: true, severity: 'medium' }
+    );
+    setActionLoading(null);
   };
 
   const handleDeleteUser = async () => {
     if (!userProfile || !userId) return;
 
     if (currentUser && userId === currentUser.id) {
-      toast.error("Você não pode excluir a si mesmo.");
+      logger.warn('User tried to delete themselves');
       return;
     }
 
-    // --- INÍCIO DA MODIFICAÇÃO AQUI ---
     if (!accessToken) {
-      // Verifica se há um token antes de prosseguir
-      toast.error("Você não está autenticado. Faça login novamente.");
-      setActionLoading(null);
+      logger.warn('User not authenticated for delete operation');
       return;
     }
-    // --- FIM DA MODIFICAÇÃO AQUI ---
 
-    setActionLoading("delete"); // Ativa o loading
-
-    try {
-      console.log(`Iniciando deleção para o usuário: ${userId}`);
-      // --- INÍCIO DA MODIFICAÇÃO AQUI ---
-      await supabaseAdminService.deleteUserAuthAndProfile(userId);
-      // --- FIM DA MODIFICAÇÃO AQUI ---
-
-      toast.success(
-        `Usuário ${userProfile.name || userProfile.email} excluído com sucesso.`
-      );
+    setActionLoading("delete");
+    const success = await handleAsync(
+      async () => {
+        logger.info('Deleting user', { userId });
+        await supabaseAdminService.deleteUserAuthAndProfile(userId);
+        logger.info('User deleted', { userId });
+        return true;
+      },
+      { action: 'delete_user' },
+      { showToast: true, severity: 'high' }
+    );
+    
+    if (success) {
       navigate("/admin");
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Erro desconhecido ao excluir usuário.";
-      toast.error(`Erro ao excluir usuário: ${errorMessage}`);
-    } finally {
-      setActionLoading(null);
     }
+    setActionLoading(null);
   };
 
   const getPlanBadge = (plan: string | null) => {

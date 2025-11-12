@@ -6,7 +6,8 @@ import { RefreshCw, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCacheStats } from '@/hooks/useOptimizedQueries';
 import { getCacheService } from '@/services/reactiveCache';
-import { secureLog } from '@/lib/security';
+import { logger } from '@/lib/logger';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
 interface PerformanceStats {
   total_products: number;
@@ -22,52 +23,57 @@ export const PerformanceMonitor = () => {
   const [stats, setStats] = useState<PerformanceStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const { handleAsync } = useErrorHandler({ component: 'PerformanceMonitor' });
   
   const cacheStats = useCacheStats();
 
   const fetchPerformanceStats = async () => {
     setLoading(true);
-    try {
-      // Usando query SQL direta pois a função pode não estar nas tipagens ainda
-      const { data, error } = await supabase
-        .from('products')
-        .select('id')
-        .limit(1);
-      
-      if (error) {
-        console.error('Error testing database connection:', error);
-        return;
-      }
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching performance stats');
+        const { data, error } = await supabase
+          .from('products')
+          .select('id')
+          .limit(1);
+        
+        if (error) throw error;
 
-      // Simulação de stats até a função estar disponível nas tipagens
-      const mockStats: PerformanceStats = {
-        total_products: 0,
-        total_offers: 0,
-        recent_offers_24h: 0,
-        avg_response_time_ms: 0,
-        cache_optimization_active: true,
-        indexes_created: true,
-        last_updated: new Date().toISOString()
-      };
+        const mockStats: PerformanceStats = {
+          total_products: 0,
+          total_offers: 0,
+          recent_offers_24h: 0,
+          avg_response_time_ms: 0,
+          cache_optimization_active: true,
+          indexes_created: true,
+          last_updated: new Date().toISOString()
+        };
 
-      setStats(mockStats);
+        logger.info('Performance stats updated', { stats: mockStats });
+        return mockStats;
+      },
+      { action: 'fetch_performance_stats' },
+      { showToast: false, severity: 'low' }
+    );
+    
+    if (result) {
+      setStats(result);
       setLastRefresh(new Date());
-      secureLog('📊 Performance stats updated (mock)', { data: mockStats });
-    } catch (error) {
-      console.error('Error in performance monitor:', error);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const handleCacheCleanup = async () => {
-    try {
-      const cacheService = getCacheService();
-      await cacheService.cleanupStaleCache();
-      secureLog('🧹 Cache cleanup completed');
-    } catch (error) {
-      console.error('Error during cache cleanup:', error);
-    }
+    await handleAsync(
+      async () => {
+        logger.info('Starting cache cleanup');
+        const cacheService = getCacheService();
+        await cacheService.cleanupStaleCache();
+        logger.info('Cache cleanup completed');
+      },
+      { action: 'cache_cleanup' },
+      { showToast: true, severity: 'low' }
+    );
   };
 
   useEffect(() => {

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Shield, Settings } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 const AdminLogin: React.FC = () => {
   const { user, loading, signOut } = useAuth();
@@ -42,7 +43,7 @@ const AdminLogin: React.FC = () => {
       });
 
       if (error) {
-        console.error("Google admin sign in error:", error);
+        logger.error("Google admin sign in error", error);
         toast.dismiss();
         toast.error("Erro ao fazer login administrativo. Tente novamente.");
       } else {

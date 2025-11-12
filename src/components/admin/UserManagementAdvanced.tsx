@@ -33,7 +33,8 @@ import {
   Activity
 } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -60,6 +61,7 @@ interface FilterOptions {
 export const UserManagementAdvanced: React.FC = () => {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
+  const { handleAsync } = useErrorHandler({ component: 'UserManagementAdvanced' });
   
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
@@ -81,16 +83,19 @@ export const UserManagementAdvanced: React.FC = () => {
   });
 
   const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const data = await supabaseAdminService.getAllUsers();
-      setUsers(data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Erro ao carregar usuários");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching all users');
+        const data = await supabaseAdminService.getAllUsers();
+        logger.info('Users fetched', { count: data?.length || 0 });
+        return data;
+      },
+      { action: 'fetch_users' },
+      { showToast: true, severity: 'low' }
+    );
+    if (result) setUsers(result);
+    setLoading(false);
   };
 
   // Apply filters and search
@@ -174,24 +179,24 @@ export const UserManagementAdvanced: React.FC = () => {
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
 
   const handleExport = async (format: 'csv' | 'pdf') => {
-    try {
-      setExporting(true);
-      
-      if (format === 'csv') {
-        const csvContent = generateCSV(filteredUsers);
-        downloadFile(csvContent, 'usuarios.csv', 'text/csv');
-      } else {
-        // For PDF, you could use a library like jsPDF
-        toast.info("Exportação PDF será implementada em breve");
-      }
-      
-      toast.success(`Relatório ${format.toUpperCase()} gerado com sucesso`);
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Erro ao exportar relatório");
-    } finally {
-      setExporting(false);
-    }
+    setExporting(true);
+    await handleAsync(
+      async () => {
+        logger.info('Exporting users report', { format, count: filteredUsers.length });
+        
+        if (format === 'csv') {
+          const csvContent = generateCSV(filteredUsers);
+          downloadFile(csvContent, 'usuarios.csv', 'text/csv');
+        } else {
+          throw new Error('PDF export not implemented yet');
+        }
+        
+        logger.info('Report exported successfully', { format });
+      },
+      { action: 'export_users' },
+      { showToast: true, severity: 'low' }
+    );
+    setExporting(false);
   };
 
   const generateCSV = (data: UserProfile[]): string => {

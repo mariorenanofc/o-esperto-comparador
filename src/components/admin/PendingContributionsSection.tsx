@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 interface Contribution {
   id: string;
@@ -25,21 +26,22 @@ export const PendingContributionsSection = () => {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { handleAsync } = useErrorHandler({ component: 'PendingContributionsSection' });
 
   const fetchContributions = async () => {
-    try {
-      setLoading(true);
-      console.log("Fetching all contributions for admin review...");
-
-      const data = await supabaseAdminService.getAllContributions();
-      console.log("Fetched contributions:", data);
-      setContributions(data || []);
-    } catch (error) {
-      console.error("Error fetching contributions:", error);
-      toast.error("Erro ao carregar contribuições");
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching contributions for admin review');
+        const data = await supabaseAdminService.getAllContributions();
+        logger.info('Contributions fetched', { count: data?.length || 0 });
+        return data;
+      },
+      { action: 'fetch_contributions' },
+      { showToast: true, severity: 'low' }
+    );
+    if (result) setContributions(result);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -47,53 +49,46 @@ export const PendingContributionsSection = () => {
   }, []);
 
   const handleApprove = async (id: string) => {
-    try {
-      console.log("Admin approving contribution:", id);
-      setActionLoading(id);
-
-      await supabaseAdminService.approveContribution(id);
-      toast.success("Contribuição aprovada com sucesso!");
-
-      // Update local state to reflect the change
-      setContributions((prev) =>
-        prev.map((contrib) =>
-          contrib.id === id ? { ...contrib, verified: true } : contrib
-        )
-      );
-    } catch (error) {
-      console.error("Error approving contribution:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error(`Erro ao aprovar contribuição: ${errorMessage}`);
-    } finally {
-      setActionLoading(null);
-    }
+    setActionLoading(id);
+    const result = await handleAsync(
+      async () => {
+        logger.info('Approving contribution', { contributionId: id });
+        await supabaseAdminService.approveContribution(id);
+        logger.info('Contribution approved', { contributionId: id });
+        
+        setContributions((prev) =>
+          prev.map((contrib) =>
+            contrib.id === id ? { ...contrib, verified: true } : contrib
+          )
+        );
+        return true;
+      },
+      { action: 'approve_contribution' },
+      { showToast: true, severity: 'medium' }
+    );
+    setActionLoading(null);
   };
 
   const handleReject = async (id: string) => {
-    try {
-      console.log("Admin rejecting contribution:", id);
+    const confirmed = window.confirm(
+      "Tem certeza que deseja rejeitar e remover esta contribuição?"
+    );
+    if (!confirmed) return;
 
-      const confirmed = window.confirm(
-        "Tem certeza que deseja rejeitar e remover esta contribuição?"
-      );
-      if (!confirmed) return;
-
-      setActionLoading(id);
-
-      await supabaseAdminService.rejectContribution(id);
-      toast.success("Contribuição rejeitada e removida");
-
-      // Remove from local state
-      setContributions((prev) => prev.filter((contrib) => contrib.id !== id));
-    } catch (error) {
-      console.error("Error rejecting contribution:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Erro desconhecido";
-      toast.error(`Erro ao rejeitar contribuição: ${errorMessage}`);
-    } finally {
-      setActionLoading(null);
-    }
+    setActionLoading(id);
+    const result = await handleAsync(
+      async () => {
+        logger.info('Rejecting contribution', { contributionId: id });
+        await supabaseAdminService.rejectContribution(id);
+        logger.info('Contribution rejected', { contributionId: id });
+        
+        setContributions((prev) => prev.filter((contrib) => contrib.id !== id));
+        return true;
+      },
+      { action: 'reject_contribution' },
+      { showToast: true, severity: 'medium' }
+    );
+    setActionLoading(null);
   };
 
   const getStatusBadge = (verified: boolean) => {

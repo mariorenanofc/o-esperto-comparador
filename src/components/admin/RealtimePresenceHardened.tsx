@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { logger } from "@/lib/logger";
 
 interface PresenceUser {
   user_id: string;
@@ -54,15 +55,13 @@ export const RealtimePresenceHardened: React.FC = () => {
   // Validate connection and log details
   const validateConnection = useCallback(() => {
     const expectedDomain = 'diqdsmrlhldanxxrtozl.supabase.co';
-    // Use the known URL instead of accessing protected property
     const actualUrl = 'https://diqdsmrlhldanxxrtozl.supabase.co';
     
-    console.log('🔍 Admin presence connection validation:', {
+    logger.info('Admin presence connection validation', {
       expected: expectedDomain,
       actual: actualUrl,
       isVisible: document.visibilityState === 'visible',
-      isOnline: navigator.onLine,
-      timestamp: new Date().toISOString()
+      isOnline: navigator.onLine
     });
 
     return actualUrl.includes(expectedDomain);
@@ -77,9 +76,9 @@ export const RealtimePresenceHardened: React.FC = () => {
     }
     
     if (errorLogCountRef.current < 3) {
-      console.error('❌ Admin presence connection error:', status, error, {
+      logger.error('Admin presence connection error', error, {
+        status,
         retryCount: connectionStatus.retryCount,
-        timestamp: new Date().toISOString(),
         domain: 'diqdsmrlhldanxxrtozl.supabase.co'
       });
       errorLogCountRef.current++;
@@ -96,20 +95,17 @@ export const RealtimePresenceHardened: React.FC = () => {
   const startFallbackPolling = useCallback(() => {
     if (pollingIntervalRef.current) return;
     
-    console.log('🔄 Starting admin presence fallback polling');
+    logger.info('Starting admin presence fallback polling');
     setConnectionStatus(prev => ({ ...prev, usingFallback: true }));
     
     const pollAdminData = async () => {
       try {
-        // In a real implementation, you'd fetch admin activity data from a REST endpoint
-        // For now, we'll just log that we're polling
-        console.log('📊 Admin presence polling check completed');
+        logger.info('Admin presence polling check completed');
       } catch (error) {
-        console.error('Admin presence polling error:', error);
+        logger.error('Admin presence polling error', error);
       }
     };
     
-    // Poll every 30 seconds
     pollingIntervalRef.current = setInterval(pollAdminData, 30000);
   }, []);
 
@@ -131,11 +127,11 @@ export const RealtimePresenceHardened: React.FC = () => {
 
       // Only proceed if document is visible
       if (document.visibilityState !== 'visible') {
-        console.log('🔍 Skipping admin presence setup - document hidden');
+        logger.info('Skipping admin presence setup - document hidden');
         return;
       }
 
-      console.log('🔍 Setting up admin presence channel (attempt', retryCount + 1, ')');
+      logger.info('Setting up admin presence channel', { attempt: retryCount + 1 });
 
       // Clean up existing channel
       if (channel) {
@@ -187,14 +183,14 @@ export const RealtimePresenceHardened: React.FC = () => {
           setOnlineUsers(users);
         })
         .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-          console.log('👑 Admin joined:', key, newPresences);
+          logger.info('Admin joined', { key, presences: newPresences });
         })
         .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          console.log('👑 Admin left:', key, leftPresences);
+          logger.info('Admin left', { key, presences: leftPresences });
         })
         .subscribe(async (status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Admin presence channel connected');
+            logger.info('Admin presence channel connected');
             isConnected = true;
             setConnectionStatus(prev => ({ 
               ...prev, 
@@ -220,12 +216,12 @@ export const RealtimePresenceHardened: React.FC = () => {
           
           setConnectionStatus(prev => ({ ...prev, retryCount: newRetryCount }));
           
-          console.log(`🔄 Admin presence retry in ${delay}ms (attempt ${newRetryCount + 1}/3)`);
+          logger.info('Admin presence retry scheduled', { delay, attempt: newRetryCount + 1 });
           retryTimeoutRef.current = setTimeout(() => {
             setupPresenceWithRetry(newRetryCount);
           }, delay);
         } else if (!isConnected) {
-          console.log('🔄 Admin presence max retries reached, starting fallback');
+          logger.info('Admin presence max retries reached, starting fallback');
           startFallbackPolling();
         }
       }, 5000);
@@ -246,7 +242,7 @@ export const RealtimePresenceHardened: React.FC = () => {
       };
 
     } catch (error) {
-      console.error('❌ Error setting up admin presence:', error);
+      logger.error('Error setting up admin presence', error);
       logConnectionError('SETUP_ERROR', error);
       
       const newRetryCount = retryCount + 1;

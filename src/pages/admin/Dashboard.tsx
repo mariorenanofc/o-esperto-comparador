@@ -6,7 +6,8 @@ import { ActiveUsersSection } from "@/components/admin/ActiveUsersSection";
 import { PendingContributionsSection } from "@/components/admin/PendingContributionsSection";
 import { ApiKeysManager } from "@/components/admin/ApiKeysManager";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,22 +16,28 @@ const Dashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<any>(null);
   const [dbUsage, setDbUsage] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { handleAsync } = useErrorHandler({ component: 'AdminDashboard' });
 
   const fetchDashboardData = async () => {
-    try {
-      const [analyticsData, dbUsageData] = await Promise.all([
-        supabaseAdminService.getAnalytics(),
-        supabaseAdminService.getDatabaseUsage().catch(() => null),
-      ]);
-
-      setAnalytics(analyticsData);
-      setDbUsage(dbUsageData);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      toast.error("Erro ao carregar dados do dashboard");
-    } finally {
-      setLoading(false);
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching dashboard data');
+        const [analyticsData, dbUsageData] = await Promise.all([
+          supabaseAdminService.getAnalytics(),
+          supabaseAdminService.getDatabaseUsage().catch(() => null),
+        ]);
+        logger.info('Dashboard data fetched');
+        return { analyticsData, dbUsageData };
+      },
+      { action: 'fetch_dashboard_data' },
+      { showToast: true, severity: 'medium' }
+    );
+    
+    if (result) {
+      setAnalytics(result.analyticsData);
+      setDbUsage(result.dbUsageData);
     }
+    setLoading(false);
   };
 
   useEffect(() => {

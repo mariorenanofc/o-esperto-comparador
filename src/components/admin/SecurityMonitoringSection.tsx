@@ -22,7 +22,8 @@ import {
   Database
 } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 interface AuditLog {
   id: string;
@@ -47,41 +48,42 @@ export const SecurityMonitoringSection: React.FC = () => {
   const [rateLimits, setRateLimits] = useState<RateLimit[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { handleAsync } = useErrorHandler({ component: 'SecurityMonitoringSection' });
 
   const fetchSecurityData = async () => {
-    try {
-      const [logs, limits] = await Promise.all([
-        supabaseAdminService.getAuditLogs(),
-        supabaseAdminService.getRateLimits()
-      ]);
-      
-      setAuditLogs(logs);
-      setRateLimits(limits);
-    } catch (error) {
-      console.error("Error fetching security data:", error);
-      toast.error("Erro ao carregar dados de segurança");
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching security data');
+        const [logs, limits] = await Promise.all([
+          supabaseAdminService.getAuditLogs(),
+          supabaseAdminService.getRateLimits()
+        ]);
+        logger.info('Security data fetched', { logsCount: logs.length, limitsCount: limits.length });
+        return { logs, limits };
+      },
+      { action: 'fetch_security_data' },
+      { showToast: true, severity: 'low' }
+    );
+    
+    if (result) {
+      setAuditLogs(result.logs);
+      setRateLimits(result.limits);
     }
   };
 
   const handleMaintenance = async (action: string) => {
-    try {
-      setActionLoading(action);
-      await supabaseAdminService.performMaintenance(action);
-      
-      const actionNames: Record<string, string> = {
-        cleanup_sessions: "Limpeza de sessões",
-        cleanup_notifications: "Limpeza de notificações",
-        mark_offline: "Marcar usuários inativos como offline"
-      };
-      
-      toast.success(`${actionNames[action]} executada com sucesso`);
-      await fetchSecurityData();
-    } catch (error) {
-      console.error(`Error performing ${action}:`, error);
-      toast.error(`Erro ao executar ${action}`);
-    } finally {
-      setActionLoading(null);
-    }
+    setActionLoading(action);
+    await handleAsync(
+      async () => {
+        logger.info('Performing maintenance action', { action });
+        await supabaseAdminService.performMaintenance(action);
+        logger.info('Maintenance action completed', { action });
+        await fetchSecurityData();
+      },
+      { action: 'perform_maintenance' },
+      { showToast: true, severity: 'medium' }
+    );
+    setActionLoading(null);
   };
 
   useEffect(() => {
