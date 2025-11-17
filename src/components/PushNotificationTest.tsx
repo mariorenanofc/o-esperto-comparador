@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { Bell, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { logger } from '@/lib/logger';
 
 export const PushNotificationTest: React.FC = () => {
   const { user } = useAuth();
+  const { handleAsync } = useErrorHandler({ component: 'PushNotificationTest' });
   const [isLoading, setIsLoading] = useState(false);
   const [testResults, setTestResults] = useState<{
     swRegistered: boolean | null;
@@ -24,81 +26,81 @@ export const PushNotificationTest: React.FC = () => {
 
   const checkPushStatus = async () => {
     setIsLoading(true);
-    const results = { ...testResults };
 
-    try {
-      // Check notification permission
-      results.permission = Notification.permission;
+    await handleAsync(
+      async () => {
+        logger.info('Checking push notification status');
+        const results = { ...testResults };
 
-      // Check service worker
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        results.swRegistered = !!registration;
+        results.permission = Notification.permission;
 
-        if (registration) {
-          // Check existing subscription
-          const subscription = await registration.pushManager.getSubscription();
-          results.subscription = !!subscription;
-          console.log('Current subscription:', subscription);
-        }
-      } else {
-        results.swRegistered = false;
-      }
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          results.swRegistered = !!registration;
 
-      // Test VAPID key fetch
-      try {
-        const { data, error } = await supabase.functions.invoke('get-vapid');
-        console.log('VAPID function response:', { data, error });
-        if (error) throw error;
-        
-        if (!data?.publicKey || data.publicKey === '') {
-          console.error('VAPID key is empty or missing');
-          toast.error('Falha ao obter chave VAPID: Chave não encontrada');
-          results.vapidKey = false;
+          if (registration) {
+            const subscription = await registration.pushManager.getSubscription();
+            results.subscription = !!subscription;
+            logger.info('Push subscription status', { hasSubscription: !!subscription });
+          }
         } else {
-          results.vapidKey = true;
-          console.log('VAPID key found successfully');
+          results.swRegistered = false;
+          logger.warn('Service worker not supported');
         }
-      } catch (error) {
-        console.error('VAPID key fetch error:', error);
-        toast.error(`Erro na função VAPID: ${error.message}`);
-        results.vapidKey = false;
-      }
 
-      setTestResults(results);
-    } catch (error) {
-      console.error('Error checking push status:', error);
-      toast.error('Erro ao verificar status das notificações');
-    } finally {
-      setIsLoading(false);
-    }
+        try {
+          const { data, error } = await supabase.functions.invoke('get-vapid');
+          if (error) throw error;
+          
+          if (!data?.publicKey || data.publicKey === '') {
+            logger.error('VAPID key is empty or missing');
+            results.vapidKey = false;
+          } else {
+            results.vapidKey = true;
+            logger.info('VAPID key retrieved successfully');
+          }
+        } catch (error) {
+          logger.error('VAPID key fetch error', error as Error);
+          results.vapidKey = false;
+        }
+
+        setTestResults(results);
+      },
+      { action: 'check_push_status' },
+      { severity: 'low', showToast: true }
+    );
+
+    setIsLoading(false);
   };
 
   const sendTestNotification = async () => {
     if (!user?.id) {
-      toast.error('Usuário não está logado');
       return;
     }
 
     setIsLoading(true);
-    try {
-      const { error } = await supabase.functions.invoke('notify-user', {
-        body: {
-          userId: user.id,
-          title: '🧪 Teste de Notificação',
-          body: 'Esta é uma notificação de teste do sistema push!',
-          data: { test: true }
-        }
-      });
 
-      if (error) throw error;
-      toast.success('Notificação de teste enviada!');
-    } catch (error) {
-      console.error('Error sending test notification:', error);
-      toast.error('Erro ao enviar notificação de teste');
-    } finally {
-      setIsLoading(false);
-    }
+    await handleAsync(
+      async () => {
+        logger.info('Sending test notification', { userId: user.id });
+        
+        const { error } = await supabase.functions.invoke('notify-user', {
+          body: {
+            userId: user.id,
+            title: '🧪 Teste de Notificação',
+            body: 'Esta é uma notificação de teste do sistema push!',
+            data: { test: true }
+          }
+        });
+
+        if (error) throw error;
+        logger.info('Test notification sent successfully');
+      },
+      { action: 'send_test_notification' },
+      { severity: 'low', showToast: true }
+    );
+
+    setIsLoading(false);
   };
 
   const getStatusIcon = (status: boolean | null) => {

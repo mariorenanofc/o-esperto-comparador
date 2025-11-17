@@ -89,7 +89,7 @@ export type Database = {
           event_name: string
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           page_url: string | null
           properties: Json | null
           session_id: string | null
@@ -101,7 +101,7 @@ export type Database = {
           event_name: string
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           page_url?: string | null
           properties?: Json | null
           session_id?: string | null
@@ -113,7 +113,7 @@ export type Database = {
           event_name?: string
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           page_url?: string | null
           properties?: Json | null
           session_id?: string | null
@@ -810,7 +810,7 @@ export type Database = {
           created_at: string | null
           endpoint: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           updated_at: string | null
           user_id: string | null
           window_start: string | null
@@ -821,7 +821,7 @@ export type Database = {
           created_at?: string | null
           endpoint: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           updated_at?: string | null
           user_id?: string | null
           window_start?: string | null
@@ -832,7 +832,7 @@ export type Database = {
           created_at?: string | null
           endpoint?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           updated_at?: string | null
           user_id?: string | null
           window_start?: string | null
@@ -1131,10 +1131,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_admin_with_auth: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      check_admin_with_auth: { Args: never; Returns: boolean }
       check_api_rate_limit: {
         Args: {
           api_key_input: string
@@ -1160,22 +1157,10 @@ export type Database = {
         Args: { current_usage?: number; feature_name: string }
         Returns: boolean
       }
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_daily_offers: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_orphaned_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_sessions: { Args: never; Returns: undefined }
+      cleanup_old_daily_offers: { Args: never; Returns: undefined }
+      cleanup_old_notifications: { Args: never; Returns: undefined }
+      cleanup_orphaned_data: { Args: never; Returns: undefined }
       detect_security_anomalies: {
         Args: { check_type?: string }
         Returns: Json
@@ -1192,10 +1177,7 @@ export type Database = {
         Args: { expires_in_days?: number; key_name: string }
         Returns: Json
       }
-      get_db_usage: {
-        Args: { limit_bytes?: number }
-        Returns: Json
-      }
+      get_db_usage: { Args: { limit_bytes?: number }; Returns: Json }
       get_masked_profile_data: {
         Args: { target_user_id: string }
         Returns: Json
@@ -1219,10 +1201,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: Json
       }
-      is_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_user_admin: { Args: never; Returns: boolean }
       log_admin_action: {
         Args: {
           action_details?: Json
@@ -1249,10 +1228,7 @@ export type Database = {
         Args: { details?: Json; event_type: string; severity?: string }
         Returns: undefined
       }
-      mark_inactive_users_offline: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      mark_inactive_users_offline: { Args: never; Returns: undefined }
       mask_sensitive_admin_data: {
         Args: { email_input: string }
         Returns: string
@@ -1267,10 +1243,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      sanitize_text_input: {
-        Args: { input_text: string }
-        Returns: string
-      }
+      sanitize_text_input: { Args: { input_text: string }; Returns: string }
       search_products_optimized: {
         Args: {
           category_filter?: string
@@ -1287,22 +1260,10 @@ export type Database = {
           unit: string
         }[]
       }
-      user_plan_access: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      validate_api_key: {
-        Args: { api_key_input: string }
-        Returns: Json
-      }
-      validate_email: {
-        Args: { email_input: string }
-        Returns: boolean
-      }
-      validate_price: {
-        Args: { price_input: number }
-        Returns: boolean
-      }
+      user_plan_access: { Args: never; Returns: string }
+      validate_api_key: { Args: { api_key_input: string }; Returns: Json }
+      validate_email: { Args: { email_input: string }; Returns: boolean }
+      validate_price: { Args: { price_input: number }; Returns: boolean }
       verify_admin_with_enhanced_logging: {
         Args: {
           log_attempt?: boolean
