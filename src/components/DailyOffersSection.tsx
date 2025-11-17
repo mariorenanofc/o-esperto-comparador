@@ -14,58 +14,63 @@ import { getPlanById } from "@/lib/plans";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 const DailyOffersSection: React.FC = () => {
   const { user, loading: authLoading, profile } = useAuth();
   const { currentPlan } = useSubscription();
   const { city, state } = useGeolocation();
+  const { handleAsync } = useErrorHandler({ component: 'DailyOffersSection' });
   const [offers, setOffers] = useState<DailyOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllForGuest, setShowAllForGuest] = useState(false);
 
-  // REMOVIDO: const isSignedIn = !!user; <-- Não existe mais aqui
-
   const fetchOffers = useCallback(async () => {
     if (authLoading) return;
 
-    try {
-      console.log("Fetching daily offers for location:", { city, state });
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      const fetchedOffers = await dailyOffersService.getTodaysOffers();
+    const result = await handleAsync(
+      async () => {
+        logger.info('Fetching daily offers', { city, state });
+        const fetchedOffers = await dailyOffersService.getTodaysOffers();
 
-      let filteredOffers = fetchedOffers;
-      if (city && state) {
-        filteredOffers = fetchedOffers.filter(
-          (offer) =>
-            offer.city.toLowerCase() === city.toLowerCase() &&
-            offer.state.toLowerCase() === state.toLowerCase()
-        );
-      }
+        let filteredOffers = fetchedOffers;
+        if (city && state) {
+          filteredOffers = fetchedOffers.filter(
+            (offer) =>
+              offer.city.toLowerCase() === city.toLowerCase() &&
+              offer.state.toLowerCase() === state.toLowerCase()
+          );
+        }
 
-      setOffers(filteredOffers);
+        if (filteredOffers.length === 0) {
+          logger.info('No offers found for location', { city, state });
+        }
 
-      if (filteredOffers.length === 0) {
-        console.log(
-          "No offers found for current location in the last 24 hours"
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching daily offers:", error);
+        return filteredOffers;
+      },
+      { action: 'fetch_daily_offers' },
+      { severity: 'medium', showToast: true }
+    );
+
+    if (result) {
+      setOffers(result);
+    } else {
       setError("Erro ao carregar ofertas do dia");
-      toast.error("Erro ao carregar ofertas do dia");
-    } finally {
-      setLoading(false);
     }
-  }, [authLoading, city, state]);
+    
+    setLoading(false);
+  }, [authLoading, city, state, handleAsync]);
 
   useEffect(() => {
     fetchOffers();
 
     const interval = setInterval(() => {
-      console.log("Auto-refreshing offers...");
+      logger.info('Auto-refreshing daily offers');
       fetchOffers();
     }, 5 * 60 * 1000); // 5 minutos
 

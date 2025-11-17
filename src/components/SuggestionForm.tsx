@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { contributionService } from "@/services/contributionService";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 interface SuggestionFormProps {
   onClose?: () => void;
@@ -17,6 +17,7 @@ interface SuggestionFormProps {
 
 const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
   const { user, profile } = useAuth();
+  const { handleAsync } = useErrorHandler({ component: 'SuggestionForm' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -30,65 +31,48 @@ const SuggestionForm: React.FC<SuggestionFormProps> = ({ onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('=== INICIANDO SUBMISSÃO DA SUGESTÃO ===');
-    console.log('Form data:', formData);
-    console.log('User:', user?.id);
-    
     if (!user) {
-      toast.error('Você precisa estar logado para enviar sugestões');
       return;
     }
 
-    if (!formData.title.trim()) {
-      toast.error('Título é obrigatório');
-      return;
-    }
-
-    if (!formData.description.trim()) {
-      toast.error('Descrição é obrigatória');
+    if (!formData.title.trim() || !formData.description.trim()) {
       return;
     }
 
     setIsSubmitting(true);
-    toast.loading('Enviando sugestão...', { id: 'suggestion-submit' });
 
-    try {
-      await contributionService.submitSuggestion(user.id, formData);
-      
-      console.log('Sugestão enviada com sucesso!');
-      toast.success('🎉 Sugestão enviada com sucesso! Obrigado pelo seu feedback!', { 
-        id: 'suggestion-submit',
-        duration: 5000
-      });
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        category: 'improvement',
-        userName: profile?.name || '',
-        userEmail: profile?.email || '',
-        userPhone: ''
-      });
-      
-      // Fechar modal após sucesso
-      setTimeout(() => {
-        if (onClose) {
-          onClose();
-        }
-      }, 1000);
+    const success = await handleAsync(
+      async () => {
+        logger.info('Submitting suggestion', { 
+          userId: user.id,
+          category: formData.category,
+          hasTitle: !!formData.title
+        });
+        
+        await contributionService.submitSuggestion(user.id, formData);
+        
+        logger.info('Suggestion submitted successfully');
+        
+        setFormData({
+          title: '',
+          description: '',
+          category: 'improvement',
+          userName: profile?.name || '',
+          userEmail: profile?.email || '',
+          userPhone: ''
+        });
+        
+        setTimeout(() => {
+          if (onClose) {
+            onClose();
+          }
+        }, 1000);
+      },
+      { action: 'submit_suggestion' },
+      { severity: 'low', showToast: true }
+    );
 
-    } catch (error) {
-      console.error('=== ERRO AO ENVIAR SUGESTÃO ===');
-      console.error('Detalhes do erro:', error);
-      
-      toast.error('❌ Erro ao enviar sugestão. Tente novamente.', { 
-        id: 'suggestion-submit',
-        duration: 5000 
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsSubmitting(false);
   };
 
   if (!user) {

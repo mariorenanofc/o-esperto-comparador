@@ -8,6 +8,8 @@ import PriceTable from "./PriceTable";
 import ReportFilters, { ReportFilters as ReportFiltersType } from "./reports/ReportFilters";
 import ReportMetrics from "./reports/ReportMetrics";
 import { ComparisonData, Product, Store } from "@/lib/types";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { logger } from "@/lib/logger";
 
 // Definição da estrutura de um produto retornado junto com a comparação
 interface ComparisonProductDetails {
@@ -55,6 +57,7 @@ interface MonthlyReportData {
 
 const MonthlyReport: React.FC = () => {
   const { user } = useAuth();
+  const { handleAsync } = useErrorHandler({ component: 'MonthlyReport' });
   const [reports, setReports] = useState<MonthlyReportData[]>([]);
   const [filteredReports, setFilteredReports] = useState<MonthlyReportData[]>([]);
   const [userComparisons, setUserComparisons] = useState<UserComparison[]>([]);
@@ -69,79 +72,88 @@ const MonthlyReport: React.FC = () => {
     minComparisons: 1
   });
 
-  // Envolva loadUserData em useCallback para otimização e para ser uma dependência estável do useEffect
   const loadUserData = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
-    try {
-      console.log("Loading user comparisons and reports...");
+    
+    const result = await handleAsync(
+      async () => {
+        logger.info('Loading user comparisons and reports', { userId: user.id });
+        const comparisons: UserComparison[] = await comparisonService.getUserComparisons(user.id);
+        logger.info('User comparisons loaded', { count: comparisons.length });
+        return comparisons;
+      },
+      { action: 'load_user_data' },
+      { severity: 'medium', showToast: true }
+    );
 
-      const comparisons: UserComparison[] =
-        await comparisonService.getUserComparisons(user.id);
-      console.log("User comparisons:", comparisons);
-      setUserComparisons(comparisons);
+    if (!result) {
+      setLoading(false);
+      return;
+    }
 
-      const groupedByMonth = comparisons.reduce(
-        (
-          acc: Record<string, MonthlyReportData>,
-          comparison: UserComparison
-        ) => {
-          const date = new Date(comparison.created_at);
-          const month = date.getMonth() + 1;
-          const year = date.getFullYear();
-          const key = `${year}-${month}`;
+    const comparisons = result;
+    setUserComparisons(comparisons);
 
-          if (!acc[key]) {
-            acc[key] = {
-              id: key,
-              month,
-              year,
-              total_spent: 0, // Será calculado abaixo
-              comparison_count: 0,
-              comparisons: [],
-            };
-          }
+    const groupedByMonth = comparisons.reduce(
+      (
+        acc: Record<string, MonthlyReportData>,
+        comparison: UserComparison
+      ) => {
+        const date = new Date(comparison.created_at);
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        const key = `${year}-${month}`;
 
-          acc[key].comparisons.push(comparison);
-          acc[key].comparison_count++;
+        if (!acc[key]) {
+          acc[key] = {
+            id: key,
+            month,
+            year,
+            total_spent: 0,
+            comparison_count: 0,
+            comparisons: [],
+          };
+        }
 
-          // --- Calcular total_spent para a comparação atual (estimado pela melhor oferta) ---
-          let comparisonOptimalSpent = 0;
-          const productsInThisComparison =
-            comparison.comparison_products?.map((cp) => cp.product) || [];
+        acc[key].comparisons.push(comparison);
+        acc[key].comparison_count++;
 
-          productsInThisComparison.forEach((product) => {
-            let bestPriceForProduct = Infinity;
-            // Encontra o menor preço para este produto em qualquer loja nesta comparação
-            comparison.prices.forEach((priceDetail) => {
-              if (
-                priceDetail.product.id === product.id &&
-                priceDetail.price < bestPriceForProduct
-              ) {
-                bestPriceForProduct = priceDetail.price;
-              }
-            });
-            if (bestPriceForProduct !== Infinity) {
-              comparisonOptimalSpent += bestPriceForProduct * product.quantity;
+        let comparisonOptimalSpent = 0;
+        const productsInThisComparison =
+          comparison.comparison_products?.map((cp) => cp.product) || [];
+
+        productsInThisComparison.forEach((product) => {
+          let bestPriceForProduct = Infinity;
+          comparison.prices.forEach((priceDetail) => {
+            if (
+              priceDetail.product.id === product.id &&
+              priceDetail.price < bestPriceForProduct
+            ) {
+              bestPriceForProduct = priceDetail.price;
             }
           });
-          acc[key].total_spent += comparisonOptimalSpent; // Soma ao total do mês
+          if (bestPriceForProduct !== Infinity) {
+            comparisonOptimalSpent += bestPriceForProduct * product.quantity;
+          }
+        });
+        acc[key].total_spent += comparisonOptimalSpent;
 
-          return acc;
-        },
-        {}
-      );
+        return acc;
+      },
+      {}
+    );
 
-      const monthlyReports = Object.values(groupedByMonth) as MonthlyReportData[];
-      setReports(monthlyReports);
-      setFilteredReports(monthlyReports);
-    } catch (error) {
-      console.error("Error loading user data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+    const sortedReports = Object.values(groupedByMonth).sort(
+      (a, b) => b.year - a.year || b.month - a.month
+    );
+
+    logger.info('Monthly reports generated', { count: sortedReports.length });
+    setReports(sortedReports);
+    setFilteredReports(sortedReports);
+    setLoading(false);
+  }, [user, handleAsync]);
 
   useEffect(() => {
     if (user) {
