@@ -1,22 +1,25 @@
 import { DailyOffer, PriceContribution } from "@/lib/types";
 import { supabaseDailyOffersService } from "./supabase/dailyOffersService";
 import { offlineStorageService, OfflineContribution } from './offlineStorageService';
-import { toast } from 'sonner';
+import { logger } from "@/lib/logger";
+import { errorHandler } from "@/lib/errorHandler";
 
 export const enhancedDailyOffersService = {
   // Get today's offers (online only)
   async getTodaysOffers(): Promise<DailyOffer[]> {
     if (!navigator.onLine) {
-      console.log('Offline mode: returning empty offers array');
+      logger.info('Offline mode: returning empty offers array');
       return [];
     }
     
-    try {
-      return await supabaseDailyOffersService.getTodaysOffers();
-    } catch (error) {
-      console.error('Failed to get offers:', error);
-      return [];
-    }
+    return errorHandler.retry(
+      async () => {
+        return await supabaseDailyOffersService.getTodaysOffers();
+      },
+      2,
+      1000,
+      { component: 'enhancedDailyOffersService', action: 'buscar ofertas do dia' }
+    ) || [];
   },
   
   // Submit price contribution (offline-first)
@@ -26,17 +29,22 @@ export const enhancedDailyOffersService = {
     userName: string
   ): Promise<void> {
     if (navigator.onLine) {
-      try {
-        await supabaseDailyOffersService.submitPriceContribution(
-          contribution,
-          userId,
-          userName
-        );
-        console.log('Contribution submitted successfully online');
-        return;
-      } catch (error) {
-        console.error('Failed to submit online, saving offline:', error);
-      }
+      const result = await errorHandler.handleAsync(
+        async () => {
+          await supabaseDailyOffersService.submitPriceContribution(
+            contribution,
+            userId,
+            userName
+          );
+          logger.info('Contribution submitted successfully online', { userId });
+        },
+        { component: 'enhancedDailyOffersService', action: 'enviar contribuição online', userId },
+        { severity: 'high', showToast: true }
+      );
+      
+      if (result !== null) return;
+      
+      logger.warn('Failed to submit online, saving offline', { userId });
     }
     
     // Save offline
@@ -55,7 +63,7 @@ export const enhancedDailyOffersService = {
     };
     
     offlineStorageService.saveOfflineContribution(offlineContribution);
-    console.log('Contribution saved offline successfully');
+    logger.info('Contribution saved offline successfully', { userId });
   },
 
   // Validate user contribution
@@ -70,21 +78,23 @@ export const enhancedDailyOffersService = {
         return { isValid: false, message: 'Preço deve ser maior que zero' };
       }
       
+      logger.info('Offline validation passed', { userId });
       return { isValid: true, message: 'Contribuição será validada quando sincronizada' };
     }
     
-    try {
-      return await supabaseDailyOffersService.validateUserContribution(contribution, userId);
-    } catch (error) {
-      console.error('Validation failed:', error);
-      return { isValid: true, message: 'Validação offline - será verificada ao sincronizar' };
-    }
+    return errorHandler.handleAsync(
+      async () => {
+        return await supabaseDailyOffersService.validateUserContribution(contribution, userId);
+      },
+      { component: 'enhancedDailyOffersService', action: 'validar contribuição', userId },
+      { severity: 'medium', showToast: false }
+    ) || { isValid: true, message: 'Validação offline - será verificada ao sincronizar' };
   },
 
   // Admin functions (online only)
   async getAllContributions(): Promise<any[]> {
     if (!navigator.onLine) {
-      console.log('Admin functionality requires internet connection');
+      logger.warn('Admin functionality requires internet connection');
       return [];
     }
     
@@ -93,7 +103,7 @@ export const enhancedDailyOffersService = {
 
   async approveContribution(contributionId: string): Promise<void> {
     if (!navigator.onLine) {
-      console.log('Admin functionality requires internet connection');
+      logger.warn('Admin functionality requires internet connection');
       return;
     }
     
@@ -102,7 +112,7 @@ export const enhancedDailyOffersService = {
 
   async rejectContribution(contributionId: string): Promise<void> {
     if (!navigator.onLine) {
-      console.log('Admin functionality requires internet connection');
+      logger.warn('Admin functionality requires internet connection');
       return;
     }
     

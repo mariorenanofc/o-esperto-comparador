@@ -2,6 +2,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
+import { errorHandler } from "@/lib/errorHandler";
+import { logger } from "@/lib/logger";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -16,177 +18,165 @@ export const supabaseAdminService = {
 
   // Helper function to log admin actions
   async logAdminAction(action: string, targetUserId?: string, details?: any): Promise<void> {
-    try {
-      await supabase.rpc('log_admin_action', {
-        action_type: action,
-        target_user: targetUserId || null,
-        action_details: details || null
-      });
-    } catch (error) {
-      console.error('Failed to log admin action:', error);
-    }
+    return errorHandler.handleAsync(
+      async () => {
+        await supabase.rpc('log_admin_action', {
+          action_type: action,
+          target_user: targetUserId || null,
+          action_details: details || null
+        });
+        logger.info('Admin action logged', { action, targetUserId });
+      },
+      { component: 'adminService', action: 'registrar ação admin' },
+      { severity: 'low', showToast: false }
+    ) as Promise<void>;
   },
 
   async approveContribution(contributionId: string): Promise<void> {
-    console.log("=== ADMIN SERVICE: APPROVING CONTRIBUTION ===");
-    
-    try {
-      await this.ensureAdminAccess();
-      
-      const { error } = await supabase
-        .from("daily_offers")
-        .update({ verified: true })
-        .eq("id", contributionId);
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Approving contribution', { contributionId });
+        
+        await this.ensureAdminAccess();
+        
+        const { error } = await supabase
+          .from("daily_offers")
+          .update({ verified: true })
+          .eq("id", contributionId);
 
-      if (error) {
-        console.error("Error approving contribution:", error);
-        throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
-      }
+        if (error) throw new Error(`Erro ao aprovar contribuição: ${error.message}`);
 
-      await this.logAdminAction('APPROVE_CONTRIBUTION', null, { contributionId });
-      console.log("✅ Contribuição aprovada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro no serviço de admin:", error);
-      throw error;
-    }
+        await this.logAdminAction('APPROVE_CONTRIBUTION', null, { contributionId });
+        logger.info('Contribution approved successfully', { contributionId });
+      },
+      { component: 'adminService', action: 'aprovar contribuição', metadata: { contributionId } },
+      { severity: 'high', showToast: true }
+    ) as Promise<void>;
   },
 
   async rejectContribution(contributionId: string): Promise<void> {
-    console.log("=== ADMIN SERVICE: REJECTING CONTRIBUTION ===");
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Rejecting contribution', { contributionId });
 
-    try {
-      await this.ensureAdminAccess();
-      
-      const { error } = await supabase
-        .from("daily_offers")
-        .delete()
-        .eq("id", contributionId);
+        await this.ensureAdminAccess();
+        
+        const { error } = await supabase
+          .from("daily_offers")
+          .delete()
+          .eq("id", contributionId);
 
-      if (error) {
-        console.error("Error rejecting contribution:", error);
-        throw new Error(`Erro ao rejeitar contribuição: ${error.message}`);
-      }
+        if (error) throw new Error(`Erro ao rejeitar contribuição: ${error.message}`);
 
-      await this.logAdminAction('REJECT_CONTRIBUTION', null, { contributionId });
-      console.log("✅ Contribuição rejeitada com sucesso");
-    } catch (error) {
-      console.error("❌ Erro no serviço de admin:", error);
-      throw error;
-    }
+        await this.logAdminAction('REJECT_CONTRIBUTION', null, { contributionId });
+        logger.info('Contribution rejected successfully', { contributionId });
+      },
+      { component: 'adminService', action: 'rejeitar contribuição', metadata: { contributionId } },
+      { severity: 'high', showToast: true }
+    ) as Promise<void>;
   },
 
   async getAllContributions(): Promise<any[]> {
-    console.log("=== ADMIN SERVICE: FETCHING ALL CONTRIBUTIONS ===");
+    return errorHandler.retry(
+      async () => {
+        logger.info('Fetching all contributions');
 
-    try {
-      const { data, error } = await supabase
-        .from("daily_offers")
-        .select("*")
-        .order("created_at", { ascending: false });
+        const { data, error } = await supabase
+          .from("daily_offers")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching contributions:", error);
-        throw error;
-      }
+        if (error) throw error;
 
-      console.log("✅ Contribuições carregadas:", data?.length || 0);
-      return data || [];
-    } catch (error) {
-      console.error("❌ Erro ao carregar contribuições:", error);
-      throw error;
-    }
+        logger.info('Contributions loaded', { count: data?.length || 0 });
+        return data || [];
+      },
+      3,
+      1000,
+      { component: 'adminService', action: 'carregar contribuições' }
+    ) || [];
   },
 
   async getAllSuggestions(): Promise<any[]> {
-    console.log("=== ADMIN SERVICE: FETCHING ALL SUGGESTIONS ===");
+    return errorHandler.retry(
+      async () => {
+        logger.info('Fetching all suggestions');
 
-    try {
-      const { data, error } = await supabase
-        .from("suggestions")
-        .select(
+        const { data, error } = await supabase
+          .from("suggestions")
+          .select(
+            `
+            *,
+            profiles (
+              name,
+              email
+            )
           `
-          *,
-          profiles (
-            name,
-            email
           )
-        `
-        )
-        .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching suggestions:", error);
-        throw error;
-      }
+        if (error) throw error;
 
-      console.log("✅ Sugestões carregadas:", data?.length || 0);
-      return data || [];
-    } catch (error) {
-      console.error("❌ Erro ao carregar sugestões:", error);
-      throw error;
-    }
+        logger.info('Suggestions loaded', { count: data?.length || 0 });
+        return data || [];
+      },
+      3,
+      1000,
+      { component: 'adminService', action: 'carregar sugestões' }
+    ) || [];
   },
 
   async updateSuggestionStatus(
     suggestionId: string,
     status: string
   ): Promise<void> {
-    console.log("=== ADMIN SERVICE: UPDATING SUGGESTION STATUS ===");
-    console.log("Suggestion ID:", suggestionId, "Status:", status);
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Updating suggestion status', { suggestionId, status });
 
-    try {
-      const { error } = await supabase
-        .from("suggestions")
-        .update({ status })
-        .eq("id", suggestionId);
+        const { error } = await supabase
+          .from("suggestions")
+          .update({ status })
+          .eq("id", suggestionId);
 
-      if (error) {
-        console.error("Error updating suggestion status:", error);
-        throw new Error(
-          `Erro ao atualizar status da sugestão: ${error.message}`
-        );
-      }
+        if (error) throw new Error(`Erro ao atualizar status da sugestão: ${error.message}`);
 
-      console.log("✅ Status da sugestão atualizado com sucesso");
-    } catch (error) {
-      console.error("❌ Erro ao atualizar status da sugestão:", error);
-      throw error;
-    }
+        logger.info('Suggestion status updated successfully', { suggestionId, status });
+      },
+      { component: 'adminService', action: 'atualizar status da sugestão', metadata: { suggestionId, status } },
+      { severity: 'medium', showToast: true }
+    ) as Promise<void>;
   },
 
-  // --- INÍCIO DA FUNÇÃO deleteUserAuthAndProfile COM AUTORIZAÇÃO ---
   async deleteUserAuthAndProfile(userId: string): Promise<void> {
-    console.log(`=== ADMIN SERVICE: DELETING USER: ${userId} ===`);
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Deleting user', { userId });
 
-    try {
-      await this.ensureAdminAccess();
-      
-      // Get current session for authorization
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        throw new Error('No valid session for admin operation');
-      }
-
-      const { error } = await supabase.functions.invoke('delete-user', {
-        body: { userId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+        await this.ensureAdminAccess();
+        
+        // Get current session for authorization
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session) {
+          throw new Error('No valid session for admin operation');
         }
-      });
 
-      if (error) {
-        console.error('Error calling delete-user function:', error);
-        throw new Error(`Erro ao deletar usuário: ${error.message}`);
-      }
+        const { error } = await supabase.functions.invoke('delete-user', {
+          body: { userId },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`
+          }
+        });
 
-      await this.logAdminAction('DELETE_USER', userId);
-      console.log('✅ Usuário deletado com sucesso');
-    } catch (error) {
-      console.error('❌ Erro no serviço de deleção de usuário:', error);
-      throw error;
-    }
+        if (error) throw new Error(`Erro ao deletar usuário: ${error.message}`);
+
+        await this.logAdminAction('DELETE_USER', userId);
+        logger.info('User deleted successfully', { userId });
+      },
+      { component: 'adminService', action: 'deletar usuário', userId },
+      { severity: 'critical', showToast: true }
+    ) as Promise<void>;
   },
-  // --- FIM DA FUNÇÃO deleteUserAuthAndProfile COM AUTORIZAÇÃO ---
 
   async incrementComparisonsMade(userId: string): Promise<void> {
     console.log(

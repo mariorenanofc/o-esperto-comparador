@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { isAdmin } from '@/lib/admin';
+import { logger } from '@/lib/logger';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
 interface Notification {
   id: string;
@@ -15,6 +17,7 @@ interface Notification {
 
 export const useNotifications = () => {
   const { user } = useAuth();
+  const { handleAsync } = useErrorHandler({ component: 'useNotifications' });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const channelsRef = useRef<any[]>([]);
   const setupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -23,7 +26,7 @@ export const useNotifications = () => {
 
   const playNotificationSound = () => {
     try {
-      console.log('🔊 Playing notification sound...');
+      logger.info('Playing notification sound');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
       // Create a pleasant two-tone notification sound
@@ -61,37 +64,37 @@ export const useNotifications = () => {
         audioContext.close().catch(() => {});
       }, 500);
       
-      console.log('🔊 Notification sound played successfully');
+      logger.info('Notification sound played successfully');
     } catch (e) {
-      console.error('❌ Could not play notification sound:', e);
+      logger.error('Could not play notification sound', e as Error);
     }
   };
 
   const showNotification = async (notification: Notification) => {
-    console.log('🔔 Showing notification:', notification.title);
+    logger.info('Showing notification', { title: notification.title, type: notification.type });
     
     // Add to state
     setNotifications(prev => [notification, ...prev.slice(0, 9)]);
     
     // Persistir a notificação no banco de dados
     if (user?.id) {
-      try {
-        const { error } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: user.id,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            data: {}
-          });
-        
-        if (error) {
-          console.error('Error saving notification to DB:', error);
-        }
-      } catch (error) {
-        console.error('Error persisting notification:', error);
-      }
+      await handleAsync(
+        async () => {
+          const { error } = await supabase
+            .from('notifications')
+            .insert({
+              user_id: user.id,
+              title: notification.title,
+              message: notification.message,
+              type: notification.type,
+              data: {}
+            });
+          
+          if (error) throw error;
+        },
+        { action: 'salvar notificação' },
+        { severity: 'low', showToast: false }
+      );
     }
     
     // Show toast
@@ -117,46 +120,46 @@ export const useNotifications = () => {
   
   // Carregar notificações persistidas do banco
   const loadPersistedNotifications = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('read', false)
-        .order('created_at', { ascending: false })
-        .limit(10);
+    await handleAsync(
+      async () => {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('read', false)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      if (error) {
-        console.error('Error loading persisted notifications:', error);
-        return;
-      }
+        if (error) throw error;
 
-      if (data && data.length > 0) {
-        const persistedNotifications = data.map(n => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: n.type as 'info' | 'success' | 'warning' | 'error',
-          timestamp: new Date(n.created_at),
-          read: n.read
-        }));
-        
-        setNotifications(prev => [...persistedNotifications, ...prev]);
-      }
-    } catch (error) {
-      console.error('Error loading persisted notifications:', error);
-    }
-  }, []);
+        if (data && data.length > 0) {
+          const persistedNotifications = data.map(n => ({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            type: n.type as 'info' | 'success' | 'warning' | 'error',
+            timestamp: new Date(n.created_at),
+            read: n.read
+          }));
+          
+          setNotifications(prev => [...persistedNotifications, ...prev]);
+          logger.info('Loaded persisted notifications', { count: data.length, userId });
+        }
+      },
+      { action: 'carregar notificações persistidas', userId },
+      { severity: 'low', showToast: false }
+    );
+  }, [handleAsync]);
 
   // Cleanup function for channels
   const cleanupChannels = useCallback(() => {
-    console.log('🧹 Cleaning up channels, count:', channelsRef.current.length);
+    logger.info('Cleaning up notification channels', { count: channelsRef.current.length });
     channelsRef.current.forEach(channel => {
       if (channel) {
         try {
           channel.unsubscribe();
         } catch (e) {
-          console.log('Error unsubscribing channel:', e);
+          logger.warn('Error unsubscribing channel', { error: e });
         }
       }
     });
@@ -167,15 +170,15 @@ export const useNotifications = () => {
   // Setup notifications with retry logic
   const setupNotifications = useCallback(async (userId: string) => {
     try {
-      console.log('🔔 Setting up notifications for user:', userId);
+      logger.info('Setting up notifications for user', { userId });
       
       // Clean up any existing channels first
       channelsRef.current.forEach(channel => {
         if (channel) {
           try {
-            channel.unsubscribe();
+          channel.unsubscribe();
           } catch (e) {
-            console.log('Error unsubscribing channel:', e);
+            logger.warn('Error unsubscribing existing channel', { error: e });
           }
         }
       });
@@ -201,14 +204,14 @@ export const useNotifications = () => {
             filter: `user_id=eq.${userId}`
           },
           (payload) => {
-            console.log('🔔 Contribution update received:', {
+            logger.info('Contribution update received', {
               product: payload.new.product_name,
               oldVerified: payload.old.verified,
               newVerified: payload.new.verified
             });
             
             if (payload.new.verified === true && payload.old.verified === false) {
-              console.log('🔔 User contribution approved, showing notification');
+              logger.info('User contribution approved');
               const notification: Notification = {
                 id: Date.now().toString(),
                 title: 'Contribuição Aprovada! ✅',
@@ -220,7 +223,7 @@ export const useNotifications = () => {
               
               showNotification(notification);
             } else if (payload.new.verified === false && payload.old.verified === null) {
-              console.log('🔔 User contribution rejected, showing notification');
+              logger.info('User contribution rejected');
               const notification: Notification = {
                 id: Date.now().toString(),
                 title: 'Contribuição Rejeitada ❌',
@@ -236,9 +239,9 @@ export const useNotifications = () => {
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('✅ User notifications channel connected');
+            logger.info('User notifications channel connected');
           } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-            console.error('❌ User channel error:', status);
+            logger.error('User channel error', new Error(`Channel status: ${status}`));
           }
         });
 
@@ -259,7 +262,7 @@ export const useNotifications = () => {
             filter: `user_id=eq.${userId}`
           },
           (payload) => {
-            console.log('🔔 Suggestion status update received:', {
+            logger.info('Suggestion status update received', {
               title: payload.new.title,
               oldStatus: payload.old.status,
               newStatus: payload.new.status
@@ -305,9 +308,9 @@ export const useNotifications = () => {
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('✅ User suggestions channel connected');
+            logger.info('User suggestions channel connected');
           } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-            console.error('❌ User suggestions channel error:', status);
+            logger.error('User suggestions channel error', new Error(`Channel status: ${status}`));
           }
         });
 
@@ -317,7 +320,7 @@ export const useNotifications = () => {
       const userIsAdmin = await isAdmin(userId);
       
       if (userIsAdmin) {
-        console.log('👑 Setting up admin notifications');
+        logger.info('Setting up admin notifications', { userId });
         
         // Canal para novas contribuições de preços
         const adminContributionsChannel = supabase
@@ -336,7 +339,7 @@ export const useNotifications = () => {
             },
             (payload) => {
               if (payload.new.user_id !== userId) {
-                console.log('🔔 New contribution for admin:', {
+                logger.info('New contribution for admin', {
                   contributor: payload.new.contributor_name,
                   product: payload.new.product_name,
                   store: payload.new.store_name
@@ -357,9 +360,9 @@ export const useNotifications = () => {
           )
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Admin contributions channel connected');
+              logger.info('Admin contributions channel connected');
             } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-              console.error('❌ Admin contributions channel error:', status);
+              logger.error('Admin contributions channel error', new Error(`Channel status: ${status}`));
             }
           });
 
@@ -380,7 +383,7 @@ export const useNotifications = () => {
             },
             (payload) => {
               if (payload.new.user_id !== userId) {
-                console.log('🔔 New suggestion for admin:', {
+                logger.info('New suggestion for admin', {
                   title: payload.new.title,
                   category: payload.new.category
                 });
@@ -400,9 +403,9 @@ export const useNotifications = () => {
           )
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Admin suggestions channel connected');
+              logger.info('Admin suggestions channel connected');
             } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
-              console.error('❌ Admin suggestions channel error:', status);
+              logger.error('Admin suggestions channel error', new Error(`Channel status: ${status}`));
             }
           });
 
@@ -411,16 +414,16 @@ export const useNotifications = () => {
 
       isSetupRef.current = true;
     } catch (error) {
-      console.error('❌ Error setting up notifications:', error);
+      logger.error('Error setting up notifications', error as Error, { userId });
       isSetupRef.current = false;
     }
-  }, []);
+  }, [handleAsync]);
 
   useEffect(() => {
-    console.log('🔔 useNotifications effect triggered, user:', user?.id);
+    logger.info('useNotifications effect triggered', { userId: user?.id });
     
     if (!user?.id) {
-      console.log('🔔 No user, cleaning up channels');
+      logger.info('No user, cleaning up channels');
       cleanupChannels();
       currentUserIdRef.current = undefined;
       isSetupRef.current = false;
@@ -429,7 +432,7 @@ export const useNotifications = () => {
 
     // If user changed, cleanup and reset
     if (currentUserIdRef.current !== user.id) {
-      console.log('🔔 User changed, cleaning up and resetting');
+      logger.info('User changed, cleaning up and resetting');
       cleanupChannels();
       currentUserIdRef.current = user.id;
       isSetupRef.current = false;
@@ -437,17 +440,17 @@ export const useNotifications = () => {
 
     // Skip if already setup for this user
     if (isSetupRef.current) {
-      console.log('🔔 Already setup for this user, skipping');
+      logger.info('Already setup for this user, skipping');
       return;
     }
 
     // Setup notifications immediately
-    console.log('🔔 Setting up notifications for user:', user.id);
+    logger.info('Setting up notifications for user', { userId: user.id });
     setupNotifications(user.id);
     
     // Carregar notificações persistidas
     loadPersistedNotifications(user.id);
-  }, [user?.id, setupNotifications]);
+  }, [user?.id, setupNotifications, loadPersistedNotifications, cleanupChannels]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { isAdmin } from '@/lib/admin';
+import { logger } from '@/lib/logger';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
 
 interface Notification {
   id: string;
@@ -22,6 +24,7 @@ interface ConnectionStatus {
 
 export const useNotificationsHardened = () => {
   const { user } = useAuth();
+  const { handleAsync } = useErrorHandler({ component: 'useNotificationsHardened' });
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     isConnected: false,
@@ -42,18 +45,16 @@ export const useNotificationsHardened = () => {
   // Validate connection URL and log critical info
   const validateConnection = useCallback(() => {
     const expectedDomain = 'diqdsmrlhldanxxrtozl.supabase.co';
-    // Use the known URL instead of accessing protected property
     const actualUrl = 'https://diqdsmrlhldanxxrtozl.supabase.co';
     
-    console.log('🔍 Connection validation:', {
+    logger.info('Connection validation', {
       expected: expectedDomain,
       actual: actualUrl,
-      isOnline: navigator.onLine,
-      timestamp: new Date().toISOString()
+      isOnline: navigator.onLine
     });
 
     if (!actualUrl.includes(expectedDomain)) {
-      console.error('❌ CRITICAL: Supabase URL mismatch!', {
+      logger.error('CRITICAL: Supabase URL mismatch', new Error('URL mismatch'), {
         expected: expectedDomain,
         actual: actualUrl
       });
@@ -64,7 +65,7 @@ export const useNotificationsHardened = () => {
 
   const playNotificationSound = () => {
     try {
-      console.log('🔊 Playing notification sound...');
+      logger.info('Playing notification sound');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
       const playTone = (frequency: number, startTime: number, duration: number, fadeOut: boolean = true) => {
@@ -98,35 +99,35 @@ export const useNotificationsHardened = () => {
         audioContext.close().catch(() => {});
       }, 500);
       
-      console.log('🔊 Notification sound played successfully');
+      logger.info('Notification sound played successfully');
     } catch (e) {
-      console.error('❌ Could not play notification sound:', e);
+      logger.error('Could not play notification sound', e as Error);
     }
   };
 
   const showNotification = async (notification: Notification) => {
-    console.log('🔔 Showing notification:', notification.title);
+    logger.info('Showing notification', { title: notification.title, type: notification.type });
     
     setNotifications(prev => [notification, ...prev.slice(0, 9)]);
     
     if (user?.id) {
-      try {
-        const { error } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: user.id,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            data: {}
-          });
-        
-        if (error) {
-          console.error('Error saving notification to DB:', error);
-        }
-      } catch (error) {
-        console.error('Error persisting notification:', error);
-      }
+      await handleAsync(
+        async () => {
+          const { error } = await supabase
+            .from('notifications')
+            .insert({
+              user_id: user.id,
+              title: notification.title,
+              message: notification.message,
+              type: notification.type,
+              data: {}
+            });
+          
+          if (error) throw error;
+        },
+        { action: 'salvar notificação' },
+        { severity: 'low', showToast: false }
+      );
     }
     
     toast(notification.title, {
@@ -146,36 +147,36 @@ export const useNotificationsHardened = () => {
   };
 
   const loadPersistedNotifications = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('read', false)
-        .order('created_at', { ascending: false })
-        .limit(10);
+    await handleAsync(
+      async () => {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('read', false)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      if (error) {
-        console.error('Error loading persisted notifications:', error);
-        return;
-      }
+        if (error) throw error;
 
-      if (data && data.length > 0) {
-        const persistedNotifications = data.map(n => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: n.type as 'info' | 'success' | 'warning' | 'error',
-          timestamp: new Date(n.created_at),
-          read: n.read
-        }));
-        
-        setNotifications(prev => [...persistedNotifications, ...prev]);
-      }
-    } catch (error) {
-      console.error('Error loading persisted notifications:', error);
-    }
-  }, []);
+        if (data && data.length > 0) {
+          const persistedNotifications = data.map(n => ({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            type: n.type as 'info' | 'success' | 'warning' | 'error',
+            timestamp: new Date(n.created_at),
+            read: n.read
+          }));
+          
+          setNotifications(prev => [...persistedNotifications, ...prev]);
+          logger.info('Loaded persisted notifications', { count: data.length, userId });
+        }
+      },
+      { action: 'carregar notificações persistidas', userId },
+      { severity: 'low', showToast: false }
+    );
+  }, [handleAsync]);
 
   // Debounced error logging (max 3 per minute)
   const logChannelError = useCallback((status: string, context: string) => {
@@ -187,11 +188,10 @@ export const useNotificationsHardened = () => {
     }
     
     if (errorLogCountRef.current < 3) {
-        console.error(`❌ ${context} channel error:`, status, {
-          retryCount: connectionStatus.retryCount,
-          timestamp: new Date().toISOString(),
-          domain: 'diqdsmrlhldanxxrtozl.supabase.co'
-        });
+      logger.error(`${context} channel error`, new Error(`Channel status: ${status}`), {
+        retryCount: connectionStatus.retryCount,
+        domain: 'diqdsmrlhldanxxrtozl.supabase.co'
+      });
       errorLogCountRef.current++;
       lastErrorLogRef.current = now;
     }
@@ -206,30 +206,30 @@ export const useNotificationsHardened = () => {
   const startFallbackPolling = useCallback(async (userId: string) => {
     if (pollingIntervalRef.current) return;
     
-    console.log('🔄 Starting fallback polling mode');
+    logger.info('Starting fallback polling mode', { userId });
     setConnectionStatus(prev => ({ ...prev, usingFallback: true }));
     
     const pollForUpdates = async () => {
-      try {
-        // Check for new notifications
-        const { data } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('read', false)
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
-        // This is a simple implementation - in production you'd track what's already been shown
-        console.log('📊 Polling check completed, new notifications:', data?.length || 0);
-      } catch (error) {
-        console.error('Polling error:', error);
-      }
+      await handleAsync(
+        async () => {
+          const { data } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('read', false)
+            .order('created_at', { ascending: false })
+            .limit(5);
+          
+          logger.info('Polling check completed', { newNotifications: data?.length || 0 });
+        },
+        { action: 'polling check', userId },
+        { severity: 'low', showToast: false }
+      );
     };
     
     // Poll every 30 seconds
     pollingIntervalRef.current = setInterval(pollForUpdates, 30000);
-  }, []);
+  }, [handleAsync]);
 
   const stopFallbackPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
@@ -240,13 +240,13 @@ export const useNotificationsHardened = () => {
   }, []);
 
   const cleanupChannels = useCallback(() => {
-    console.log('🧹 Cleaning up channels, count:', channelsRef.current.length);
+    logger.info('Cleaning up notification channels', { count: channelsRef.current.length });
     channelsRef.current.forEach(channel => {
       if (channel) {
         try {
           channel.unsubscribe();
         } catch (e) {
-          console.log('Error unsubscribing channel:', e);
+          logger.warn('Error unsubscribing channel', { error: e });
         }
       }
     });
@@ -263,11 +263,11 @@ export const useNotificationsHardened = () => {
 
       // Only proceed if document is visible and user is authenticated
       if (document.visibilityState !== 'visible' || !userId) {
-        console.log('🔔 Skipping setup - document hidden or no user');
+        logger.info('Skipping setup - document hidden or no user');
         return;
       }
 
-      console.log('🔔 Setting up notifications for user:', userId, `(attempt ${retryCount + 1})`);
+      logger.info('Setting up hardened notifications', { userId, attempt: retryCount + 1 });
       
       // Clean up any existing channels first
       cleanupChannels();
@@ -294,7 +294,7 @@ export const useNotificationsHardened = () => {
             filter: `user_id=eq.${userId}`
           },
           (payload) => {
-            console.log('🔔 Contribution update received:', payload);
+            logger.info('Contribution update received', { payload: payload.new });
             
             if (payload.new.verified === true && payload.old.verified === false) {
               const notification: Notification = {
@@ -321,7 +321,7 @@ export const useNotificationsHardened = () => {
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('✅ User notifications channel connected');
+            logger.info('User notifications channel connected');
             successCount++;
             setConnectionStatus(prev => ({ 
               ...prev, 
@@ -388,7 +388,7 @@ export const useNotificationsHardened = () => {
         )
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
-            console.log('✅ User suggestions channel connected');
+            logger.info('User suggestions channel connected');
             successCount++;
           } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
             logChannelError(status, 'User suggestions');
@@ -401,7 +401,7 @@ export const useNotificationsHardened = () => {
       // Setup admin channels if needed
       const userIsAdmin = await isAdmin(userId);
       if (userIsAdmin) {
-        console.log('👑 Setting up admin notifications');
+        logger.info('Setting up admin notifications', { userId });
         
         const adminContributionsChannel = supabase
           .channel(`admin-contributions-${userId}-${timestamp}`)
@@ -428,7 +428,7 @@ export const useNotificationsHardened = () => {
           )
           .subscribe((status) => {
             if (status === 'SUBSCRIBED') {
-              console.log('✅ Admin contributions channel connected');
+              logger.info('Admin contributions channel connected');
               successCount++;
             } else if (status === 'CHANNEL_ERROR' || status === 'CLOSED') {
               logChannelError(status, 'Admin contributions');
@@ -442,7 +442,7 @@ export const useNotificationsHardened = () => {
       // Check if we should fall back to polling after some time
       setTimeout(() => {
         if (successCount === 0 && retryCount >= 2) {
-          console.log('🔄 All channels failed, starting fallback polling');
+          logger.info('All channels failed, starting fallback polling');
           startFallbackPolling(userId);
         }
       }, 5000);
@@ -450,7 +450,7 @@ export const useNotificationsHardened = () => {
       isSetupRef.current = true;
 
     } catch (error) {
-      console.error('❌ Error setting up notifications:', error);
+      logger.error('Error setting up hardened notifications', error as Error, { userId });
       
       const newRetryCount = retryCount + 1;
       setConnectionStatus(prev => ({ 
@@ -462,23 +462,23 @@ export const useNotificationsHardened = () => {
       // Retry with exponential backoff, max 3 attempts
       if (newRetryCount < 3) {
         const delay = getRetryDelay(newRetryCount);
-        console.log(`🔄 Retrying in ${delay}ms (attempt ${newRetryCount + 1}/3)`);
+        logger.info('Retrying notification setup', { delay, attempt: newRetryCount + 1, maxAttempts: 3 });
         
         retryTimeoutRef.current = setTimeout(() => {
           setupNotificationsWithRetry(userId, newRetryCount);
         }, delay);
       } else {
-        console.log('🔄 Max retries reached, starting fallback mode');
+        logger.info('Max retries reached, starting fallback mode');
         startFallbackPolling(userId);
       }
     }
-  }, [validateConnection, cleanupChannels, logChannelError, startFallbackPolling, showNotification]);
+  }, [validateConnection, cleanupChannels, logChannelError, startFallbackPolling, showNotification, handleAsync]);
 
   useEffect(() => {
-    console.log('🔔 useNotificationsHardened effect triggered, user:', user?.id);
+    logger.info('useNotificationsHardened effect triggered', { userId: user?.id });
     
     if (!user?.id) {
-      console.log('🔔 No user, cleaning up channels');
+      logger.info('No user, cleaning up channels');
       cleanupChannels();
       currentUserIdRef.current = undefined;
       isSetupRef.current = false;
@@ -487,7 +487,7 @@ export const useNotificationsHardened = () => {
 
     // If user changed, cleanup and reset
     if (currentUserIdRef.current !== user.id) {
-      console.log('🔔 User changed, cleaning up and resetting');
+      logger.info('User changed, cleaning up and resetting');
       cleanupChannels();
       currentUserIdRef.current = user.id;
       isSetupRef.current = false;
@@ -495,12 +495,12 @@ export const useNotificationsHardened = () => {
 
     // Skip if already setup for this user
     if (isSetupRef.current) {
-      console.log('🔔 Already setup for this user, skipping');
+      logger.info('Already setup for this user, skipping');
       return;
     }
 
     // Setup notifications immediately
-    console.log('🔔 Setting up hardened notifications for user:', user.id);
+    logger.info('Setting up hardened notifications for user', { userId: user.id });
     setupNotificationsWithRetry(user.id, 0);
     
     // Load persisted notifications

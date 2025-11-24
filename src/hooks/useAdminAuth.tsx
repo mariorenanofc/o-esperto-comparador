@@ -2,6 +2,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 export const useAdminAuth = () => {
   const { user, loading } = useAuth();
@@ -21,13 +22,13 @@ export const useAdminAuth = () => {
         const { data: isUserAdmin, error } = await supabase.rpc('check_admin_with_auth');
         
         if (error) {
-          console.error('Error checking admin status:', error);
+          logger.error('Error checking admin status', error, { userId: user?.id });
           setIsAdmin(false);
         } else {
           setIsAdmin(!!isUserAdmin);
         }
       } catch (error) {
-        console.error('Error in checkAdminStatus:', error);
+        logger.error('Error in checkAdminStatus', error as Error, { userId: user?.id });
         setIsAdmin(false);
       } finally {
         setIsLoaded(true);
@@ -49,13 +50,13 @@ export const useAdminAuth = () => {
       const { data: isUserAdmin, error } = await supabase.rpc('check_admin_with_auth');
       
       if (error) {
-        console.error('Error refreshing admin status:', error);
+        logger.error('Error refreshing admin status', error, { userId: user?.id });
         setIsAdmin(false);
       } else {
         setIsAdmin(!!isUserAdmin);
       }
     } catch (error) {
-      console.error('Error in refreshAdminStatus:', error);
+      logger.error('Error in refreshAdminStatus', error as Error, { userId: user?.id });
       setIsAdmin(false);
     } finally {
       setIsLoaded(true);
