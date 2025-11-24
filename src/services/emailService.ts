@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { errorHandler } from "@/lib/errorHandler";
+import { logger } from "@/lib/logger";
 
 export interface EmailTemplate {
   id?: string;
@@ -20,102 +22,107 @@ export interface EmailData {
 
 export class EmailService {
   async sendEmail(emailData: EmailData): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data, error } = await supabase.functions.invoke('send-email', {
-        body: emailData
-      });
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Sending email', { to: emailData.to, subject: emailData.subject });
+        
+        const { data, error } = await supabase.functions.invoke('send-email', {
+          body: emailData
+        });
 
-      if (error) {
-        console.error('Email sending error:', error);
-        return { success: false, error: error.message };
-      }
+        if (error) throw error;
 
-      return { success: true };
-    } catch (error) {
-      console.error('Email service error:', error);
-      return { success: false, error: 'Failed to send email' };
-    }
+        logger.info('Email sent successfully');
+        return { success: true };
+      },
+      { component: 'EmailService', action: 'enviar email' },
+      { severity: 'high', showToast: true }
+    ) || { success: false, error: 'Failed to send email' };
   }
 
   async getTemplates(): Promise<EmailTemplate[]> {
-    try {
-      const { data, error } = await supabase
-        .from('email_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Fetching email templates');
+        
+        const { data, error } = await supabase
+          .from('email_templates')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching email templates:', error);
-        return [];
-      }
+        if (error) throw error;
 
-      return data?.map(template => ({
-        ...template,
-        variables: Array.isArray(template.variables) 
-          ? template.variables as string[]
-          : typeof template.variables === 'string' 
-            ? JSON.parse(template.variables) 
-            : []
-      })) || [];
-    } catch (error) {
-      console.error('Email service error:', error);
-      return [];
-    }
+        const templates = data?.map(template => ({
+          ...template,
+          variables: Array.isArray(template.variables) 
+            ? template.variables as string[]
+            : typeof template.variables === 'string' 
+              ? JSON.parse(template.variables) 
+              : []
+        })) || [];
+        
+        logger.info('Email templates fetched', { count: templates.length });
+        return templates;
+      },
+      { component: 'EmailService', action: 'buscar templates' },
+      { severity: 'medium', showToast: false }
+    ) || [];
   }
 
   async saveTemplate(template: EmailTemplate): Promise<{ success: boolean; error?: string }> {
-    try {
-      const templateData = {
-        name: template.name,
-        subject: template.subject,
-        html_content: template.html_content,
-        text_content: template.text_content,
-        variables: template.variables || []
-      };
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Saving email template', { name: template.name, hasId: !!template.id });
+        
+        const templateData = {
+          name: template.name,
+          subject: template.subject,
+          html_content: template.html_content,
+          text_content: template.text_content,
+          variables: template.variables || []
+        };
 
-      let query;
-      if (template.id) {
-        query = supabase
-          .from('email_templates')
-          .update(templateData)
-          .eq('id', template.id);
-      } else {
-        query = supabase
-          .from('email_templates')
-          .insert(templateData);
-      }
+        let query;
+        if (template.id) {
+          query = supabase
+            .from('email_templates')
+            .update(templateData)
+            .eq('id', template.id);
+        } else {
+          query = supabase
+            .from('email_templates')
+            .insert(templateData);
+        }
 
-      const { error } = await query;
+        const { error } = await query;
+        if (error) throw error;
 
-      if (error) {
-        console.error('Error saving email template:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Email service error:', error);
-      return { success: false, error: 'Failed to save template' };
-    }
+        logger.info('Email template saved successfully', { templateId: template.id });
+        return { success: true };
+      },
+      { component: 'EmailService', action: 'salvar template' },
+      { severity: 'high', showToast: true }
+    ) || { success: false, error: 'Failed to save template' };
   }
 
   async deleteTemplate(templateId: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await supabase
-        .from('email_templates')
-        .delete()
-        .eq('id', templateId);
+    return errorHandler.handleAsync(
+      async () => {
+        logger.info('Deleting email template', { templateId });
+        
+        const { error } = await supabase
+          .from('email_templates')
+          .delete()
+          .eq('id', templateId);
 
-      if (error) {
-        console.error('Error deleting email template:', error);
-        return { success: false, error: error.message };
-      }
+        if (error) throw error;
 
-      return { success: true };
-    } catch (error) {
-      console.error('Email service error:', error);
-      return { success: false, error: 'Failed to delete template' };
-    }
+        logger.info('Email template deleted successfully', { templateId });
+        return { success: true };
+      },
+      { component: 'EmailService', action: 'deletar template', metadata: { templateId } },
+      { severity: 'high', showToast: true }
+    ) || { success: false, error: 'Failed to delete template' };
   }
 }
 
