@@ -36,22 +36,29 @@
     --radius: 0.5rem;
 
     /* App colors for price comparison */
-    --app-primary: 221 39% 47%; /* Beautiful blue */
-    --app-secondary: 151 50% 45%; /* Fresh green */
-    --app-success: 151 55% 40%; /* Success green */
-    --app-warning: 43 87% 55%; /* Warning orange */
-    --app-error: 0 65% 51%; /* Error red */
+    --app-primary: 221 39% 47%;
+    --app-secondary: 151 50% 45%;
+    --app-success: 151 55% 40%;
+    --app-warning: 43 87% 55%;
+    --app-error: 0 65% 51%;
     
     /* Additional semantic colors */
-    --app-blue: 221 39% 47%; /* Same as app-primary */
-    --app-green: 151 50% 45%; /* Same as app-secondary */
-    --app-gray: 210 40% 96.1%; /* Light gray for backgrounds */
-    --app-dark: 222.2 84% 4.9%; /* Dark color */
+    --app-blue: 221 39% 47%;
+    --app-green: 151 50% 45%;
+    --app-gray: 210 40% 96.1%;
+    --app-dark: 222.2 84% 4.9%;
+
+    /* NEW: Hero section vibrant colors */
+    --hero-primary: 246 80% 60%;
+    --hero-secondary: 280 80% 55%;
+    --hero-accent: 316 70% 50%;
+    --hero-success: 151 75% 45%;
+    --hero-warning: 38 95% 55%;
     
     /* Gradient definitions */
     --gradient-primary: linear-gradient(135deg, hsl(var(--app-primary)), hsl(var(--primary)));
     --gradient-secondary: linear-gradient(135deg, hsl(var(--app-secondary)), hsl(var(--app-success)));
-    --gradient-hero: linear-gradient(135deg, hsl(221 39% 47% / 0.1), hsl(151 50% 45% / 0.1));
+    --gradient-hero: linear-gradient(135deg, hsl(246 80% 60% / 0.15), hsl(316 70% 50% / 0.15), hsl(38 95% 55% / 0.1));
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -93,17 +100,24 @@
     --ring: 212.7 26.8% 83.9%;
     
     /* Dark mode app colors */
-    --app-primary: 221 49% 57%; /* Lighter blue for dark mode */
-    --app-secondary: 151 60% 55%; /* Lighter green for dark mode */
-    --app-success: 151 65% 50%; /* Success green for dark mode */
-    --app-warning: 43 87% 65%; /* Warning orange for dark mode */
-    --app-error: 0 75% 61%; /* Error red for dark mode */
+    --app-primary: 221 49% 57%;
+    --app-secondary: 151 60% 55%;
+    --app-success: 151 65% 50%;
+    --app-warning: 43 87% 65%;
+    --app-error: 0 75% 61%;
     
     /* Additional semantic colors for dark mode */
-    --app-blue: 221 49% 57%; /* Same as app-primary for dark mode */
-    --app-green: 151 60% 55%; /* Same as app-secondary for dark mode */
-    --app-gray: 217.2 32.6% 17.5%; /* Dark gray for backgrounds */
-    --app-dark: 210 40% 98%; /* Light color for dark mode */
+    --app-blue: 221 49% 57%;
+    --app-green: 151 60% 55%;
+    --app-gray: 217.2 32.6% 17.5%;
+    --app-dark: 210 40% 98%;
+
+    /* NEW: Hero section vibrant colors for dark mode */
+    --hero-primary: 246 85% 70%;
+    --hero-secondary: 280 85% 65%;
+    --hero-accent: 316 75% 60%;
+    --hero-success: 151 80% 55%;
+    --hero-warning: 38 95% 65%;
     
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -157,4 +171,186 @@
   .carousel-image:hover {
     @apply scale-105 brightness-110;
   }
+}
+
+/* ===== NEW ANIMATIONS ===== */
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes bounce-soft {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 2s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.animate-delay-100 { animation-delay: 100ms; }
+.animate-delay-200 { animation-delay: 200ms; }
+.animate-delay-300 { animation-delay: 300ms; }
+.animate-delay-400 { animation-delay: 400ms; }
+.animate-delay-500 { animation-delay: 500ms; }
+
+/* Hero section specific styles */
+.hero-gradient-bg {
+  background: 
+    radial-gradient(ellipse at 20% 30%, hsl(var(--hero-primary) / 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, hsl(var(--hero-accent) / 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, hsl(var(--hero-secondary) / 0.08) 0%, transparent 70%),
+    linear-gradient(to bottom, hsl(var(--background)), hsl(var(--muted) / 0.5));
+}
+
+.dark .hero-gradient-bg {
+  background: 
+    radial-gradient(ellipse at 20% 30%, hsl(var(--hero-primary) / 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, hsl(var(--hero-accent) / 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, hsl(var(--hero-secondary) / 0.04) 0%, transparent 70%),
+    linear-gradient(to bottom, hsl(var(--background)), hsl(var(--background)));
+}
+
+/* Glassmorphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Text gradient utility */
+.text-gradient-hero {
+  background: linear-gradient(135deg, hsl(var(--hero-primary)), hsl(var(--hero-accent)), hsl(var(--hero-secondary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 20px hsl(var(--hero-primary) / 0.3),
+              0 0 40px hsl(var(--hero-primary) / 0.2),
+              0 0 60px hsl(var(--hero-primary) / 0.1);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px hsl(var(--hero-success) / 0.3),
+              0 0 40px hsl(var(--hero-success) / 0.2),
+              0 0 60px hsl(var(--hero-success) / 0.1);
 }

@@ -1,131 +1,88 @@
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import React from "react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  CarouselApi,
-} from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
+import HeroSearchInput from "@/components/hero/HeroSearchInput";
+import TrendingProducts from "@/components/hero/TrendingProducts";
+import SavingsCounter from "@/components/hero/SavingsCounter";
 
 const HeroSection: React.FC = () => {
-  const heroImages = [
-    {
-      src: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1074&q=80",
-      alt: "Comparação de preços em supermercado",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1591823969270-f087f50b1aff?q=80&w=415&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      alt: "Pessoa fazendo compras inteligentes",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
-      alt: "Economia nas compras do supermercado",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1542838132-92c53300491e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
-      alt: "Carrinho de compras em supermercado",
-    },
-  ];
-
-  const [api, setApi] = useState<CarouselApi>();
-  const autoplayIntervalRef = React.useRef<NodeJS.Timeout | undefined>(
-    undefined
-  );
-
-  useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    // Função para iniciar o autoplay
-    const startAutoplay = () => {
-      if (autoplayIntervalRef.current) {
-        clearInterval(autoplayIntervalRef.current);
-      }
-      autoplayIntervalRef.current = setInterval(() => {
-        api.scrollNext(); // Rola para o próximo slide
-      }, 3000); // Rola a cada 4 segundos (ajuste o tempo conforme preferir)
-    };
-
-    // Função para parar o autoplay
-    const stopAutoplay = () => {
-      if (autoplayIntervalRef.current) {
-        clearInterval(autoplayIntervalRef.current);
-        autoplayIntervalRef.current = undefined;
-      }
-    };
-
-    // Inicia o autoplay ao montar e reseta ao mudar de slide
-    api.on("init", startAutoplay);
-    api.on("select", startAutoplay); // Reseta o autoplay ao selecionar um slide manualmente
-
-    // Garante que o autoplay pare ao desmontar o componente
-    return () => {
-      stopAutoplay();
-      api.off("init", startAutoplay);
-      api.off("select", startAutoplay);
-    };
-  }, [api]);
-
   return (
-    <div className="bg-app-gray dark:bg-gray-900 py-8 sm:py-16 md:py-24">
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex flex-col lg:flex-row items-center">
-          <div className="lg:w-1/2 mb-8 lg:mb-0">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-app-dark dark:text-white mb-4 sm:mb-6 text-center lg:text-left">
-              Compare preços e economize nas compras
-            </h1>
-            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 text-center lg:text-left px-4 lg:px-0">
-              O Esperto Comparador ajuda você a encontrar os melhores preços em
-              diferentes supermercados, economizando tempo e dinheiro em suas
-              compras.
-            </p>
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center lg:justify-start px-4 lg:px-0">
-              <Link to="/comparison">
-                <Button className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-6 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto transform hover:scale-105">
-                  ✨ Comparar Agora
-                </Button>
-              </Link>
-              <Link to="/reports">
-                <Button
-                  variant="outline"
-                  className="border-app-blue text-app-blue hover:bg-blue-50 dark:hover:bg-blue-950 px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg w-full sm:w-auto dark:border-app-blue"
-                >
-                  Ver Relatórios
-                </Button>
-              </Link>
-            </div>
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden hero-gradient-bg">
+      {/* Floating decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-hero-primary/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-hero-accent/10 rounded-full blur-3xl animate-float animate-delay-300" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-hero-secondary/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-hero-primary/10 border border-hero-primary/20 mb-8 animate-fade-in-down">
+            <Sparkles className="w-4 h-4 text-hero-primary" />
+            <span className="text-sm font-medium text-hero-primary">
+              Compare preços e economize até 40%
+            </span>
           </div>
 
-          <div className="lg:w-1/2 flex justify-center">
-            <div className="w-full max-w-sm sm:max-w-md relative">
-              <Carousel
-                className="w-full"
-                opts={{ align: "start", loop: true }}
-                setApi={setApi}
+          {/* Main heading */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
+            <span className="text-foreground">Encontre o </span>
+            <span className="text-gradient-hero">melhor preço</span>
+            <br />
+            <span className="text-foreground">para suas compras</span>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in-up animate-delay-100">
+            Compare preços de produtos em diferentes supermercados da sua região 
+            e descubra onde economizar mais. Rápido, fácil e gratuito.
+          </p>
+
+          {/* Search Input */}
+          <div className="animate-fade-in-up animate-delay-200">
+            <HeroSearchInput />
+          </div>
+
+          {/* Trending Products */}
+          <div className="animate-fade-in-up animate-delay-300">
+            <TrendingProducts />
+          </div>
+
+          {/* Quick action buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 animate-fade-in-up animate-delay-400">
+            <Link to="/contribute">
+              <Button
+                variant="outline"
+                size="lg"
+                className="group border-hero-primary/30 text-hero-primary hover:bg-hero-primary/10 hover:border-hero-primary/50"
               >
-                <CarouselContent>
-                  {heroImages.map((image, index) => (
-                    <CarouselItem key={index}>
-                      <div className="aspect-square rounded-lg overflow-hidden shadow-xl">
-                        <img
-                          src={image.src}
-                          alt={image.alt}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            </div>
+                Contribuir com preços
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            <Link to="/reports">
+              <Button
+                variant="ghost"
+                size="lg"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Ver relatórios de economia
+              </Button>
+            </Link>
+          </div>
+
+          {/* Stats Counter */}
+          <div className="animate-fade-in-up animate-delay-500">
+            <SavingsCounter />
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+    </section>
   );
 };
 
