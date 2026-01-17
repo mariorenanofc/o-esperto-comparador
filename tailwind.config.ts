@@ -73,6 +73,12 @@ export default {
 				'app-green': 'hsl(var(--app-green))',
 				'app-gray': 'hsl(var(--app-gray))',
 				'app-dark': 'hsl(var(--app-dark))',
+				// NEW: Hero section vibrant colors
+				'hero-primary': 'hsl(var(--hero-primary))',
+				'hero-secondary': 'hsl(var(--hero-secondary))',
+				'hero-accent': 'hsl(var(--hero-accent))',
+				'hero-success': 'hsl(var(--hero-success))',
+				'hero-warning': 'hsl(var(--hero-warning))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -95,11 +101,21 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'pulse-glow': {
+					'0%, 100%': { opacity: '0.4' },
+					'50%': { opacity: '0.7' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.5s ease-out forwards',
+				'pulse-glow': 'pulse-glow 3s ease-in-out infinite'
 			}
 		}
 	},
