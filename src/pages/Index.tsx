@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import DailyOffersSection from "@/components/DailyOffersSection";
+import { RegionalRanking } from "@/components/ranking/RegionalRanking";
 import { PlanStatus } from "@/components/PlanStatus";
 import {
   Card,
@@ -240,6 +241,11 @@ const Index: React.FC = () => {
       <Navbar />
       <HeroSection />
       <DailyOffersSection />
+      
+      {/* Ranking Regional de Supermercados */}
+      <div className="container mx-auto py-8 px-4 sm:px-6">
+        <RegionalRanking />
+      </div>
 
       <div className="container mx-auto py-8 sm:py-16 px-4 sm:px-6">
         {/* Alerta de Expiração */}

@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Menu, X, Settings, User, Bell } from "lucide-react";
+import { ShoppingCart, Menu, X, Settings, User, Bell, Target, ListChecks, Trophy, MapPin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "./ThemeToggle";
 
@@ -71,6 +71,33 @@ const Navbar = () => {
             >
               Economia
             </Link>
+            
+            {user && (
+              <>
+                <Link 
+                  to="/alerts" 
+                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
+                >
+                  <Target className="w-4 h-4" />
+                  Alertas
+                </Link>
+                <Link 
+                  to="/smart-list" 
+                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
+                >
+                  <ListChecks className="w-4 h-4" />
+                  Lista Inteligente
+                </Link>
+                <Link 
+                  to="/gamification" 
+                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
+                >
+                  <Trophy className="w-4 h-4" />
+                  Ranking
+                </Link>
+              </>
+            )}
+            
             <Link 
               to="/plans" 
               className="text-muted-foreground hover:text-app-secondary transition-colors"
@@ -185,15 +212,42 @@ const Navbar = () => {
               >
                 Economia
               </Link>
+              
               {user && (
-                <Link 
-                  to="/notifications" 
-                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <Bell className="w-4 h-4" />
-                  Notificações
-                </Link>
+                <>
+                  <Link 
+                    to="/alerts" 
+                    className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Target className="w-4 h-4" />
+                    Alertas de Preço
+                  </Link>
+                  <Link 
+                    to="/smart-list" 
+                    className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <ListChecks className="w-4 h-4" />
+                    Lista Inteligente
+                  </Link>
+                  <Link 
+                    to="/gamification" 
+                    className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Trophy className="w-4 h-4" />
+                    Ranking
+                  </Link>
+                  <Link 
+                    to="/notifications" 
+                    className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Bell className="w-4 h-4" />
+                    Notificações
+                  </Link>
+                </>
               )}
               
               {/* Admin Link Mobile - Only visible to administrators */}
