@@ -1,7 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 import { productService } from '@/services/productService';
-import { QUERY_KEYS } from '@/hooks/useQueryCache';
+import { QUERY_KEYS } from '@/lib/queryConfig';
+
+// Tipo para produto com campos normalizados
+interface NormalizedProduct {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  created_at: string | null;
+  prices: Record<string, number>;
+}
 
 // Hook para busca com debounce e cache
 export const useProductSearch = (searchTerm: string, debounceMs: number = 300) => {
@@ -18,8 +29,8 @@ export const useProductSearch = (searchTerm: string, debounceMs: number = 300) =
 
   // Query com cache para busca
   const { data: searchResults = [], isLoading, error } = useQuery({
-    queryKey: [...QUERY_KEYS.products, 'search', debouncedSearch],
-    queryFn: async () => {
+    queryKey: QUERY_KEYS.products.search(debouncedSearch),
+    queryFn: async (): Promise<NormalizedProduct[]> => {
       if (!debouncedSearch.trim()) {
         return [];
       }
@@ -55,8 +66,8 @@ export const useProductSearch = (searchTerm: string, debounceMs: number = 300) =
 // Hook para produtos por categoria com cache
 export const useProductsByCategory = (category: string) => {
   const { data: categoryProducts = [], isLoading, error } = useQuery({
-    queryKey: [...QUERY_KEYS.products, 'category', category],
-    queryFn: async () => {
+    queryKey: QUERY_KEYS.products.byCategory(category),
+    queryFn: async (): Promise<NormalizedProduct[]> => {
       if (!category || category === 'all') {
         return [];
       }
@@ -93,8 +104,8 @@ export const useOptimizedProductFilters = () => {
 
   // Query base para todos os produtos
   const { data: allProducts = [], isLoading: isLoadingAll } = useQuery({
-    queryKey: QUERY_KEYS.products,
-    queryFn: async () => {
+    queryKey: QUERY_KEYS.products.all,
+    queryFn: async (): Promise<NormalizedProduct[]> => {
       const products = await productService.getProducts();
       return products.map(product => ({
         ...product,
@@ -116,7 +127,7 @@ export const useOptimizedProductFilters = () => {
 
   // Produtos filtrados finais
   const filteredProducts = useMemo(() => {
-    let products = allProducts;
+    let products: NormalizedProduct[] = allProducts;
 
     // Se há busca, use os resultados da busca
     if (hasSearchQuery) {
@@ -155,7 +166,7 @@ export const useOptimizedProductFilters = () => {
   }, [allProducts, searchResults, categoryProducts, hasSearchQuery, hasCategory, filters]);
 
   // Categorias disponíveis
-  const availableCategories = useMemo(() => {
+  const availableCategories = useMemo((): string[] => {
     const categories = new Set(allProducts.map(product => product.category));
     return Array.from(categories).sort();
   }, [allProducts]);

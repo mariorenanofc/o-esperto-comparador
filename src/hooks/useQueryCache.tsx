@@ -1,21 +1,25 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import { QUERY_KEYS as CENTRALIZED_QUERY_KEYS, CACHE_CONFIGS, getQueryConfig } from '@/lib/queryConfig';
 
-// Cache keys para organizar melhor o cache
+// Re-export das chaves de query centralizadas
+export { CACHE_CONFIGS, getQueryConfig };
+
+// Chaves de query legadas para compatibilidade
 export const QUERY_KEYS = {
-  user: ['user'],
-  comparisons: ['comparisons'],
-  stores: ['stores'],
-  products: ['products'],
-  dailyOffers: ['dailyOffers'],
-  reports: ['reports'],
-  feedback: ['feedback'],
-  adminUsers: ['adminUsers'],
-  profile: (userId: string) => ['profile', userId],
-  userComparisons: (userId: string) => ['userComparisons', userId],
-  storesByLocation: (city: string, state: string) => ['stores', city, state],
-  offersByLocation: (city: string, state: string) => ['offers', city, state],
-} as const;
+  user: ['user'] as const,
+  comparisons: ['comparisons'] as const,
+  stores: CENTRALIZED_QUERY_KEYS.stores.all,
+  products: CENTRALIZED_QUERY_KEYS.products.all,
+  dailyOffers: CENTRALIZED_QUERY_KEYS.offers.daily(),
+  reports: ['reports'] as const,
+  feedback: ['feedback'] as const,
+  adminUsers: ['adminUsers'] as const,
+  profile: (userId: string) => ['profile', userId] as const,
+  userComparisons: (userId: string) => ['userComparisons', userId] as const,
+  storesByLocation: (city: string, state: string) => ['stores', city, state] as const,
+  offersByLocation: (city: string, state: string) => ['offers', city, state] as const,
+};
 
 // Hook para gerenciar cache de queries
 export const useQueryCache = () => {

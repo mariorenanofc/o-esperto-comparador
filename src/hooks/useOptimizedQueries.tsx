@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
-import { QUERY_KEYS } from './useQueryCache';
+import { QUERY_KEYS } from '@/lib/queryConfig';
 import { getCacheService } from '@/services/reactiveCache';
 import { productService } from '@/services/productService';
 import { storeService } from '@/services/storeService';
@@ -9,7 +9,7 @@ import { supabaseDailyOffersService } from '@/services/supabase/dailyOffersServi
 // Hook otimizado para produtos (sem chamadas duplicadas)
 export const useOptimizedProducts = () => {
   const { data: products = [], isLoading, error, isRefetching } = useQuery({
-    queryKey: [...QUERY_KEYS.products],
+    queryKey: QUERY_KEYS.products.all,
     queryFn: async () => {
       console.log('🔄 Fetching products (optimized)');
       return await productService.getProducts();
@@ -39,7 +39,7 @@ export const useOptimizedProducts = () => {
 // Hook otimizado para lojas (sem chamadas duplicadas)
 export const useOptimizedStores = () => {
   const { data: stores = [], isLoading, error, isRefetching } = useQuery({
-    queryKey: [...QUERY_KEYS.stores],
+    queryKey: QUERY_KEYS.stores.all,
     queryFn: async () => {
       console.log('🔄 Fetching stores (optimized)');
       return await storeService.getStores();
@@ -63,7 +63,7 @@ export const useOptimizedStores = () => {
 // Hook otimizado para ofertas diárias
 export const useOptimizedDailyOffers = () => {
   const { data: offers = [], isLoading, error } = useQuery({
-    queryKey: [...QUERY_KEYS.dailyOffers],
+    queryKey: QUERY_KEYS.offers.daily(),
     queryFn: async () => {
       console.log('🔄 Fetching daily offers (optimized)');
       return await supabaseDailyOffersService.getTodaysOffers();
@@ -97,14 +97,14 @@ export const useOptimizedMutations = () => {
     },
     onMutate: async (newProduct) => {
       // Cancelar queries em andamento
-      await queryClient.cancelQueries({ queryKey: [...QUERY_KEYS.products] });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.products.all });
 
       // Snapshot do estado anterior
-      const previousProducts = queryClient.getQueryData([...QUERY_KEYS.products]);
+      const previousProducts = queryClient.getQueryData(QUERY_KEYS.products.all);
 
       // Atualização otimista
       if (previousProducts) {
-        queryClient.setQueryData([...QUERY_KEYS.products], (old: any[]) => [
+        queryClient.setQueryData(QUERY_KEYS.products.all, (old: any[]) => [
           ...old,
           { ...newProduct, id: `temp-${Date.now()}`, created_at: new Date().toISOString() }
         ]);
@@ -115,7 +115,7 @@ export const useOptimizedMutations = () => {
     onError: (err, newProduct, context) => {
       // Rollback em caso de erro
       if (context?.previousProducts) {
-        queryClient.setQueryData([...QUERY_KEYS.products], context.previousProducts);
+        queryClient.setQueryData(QUERY_KEYS.products.all, context.previousProducts);
       }
     },
     onSettled: () => {
@@ -131,11 +131,11 @@ export const useOptimizedMutations = () => {
       // return await storeService.createStore(storeData);
     },
     onMutate: async (newStore) => {
-      await queryClient.cancelQueries({ queryKey: [...QUERY_KEYS.stores] });
-      const previousStores = queryClient.getQueryData([...QUERY_KEYS.stores]);
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.stores.all });
+      const previousStores = queryClient.getQueryData(QUERY_KEYS.stores.all);
 
       if (previousStores) {
-        queryClient.setQueryData([...QUERY_KEYS.stores], (old: any[]) => [
+        queryClient.setQueryData(QUERY_KEYS.stores.all, (old: any[]) => [
           ...old,
           { ...newStore, id: `temp-${Date.now()}`, created_at: new Date().toISOString() }
         ]);
@@ -145,7 +145,7 @@ export const useOptimizedMutations = () => {
     },
     onError: (err, newStore, context) => {
       if (context?.previousStores) {
-        queryClient.setQueryData([...QUERY_KEYS.stores], context.previousStores);
+        queryClient.setQueryData(QUERY_KEYS.stores.all, context.previousStores);
       }
     },
     onSettled: () => {
@@ -183,7 +183,7 @@ export const useSmartPrefetch = () => {
 
   const prefetchProducts = useCallback(async () => {
     await cacheService.prefetchIfStale(
-      [...QUERY_KEYS.products],
+      [...QUERY_KEYS.products.all],
       () => productService.getProducts(),
       10 * 60 * 1000 // 10 minutos
     );
@@ -191,7 +191,7 @@ export const useSmartPrefetch = () => {
 
   const prefetchStores = useCallback(async () => {
     await cacheService.prefetchIfStale(
-      [...QUERY_KEYS.stores],
+      [...QUERY_KEYS.stores.all],
       () => storeService.getStores(),
       15 * 60 * 1000 // 15 minutos
     );
@@ -199,7 +199,7 @@ export const useSmartPrefetch = () => {
 
   const prefetchOffers = useCallback(async () => {
     await cacheService.prefetchIfStale(
-      [...QUERY_KEYS.dailyOffers],
+      [...QUERY_KEYS.offers.daily()],
       () => supabaseDailyOffersService.getTodaysOffers(),
       2 * 60 * 1000 // 2 minutos
     );
