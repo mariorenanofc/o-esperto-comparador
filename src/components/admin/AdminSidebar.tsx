@@ -83,11 +83,13 @@ const supportMenuItems = [
 
 interface AdminSidebarProps {
   onNavigate?: () => void;
+  isMobileSheet?: boolean;
 }
 
-export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate }) => {
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobileSheet = false }) => {
   const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  // No mobile sheet, sempre mostrar texto completo
+  const collapsed = isMobileSheet ? false : state === "collapsed";
   const location = useLocation();
   const { signOut } = useAuth();
   const currentPath = location.pathname;

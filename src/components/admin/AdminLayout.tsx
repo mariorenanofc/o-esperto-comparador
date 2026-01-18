@@ -33,7 +33,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-[280px]">
-                  <AdminSidebar onNavigate={() => setMobileMenuOpen(false)} />
+                  <AdminSidebar onNavigate={() => setMobileMenuOpen(false)} isMobileSheet={true} />
                 </SheetContent>
               </Sheet>
             ) : (

@@ -33,8 +33,8 @@ export const CACHE_CONFIGS = {
   volatile: {
     staleTime: 2 * 60 * 1000, // 2 minutos
     gcTime: 5 * 60 * 1000, // 5 minutos
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Evitar refetch no mount para prevenir loops
     refetchInterval: 5 * 60 * 1000, // 5 minutos
     retry: 2,
   },

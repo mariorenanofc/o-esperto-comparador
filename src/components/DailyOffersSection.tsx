@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGeolocation } from "@/hooks/useGeolocation";
-import { dailyOffersService } from "@/services/dailyOffersService";
 import { DailyOffer } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DailyOffersHeader from "./daily-offers/DailyOffersHeader";
@@ -14,92 +13,52 @@ import { getPlanById } from "@/lib/plans";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
-import { logger } from "@/lib/logger";
+import { useOptimizedDailyOffers } from "@/hooks/useOptimizedData";
 
 const DailyOffersSection: React.FC = () => {
-  const { user, loading: authLoading, profile } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { currentPlan } = useSubscription();
-  const { city, state } = useGeolocation();
-  const { handleAsync } = useErrorHandler({ component: 'DailyOffersSection' });
-  const [offers, setOffers] = useState<DailyOffer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showAllForGuest, setShowAllForGuest] = useState(false);
+  const { city, state, loading: geoLoading } = useGeolocation();
+  const [showAllForGuest, setShowAllForGuest] = React.useState(false);
 
-  const fetchOffers = useCallback(async () => {
-    if (authLoading) return;
+  // Usar React Query hook centralizado
+  const { data: allOffers = [], isLoading: offersLoading, error: offersError, refetch } = useOptimizedDailyOffers();
 
-    setLoading(true);
-    setError(null);
-
-    const result = await handleAsync(
-      async () => {
-        logger.info('Fetching daily offers', { city, state });
-        const fetchedOffers = await dailyOffersService.getTodaysOffers();
-
-        let filteredOffers = fetchedOffers;
-        if (city && state) {
-          filteredOffers = fetchedOffers.filter(
-            (offer) =>
-              offer.city.toLowerCase() === city.toLowerCase() &&
-              offer.state.toLowerCase() === state.toLowerCase()
-          );
-        }
-
-        if (filteredOffers.length === 0) {
-          logger.info('No offers found for location', { city, state });
-        }
-
-        return filteredOffers;
-      },
-      { action: 'fetch_daily_offers' },
-      { severity: 'medium', showToast: true }
+  // Filtrar ofertas por localização usando useMemo
+  const offers = useMemo(() => {
+    if (!city || !state || geoLoading) return allOffers;
+    return allOffers.filter(
+      (offer) =>
+        offer.city?.toLowerCase() === city.toLowerCase() &&
+        offer.state?.toLowerCase() === state.toLowerCase()
     );
+  }, [allOffers, city, state, geoLoading]);
 
-    if (result) {
-      setOffers(result);
-    } else {
-      setError("Erro ao carregar ofertas do dia");
-    }
-    
-    setLoading(false);
-  }, [authLoading, city, state, handleAsync]);
-
-  useEffect(() => {
-    fetchOffers();
-
-    const interval = setInterval(() => {
-      logger.info('Auto-refreshing daily offers');
-      fetchOffers();
-    }, 5 * 60 * 1000); // 5 minutos
-
-    return () => clearInterval(interval);
-  }, [fetchOffers]);
+  const loading = authLoading || offersLoading;
 
   const handleShowAllForGuest = () => {
     setShowAllForGuest(true);
   };
 
   const handleRefresh = () => {
-    fetchOffers();
+    refetch();
     toast.success("Ofertas atualizadas!");
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return <LoadingState />;
   }
 
-  if (error) {
+  if (offersError) {
     return (
       <Card className="w-full max-w-6xl mx-auto">
         <CardHeader>
           <CardTitle className="text-red-600">Erro</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>{error}</p>
+          <p>Erro ao carregar ofertas do dia</p>
           <button
-            onClick={fetchOffers}
+            onClick={() => refetch()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Tentar novamente
@@ -109,8 +68,7 @@ const DailyOffersSection: React.FC = () => {
     );
   }
 
-  // --- ESTA É A NOVA DECLARAÇÃO E USO CONSISTENTE ---
-  const currentUserIsSignedIn = !!user; // Usamos este nome agora
+  const currentUserIsSignedIn = !!user;
   const planDetails = getPlanById(currentPlan);
   const maxDailyOffersVisibleByPlan =
     currentUserIsSignedIn && planDetails.limitations.dailyOffersVisible !== -1
@@ -129,7 +87,6 @@ const DailyOffersSection: React.FC = () => {
   );
 
   if (!currentUserIsSignedIn) {
-    // Uso do novo nome
     offersToDisplayInGrid = showAllForGuest
       ? offers
       : offers.slice(0, guestVisibleLimit);
@@ -141,7 +98,6 @@ const DailyOffersSection: React.FC = () => {
   } else {
     offersToDisplayInGrid = offers;
   }
-  // --- FIM DA CONSISTÊNCIA ---
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 relative">

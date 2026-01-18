@@ -1,7 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
+import { DailyOffer } from '@/lib/types';
+import { CACHE_CONFIGS } from '@/lib/queryConfig';
 
 // Optimized stores hook with direct Supabase call
 export const useOptimizedStores = () => {
@@ -20,7 +22,7 @@ export const useOptimizedStores = () => {
 
       return data || [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    ...CACHE_CONFIGS.semiStatic,
   });
 };
 
@@ -46,7 +48,7 @@ export const useOptimizedProducts = (searchTerm?: string) => {
 
       return data || [];
     },
-    staleTime: 15 * 60 * 1000, // 15 minutes
+    ...CACHE_CONFIGS.semiStatic,
   });
 };
 
@@ -73,80 +75,103 @@ export const useOptimizedUserComparisons = () => {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...CACHE_CONFIGS.dynamic,
   });
 };
 
-// Optimized daily offers hook
+// Optimized daily offers hook - Retorna dados já mapeados para DailyOffer
 export const useOptimizedDailyOffers = () => {
-  return useQuery({
+  return useQuery<DailyOffer[]>({
     queryKey: ['dailyOffers'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('daily_offers')
-          .select('*')
-          .eq('verified', true)
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('Error fetching daily offers:', error);
-        return [];
-      }
+      const { data, error } = await supabase
+        .from('daily_offers')
+        .select('*')
+        .eq('verified', true)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Mapear para o formato DailyOffer
+      return (data || []).map(item => ({
+        id: item.id,
+        productName: item.product_name,
+        price: Number(item.price),
+        storeName: item.store_name,
+        city: item.city,
+        state: item.state,
+        contributorName: item.contributor_name || 'Anônimo',
+        userId: item.user_id,
+        timestamp: new Date(item.created_at || ''),
+        verified: item.verified || false,
+        quantity: item.quantity || 1,
+        unit: item.unit || 'unidade'
+      }));
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - more volatile data
-    refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
+    staleTime: CACHE_CONFIGS.volatile.staleTime,
+    gcTime: CACHE_CONFIGS.volatile.gcTime,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Evitar refetch no mount
+    refetchInterval: CACHE_CONFIGS.volatile.refetchInterval,
+    retry: 2,
   });
 };
 
-// Simplified data preloader hook
+// Simplified data preloader hook using queryClient
 export const useDataPreloader = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Preload critical data after initial render
     const preloadData = async () => {
       setTimeout(async () => {
-        try {
-          // Preload stores - fire and forget
-          await supabase.from("stores").select("*").order("name");
-        } catch {
-          // Silently fail - this is just preloading
-        }
+        // Usar prefetchQuery para integrar com o cache
+        queryClient.prefetchQuery({
+          queryKey: ['stores'],
+          queryFn: async () => {
+            const { data } = await supabase.from("stores").select("*").order("name");
+            return data || [];
+          },
+          staleTime: CACHE_CONFIGS.semiStatic.staleTime,
+        });
         
-        try {
-          // Preload products - fire and forget  
-          await supabase.from("products").select("*").order("name");
-        } catch {
-          // Silently fail - this is just preloading
-        }
+        queryClient.prefetchQuery({
+          queryKey: ['products'],
+          queryFn: async () => {
+            const { data } = await supabase.from("products").select("*").order("name");
+            return data || [];
+          },
+          staleTime: CACHE_CONFIGS.semiStatic.staleTime,
+        });
       }, 1000);
     };
 
     preloadData();
-  }, []);
+  }, [queryClient]);
 
   // Preload user-specific data when user logs in
   useEffect(() => {
     if (user) {
       const preloadUserData = async () => {
         setTimeout(async () => {
-          try {
-            await supabase
-              .from('comparisons')
-              .select('*')
-              .eq('user_id', user.id)
-              .order('created_at', { ascending: false });
-          } catch {
-            // Silently fail - this is just preloading
-          }
+          queryClient.prefetchQuery({
+            queryKey: ['userComparisons', user.id],
+            queryFn: async () => {
+              const { data } = await supabase
+                .from('comparisons')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+              return data || [];
+            },
+            staleTime: CACHE_CONFIGS.dynamic.staleTime,
+          });
         }, 500);
       };
       
       preloadUserData();
     }
-  }, [user]);
+  }, [user, queryClient]);
 };
