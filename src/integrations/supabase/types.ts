@@ -470,6 +470,27 @@ export type Database = {
         }
         Relationships: []
       }
+      leaderboard_cache: {
+        Row: {
+          calculated_at: string | null
+          id: number
+          period: string
+          rankings: Json
+        }
+        Insert: {
+          calculated_at?: string | null
+          id?: number
+          period: string
+          rankings: Json
+        }
+        Update: {
+          calculated_at?: string | null
+          id?: number
+          period?: string
+          rankings?: Json
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           created_at: string | null
@@ -645,6 +666,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      price_alerts: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          current_price: number | null
+          id: string
+          is_active: boolean | null
+          notification_sent: boolean | null
+          product_name: string
+          state: string | null
+          store_name: string | null
+          target_price: number
+          triggered_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          current_price?: number | null
+          id?: string
+          is_active?: boolean | null
+          notification_sent?: boolean | null
+          product_name: string
+          state?: string | null
+          store_name?: string | null
+          target_price: number
+          triggered_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          current_price?: number | null
+          id?: string
+          is_active?: boolean | null
+          notification_sent?: boolean | null
+          product_name?: string
+          state?: string | null
+          store_name?: string | null
+          target_price?: number
+          triggered_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_prices: {
         Row: {
@@ -866,6 +943,100 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_list_items: {
+        Row: {
+          alternative_price: number | null
+          alternative_store: string | null
+          best_price: number | null
+          best_store: string | null
+          category: string | null
+          created_at: string | null
+          id: string
+          is_checked: boolean | null
+          list_id: string
+          product_name: string
+          quantity: number | null
+          unit: string | null
+        }
+        Insert: {
+          alternative_price?: number | null
+          alternative_store?: string | null
+          best_price?: number | null
+          best_store?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_checked?: boolean | null
+          list_id: string
+          product_name: string
+          quantity?: number | null
+          unit?: string | null
+        }
+        Update: {
+          alternative_price?: number | null
+          alternative_store?: string | null
+          best_price?: number | null
+          best_store?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_checked?: boolean | null
+          list_id?: string
+          product_name?: string
+          quantity?: number | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shopping_lists: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string | null
+          total_estimated: number | null
+          total_savings: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          total_estimated?: number | null
+          total_savings?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          total_estimated?: number | null
+          total_savings?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_lists_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           created_at: string | null
@@ -1066,6 +1237,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          badge_id: string
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_dashboard_widgets: {
         Row: {
           created_at: string
@@ -1107,6 +1307,50 @@ export type Database = {
           width?: number
         }
         Relationships: []
+      }
+      user_stats: {
+        Row: {
+          contribution_streak: number | null
+          last_contribution_date: string | null
+          level: number | null
+          total_contributions: number | null
+          total_savings_generated: number | null
+          total_verified: number | null
+          updated_at: string | null
+          user_id: string
+          xp_points: number | null
+        }
+        Insert: {
+          contribution_streak?: number | null
+          last_contribution_date?: string | null
+          level?: number | null
+          total_contributions?: number | null
+          total_savings_generated?: number | null
+          total_verified?: number | null
+          updated_at?: string | null
+          user_id: string
+          xp_points?: number | null
+        }
+        Update: {
+          contribution_streak?: number | null
+          last_contribution_date?: string | null
+          level?: number | null
+          total_contributions?: number | null
+          total_savings_generated?: number | null
+          total_verified?: number | null
+          updated_at?: string | null
+          user_id?: string
+          xp_points?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
