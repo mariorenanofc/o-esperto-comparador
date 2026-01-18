@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface GeolocationData {
   city: string;
@@ -84,5 +83,15 @@ export const useGeolocation = (): GeolocationData => {
     });
   }, []);
 
-  return location;
+  // Memoizar o retorno para evitar re-renders desnecessários
+  const memoizedLocation = useMemo(() => ({
+    city: location.city,
+    state: location.state,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    loading: location.loading,
+    error: location.error,
+  }), [location.city, location.state, location.latitude, location.longitude, location.loading, location.error]);
+
+  return memoizedLocation;
 };
