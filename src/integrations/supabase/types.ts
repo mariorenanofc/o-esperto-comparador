@@ -1441,6 +1441,17 @@ export type Database = {
           unit: string
         }[]
       }
+      get_store_ranking_by_city: {
+        Args: { target_city: string; target_state?: string }
+        Returns: {
+          avg_price: number
+          max_price: number
+          min_price: number
+          rank_position: number
+          store_name: string
+          total_products: number
+        }[]
+      }
       get_user_subscription_stats: {
         Args: { target_user_id: string }
         Returns: Json
@@ -1488,6 +1499,25 @@ export type Database = {
         Returns: undefined
       }
       sanitize_text_input: { Args: { input_text: string }; Returns: string }
+      search_offers_optimized: {
+        Args: {
+          city_filter?: string
+          limit_count?: number
+          search_query?: string
+          state_filter?: string
+        }
+        Returns: {
+          city: string
+          contributor_name: string
+          created_at: string
+          id: string
+          price: number
+          product_name: string
+          relevance_score: number
+          state: string
+          store_name: string
+        }[]
+      }
       search_products_optimized: {
         Args: {
           category_filter?: string
