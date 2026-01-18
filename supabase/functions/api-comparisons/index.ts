@@ -50,7 +50,6 @@ interface Database {
 }
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -61,80 +60,92 @@ Deno.serve(async (req: Request) => {
   );
 
   try {
-    // Get API key from header
+    // Validate API key
     const apiKey = req.headers.get('x-api-key');
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'API key required' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify({ error: 'API key required', code: 'UNAUTHORIZED' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Validate API key and get user info
     const { data: keyValidation, error: keyError } = await supabaseClient.rpc(
-      'validate_api_key',
-      { api_key_input: apiKey }
-    );
-
-    if (keyError || !keyValidation?.valid) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid API key' }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Check rate limit
-    const { data: rateLimitOk } = await supabaseClient.rpc(
       'check_api_rate_limit',
-      {
-        api_key_input: apiKey,
-        endpoint_name: 'comparisons',
-        max_requests_per_hour: keyValidation.rate_limit || 1000,
-      }
+      { api_key_input: apiKey, endpoint_name: 'comparisons', max_requests_per_hour: 1000 }
     );
 
-    if (!rateLimitOk) {
+    if (keyError || !keyValidation) {
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
-        {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify({ error: 'Invalid API key or rate limit exceeded', code: 'RATE_LIMITED' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const userId = keyValidation.user_id;
     const url = new URL(req.url);
     const method = req.method;
 
-    // GET /api/v1/comparisons - List user's comparisons
+    // GET - List daily offers with filters
     if (method === 'GET') {
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+      const search = url.searchParams.get('search') || '';
+      const city = url.searchParams.get('city') || '';
+      const state = url.searchParams.get('state') || '';
+      const verified = url.searchParams.get('verified');
+      const hoursBack = parseInt(url.searchParams.get('hours') || '24');
       const offset = (page - 1) * limit;
 
-      const { data: comparisons, error, count } = await supabaseClient
-        .from('comparisons')
-        .select('*, comparison_products(id, product_id, products(name, category))', { count: 'exact' })
-        .eq('user_id', userId)
+      // Calculate timestamp for filtering
+      const cutoffTime = new Date();
+      cutoffTime.setHours(cutoffTime.getHours() - hoursBack);
+
+      let query = supabaseClient
+        .from('daily_offers')
+        .select('*', { count: 'exact' })
+        .gte('created_at', cutoffTime.toISOString())
         .range(offset, offset + limit - 1)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        throw error;
+      if (search) {
+        query = query.ilike('product_name', `%${search}%`);
       }
+      if (city) {
+        query = query.ilike('city', `%${city}%`);
+      }
+      if (state) {
+        query = query.eq('state', state.toUpperCase());
+      }
+      if (verified !== null && verified !== undefined) {
+        query = query.eq('verified', verified === 'true');
+      }
+
+      const { data: offers, error, count } = await query;
+
+      if (error) throw error;
+
+      // Calculate meta statistics
+      const uniqueStores = new Set(offers?.map(o => o.store_name) || []);
+      const avgPrice = offers && offers.length > 0 
+        ? offers.reduce((sum, o) => sum + o.price, 0) / offers.length 
+        : 0;
 
       const totalPages = Math.ceil((count || 0) / limit);
 
       return new Response(
         JSON.stringify({
-          data: comparisons,
+          data: offers?.map(offer => ({
+            id: offer.id,
+            product_name: offer.product_name,
+            price: offer.price,
+            quantity: offer.quantity,
+            unit: offer.unit,
+            store_name: offer.store_name,
+            city: offer.city,
+            state: offer.state,
+            contributor_name: offer.contributor_name,
+            verified: offer.verified,
+            created_at: offer.created_at
+          })),
           pagination: {
             page,
             limit,
@@ -143,78 +154,102 @@ Deno.serve(async (req: Request) => {
             hasNext: page < totalPages,
             hasPrev: page > 1,
           },
+          meta: {
+            hours_back: hoursBack,
+            total_stores: uniqueStores.size,
+            avg_price: Math.round(avgPrice * 100) / 100
+          }
         }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // POST /api/v1/comparisons - Create new comparison
+    // POST - Get price comparison for multiple products
     if (method === 'POST') {
       const body = await req.json();
-      
-      const comparisonData = {
-        user_id: userId,
-        title: body.title || `Comparação ${new Date().toLocaleDateString('pt-BR')}`,
-        date: body.date || new Date().toISOString(),
-      };
+      const { products, city, state } = body;
 
-      const { data: newComparison, error } = await supabaseClient
-        .from('comparisons')
-        .insert(comparisonData)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
+      if (!products || !Array.isArray(products) || products.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'Products array is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
-      // Add products to comparison if provided
-      if (body.products && Array.isArray(body.products)) {
-        const comparisonProducts = body.products.map((productId: string) => ({
-          comparison_id: newComparison.id,
-          product_id: productId,
-        }));
+      // Get offers for requested products
+      const cutoffTime = new Date();
+      cutoffTime.setHours(cutoffTime.getHours() - 48);
 
-        await supabaseClient
-          .from('comparison_products')
-          .insert(comparisonProducts);
-      }
+      let query = supabaseClient
+        .from('daily_offers')
+        .select('*')
+        .gte('created_at', cutoffTime.toISOString())
+        .order('price', { ascending: true });
 
-      // Fetch complete comparison with products
-      const { data: completeComparison } = await supabaseClient
-        .from('comparisons')
-        .select('*, comparison_products(id, product_id, products(name, category))')
-        .eq('id', newComparison.id)
-        .single();
+      if (city) query = query.ilike('city', `%${city}%`);
+      if (state) query = query.eq('state', state.toUpperCase());
+
+      // Build OR filter for products
+      const productFilters = products.map((p: string) => `product_name.ilike.%${p}%`).join(',');
+      query = query.or(productFilters);
+
+      const { data: offers, error } = await query;
+
+      if (error) throw error;
+
+      // Group by product and find best prices
+      const comparison: Record<string, any> = {};
+      products.forEach((product: string) => {
+        const productOffers = offers?.filter(o => 
+          o.product_name.toLowerCase().includes(product.toLowerCase())
+        ) || [];
+        
+        const bestOffer = productOffers[0];
+        const stores = [...new Set(productOffers.map(o => o.store_name))];
+        
+        comparison[product] = {
+          best_price: bestOffer?.price || null,
+          best_store: bestOffer?.store_name || null,
+          available_stores: stores.length,
+          offers: productOffers.slice(0, 5).map(o => ({
+            price: o.price,
+            store: o.store_name,
+            city: o.city,
+            verified: o.verified
+          }))
+        };
+      });
+
+      // Calculate total if buying best prices
+      const totalBestPrices = Object.values(comparison).reduce(
+        (sum: number, item: any) => sum + (item.best_price || 0), 0
+      );
 
       return new Response(
-        JSON.stringify({ data: completeComparison }),
-        {
-          status: 201,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify({
+          data: {
+            comparison,
+            summary: {
+              total_best_prices: Math.round(totalBestPrices * 100) / 100,
+              products_found: Object.values(comparison).filter((c: any) => c.best_price !== null).length,
+              products_requested: products.length
+            }
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
       JSON.stringify({ error: 'Method not allowed' }),
-      {
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('API Comparisons error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
