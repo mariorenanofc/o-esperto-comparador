@@ -36,6 +36,11 @@ import Security from "@/pages/admin/Security";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import Analytics from "@/pages/admin/Analytics";
 
+// Novas páginas
+import Alerts from "@/pages/Alerts";
+import SmartList from "@/pages/SmartList";
+import Gamification from "@/pages/Gamification";
+
 import PWAInstallBanner from "./PWAInstallBanner";
 import { PWAInstallPromotion } from "./PWAInstallPromotion";
 import { OfflineIndicator } from "./OfflineIndicator";
@@ -103,6 +108,24 @@ export const AppContent: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          {/* New Feature Routes */}
+          <Route
+            path="/alerts"
+            element={
+              <ProtectedRoute>
+                <Alerts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/smart-list"
+            element={
+              <ProtectedRoute>
+                <SmartList />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/gamification" element={<Gamification />} />
         {/* Admin Routes */}
         <Route 
           path="/admin" 
