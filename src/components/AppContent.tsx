@@ -40,6 +40,7 @@ import Analytics from "@/pages/admin/Analytics";
 import Alerts from "@/pages/Alerts";
 import SmartList from "@/pages/SmartList";
 import Gamification from "@/pages/Gamification";
+import ApiDocs from "@/pages/ApiDocs";
 
 import PWAInstallBanner from "./PWAInstallBanner";
 import { PWAInstallPromotion } from "./PWAInstallPromotion";
@@ -60,6 +61,7 @@ export const AppContent: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/comparison" element={<Comparison />} />
           <Route path="/products" element={<ProductCatalog />} />
+          <Route path="/api-docs" element={<ApiDocs />} />
           <Route
             path="/contribute"
             element={

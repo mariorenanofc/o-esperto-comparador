@@ -1,16 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, Clock, Trash2, Plus } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Search, X, Clock, Trash2, Plus, TrendingUp, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSearchHistory } from '@/hooks/useProductFilters';
 import { useProductSearch } from '@/hooks/useProductSearch';
 import { Product } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface ProductSearchSuggestionsProps {
   value: string;
@@ -22,6 +19,11 @@ interface ProductSearchSuggestionsProps {
   showSuggestions?: boolean;
 }
 
+// Popular search terms
+const TRENDING_SEARCHES = [
+  'Arroz', 'Feijão', 'Leite', 'Óleo', 'Açúcar', 'Café', 'Macarrão', 'Farinha'
+];
+
 export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> = ({
   value,
   onChange,
@@ -32,20 +34,59 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
   showSuggestions = true
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { searchHistory, addToHistory, clearHistory, removeFromHistory } = useSearchHistory();
   
   // Use product search with debounce for suggestions
-  const { searchResults, isSearching, searchError } = useProductSearch(
-    showSuggestions && value.length > 2 ? value : ''
+  const { searchResults, isSearching, searchError, hasSearchQuery } = useProductSearch(
+    showSuggestions && value.length > 1 ? value : '', 200
   );
 
-  // Log search errors
-  React.useEffect(() => {
-    if (searchError) {
-      console.error('Product search error:', searchError);
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Computed suggestions
+  const suggestions = useMemo(() => {
+    if (hasSearchQuery && searchResults.length > 0) {
+      return searchResults.slice(0, 8).map(p => ({
+        type: 'product' as const,
+        id: p.id,
+        text: p.name,
+        category: p.category,
+        product: p
+      }));
     }
-  }, [searchError]);
+
+    // Show history and trending when no search
+    const historySuggestions = searchHistory.slice(0, 5).map(h => ({
+      type: 'history' as const,
+      id: h,
+      text: h
+    }));
+
+    const trendingSuggestions = TRENDING_SEARCHES
+      .filter(t => !searchHistory.includes(t))
+      .slice(0, 5 - historySuggestions.length)
+      .map(t => ({
+        type: 'trending' as const,
+        id: t,
+        text: t
+      }));
+
+    return [...historySuggestions, ...trendingSuggestions];
+  }, [searchResults, hasSearchQuery, searchHistory]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,19 +96,20 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
     }
   };
 
-  const handleHistorySelect = (searchTerm: string) => {
-    onChange(searchTerm);
-    setIsOpen(false);
-    addToHistory(searchTerm);
-  };
-
-  const handleProductSelect = (product: Product) => {
-    if (onSelectProduct) {
-      onSelectProduct(product);
-      onChange('');
-      setIsOpen(false);
-      addToHistory(product.name);
+  const handleSuggestionSelect = (suggestion: typeof suggestions[0]) => {
+    if (suggestion.type === 'product') {
+      const productSuggestion = suggestion as { type: 'product'; product: Product };
+      if (onSelectProduct) {
+        onSelectProduct(productSuggestion.product);
+      }
+      onChange(suggestion.text);
+      addToHistory(suggestion.text);
+    } else {
+      onChange(suggestion.text);
+      addToHistory(suggestion.text);
     }
+    setIsOpen(false);
+    setSelectedIndex(-1);
   };
 
   const handleClear = () => {
@@ -76,23 +118,61 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setIsOpen(false);
-      inputRef.current?.blur();
+    if (!isOpen && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        setIsOpen(true);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+          handleSuggestionSelect(suggestions[selectedIndex]);
+        } else if (value.trim()) {
+          addToHistory(value.trim());
+          setIsOpen(false);
+        }
+        break;
+      case 'Escape':
+        setIsOpen(false);
+        setSelectedIndex(-1);
+        break;
     }
   };
 
-  const showPopover = isOpen && (
-    searchHistory.length > 0 || 
-    (searchResults && searchResults.length > 0) ||
-    isSearching
-  );
+  const highlightMatch = (text: string) => {
+    if (!value) return text;
+    const regex = new RegExp(`(${value})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) => 
+      regex.test(part) ? (
+        <span key={i} className="bg-primary/20 text-primary font-medium">{part}</span>
+      ) : part
+    );
+  };
+
+  const showDropdown = isOpen && (suggestions.length > 0 || isSearching || (hasSearchQuery && searchResults.length === 0));
 
   return (
-    <div className={`relative ${className}`}>
+    <div ref={containerRef} className={cn("relative", className)}>
       <form onSubmit={handleSubmit} className="relative">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
           <Input
             ref={inputRef}
             type="text"
@@ -101,15 +181,18 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
             onFocus={() => setIsOpen(true)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="pl-10 pr-10"
+            className="pl-10 pr-10 h-11"
           />
+          {isSearching && (
+            <Loader2 className="absolute right-10 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+          )}
           {value && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleClear}
-              className="absolute right-2 top-1/2 h-6 w-6 -translate-y-1/2 p-0 hover:bg-transparent"
+              className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -117,118 +200,164 @@ export const ProductSearchSuggestions: React.FC<ProductSearchSuggestionsProps> =
         </div>
       </form>
 
-      {showPopover && (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <div className="absolute inset-0 pointer-events-none" />
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-full p-2" 
-            align="start"
-            onOpenAutoFocus={(e) => e.preventDefault()}
-          >
-            <div className="space-y-2">
-              {/* Product suggestions */}
-              {showSuggestions && searchResults && searchResults.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Search className="h-4 w-4" />
-                    <span>Produtos encontrados</span>
-                  </div>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {searchResults.slice(0, 5).map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex items-center justify-between group hover:bg-accent rounded-sm p-2 cursor-pointer"
-                        onClick={() => handleProductSelect(product)}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">{product.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {product.quantity} {product.unit} • {product.category}
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                  {searchHistory.length > 0 && <div className="border-t pt-2" />}
+      {/* Suggestions Dropdown */}
+      {showDropdown && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-popover border border-border rounded-lg shadow-lg overflow-hidden">
+          <ScrollArea className="max-h-80">
+            {/* History Section Header */}
+            {!hasSearchQuery && searchHistory.length > 0 && (
+              <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  <span>Buscas recentes</span>
                 </div>
-              )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearHistory}
+                  className="h-5 text-xs px-2"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Limpar
+                </Button>
+              </div>
+            )}
 
-              {/* Search history */}
-              {showHistory && searchHistory.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>Buscas recentes</span>
+            {/* Search Results Header */}
+            {hasSearchQuery && searchResults.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b text-xs text-muted-foreground">
+                <Sparkles className="h-3 w-3" />
+                <span>{searchResults.length} produtos encontrados</span>
+              </div>
+            )}
+
+            {/* Suggestions List */}
+            {suggestions.length > 0 && (
+              <div className="py-1">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={`${suggestion.type}-${suggestion.id}`}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors group",
+                      selectedIndex === index 
+                        ? "bg-accent text-accent-foreground" 
+                        : "hover:bg-accent/50"
+                    )}
+                    onClick={() => handleSuggestionSelect(suggestion)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {suggestion.type === 'history' && (
+                        <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                      )}
+                      {suggestion.type === 'trending' && (
+                        <TrendingUp className="h-4 w-4 text-orange-500 shrink-0" />
+                      )}
+                      {suggestion.type === 'product' && (
+                        <Search className="h-4 w-4 text-primary shrink-0" />
+                      )}
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm truncate">
+                          {suggestion.type === 'product' ? highlightMatch(suggestion.text) : suggestion.text}
+                        </p>
+                        {suggestion.type === 'product' && (suggestion as any).category && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {(suggestion as any).category}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearHistory}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    {searchHistory.slice(0, 5).map((searchTerm, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between group hover:bg-accent rounded-sm p-2 cursor-pointer"
-                        onClick={() => handleHistorySelect(searchTerm)}
-                      >
-                        <span className="text-sm truncate flex-1">{searchTerm}</span>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {suggestion.type === 'history' && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            removeFromHistory(searchTerm);
+                            removeFromHistory(suggestion.text);
                           }}
-                          className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                         >
                           <X className="h-3 w-3" />
                         </Button>
-                      </div>
-                    ))}
+                      )}
+                      {suggestion.type === 'trending' && (
+                        <Badge variant="secondary" className="text-xs">
+                          Popular
+                        </Badge>
+                      )}
+                      {suggestion.type === 'product' && onSelectProduct && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+            )}
 
-              {/* Search error */}
-              {searchError && (
-                <div className="text-sm text-destructive p-2">
-                  Erro ao buscar produtos. Tente novamente.
+            {/* Trending Section (when no history) */}
+            {!hasSearchQuery && searchHistory.length === 0 && (
+              <div className="px-3 py-3 bg-muted/30">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                  <TrendingUp className="h-3 w-3" />
+                  <span>Produtos populares</span>
                 </div>
-              )}
-
-              {/* Loading state */}
-              {isSearching && (
-                <div className="text-sm text-muted-foreground p-2">
-                  Buscando produtos...
+                <div className="flex flex-wrap gap-1.5">
+                  {TRENDING_SEARCHES.slice(0, 6).map(term => (
+                    <Badge
+                      key={term}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-accent transition-colors"
+                      onClick={() => {
+                        onChange(term);
+                        addToHistory(term);
+                        setIsOpen(false);
+                      }}
+                    >
+                      {term}
+                    </Badge>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* No results found */}
-              {showSuggestions && !isSearching && !searchError && value.length > 2 && 
-               searchResults && searchResults.length === 0 && (
-                <div className="text-sm text-muted-foreground p-2">
+            {/* No Results */}
+            {hasSearchQuery && !isSearching && searchResults.length === 0 && (
+              <div className="p-4 text-center">
+                <p className="text-sm text-muted-foreground">
                   Nenhum produto encontrado para "{value}"
-                </div>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tente buscar por outro termo
+                </p>
+              </div>
+            )}
+
+            {/* Loading state */}
+            {isSearching && (
+              <div className="flex items-center justify-center gap-2 p-4 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Buscando produtos...
+              </div>
+            )}
+
+            {/* Search error */}
+            {searchError && (
+              <div className="text-sm text-destructive p-4 text-center">
+                Erro ao buscar produtos. Tente novamente.
+              </div>
+            )}
+          </ScrollArea>
+        </div>
       )}
     </div>
   );
