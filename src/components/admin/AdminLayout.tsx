@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
+import { AdminMobileMenu } from "./AdminMobileMenu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
@@ -33,7 +34,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-[280px]">
-                  <AdminSidebar onNavigate={() => setMobileMenuOpen(false)} isMobileSheet={true} />
+                  <AdminMobileMenu onNavigate={() => setMobileMenuOpen(false)} />
                 </SheetContent>
               </Sheet>
             ) : (
