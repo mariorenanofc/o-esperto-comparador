@@ -3,113 +3,46 @@ import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import DailyOffersSection from "@/components/DailyOffersSection";
 import { RegionalRanking } from "@/components/ranking/RegionalRanking";
-import { PlanStatus } from "@/components/PlanStatus";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { getPlanById } from "@/lib/plans";
 import { Link } from "react-router-dom";
 import { contributionService } from "@/services/contributionService";
 import { comparisonService } from "@/services/comparisonService";
-import { Product, Store, ComparisonData } from "@/lib/types";
+import { Product, Store } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
-  Zap,
-  Target,
   DollarSign,
-  MessageSquare,
-  Badge,
   Clock,
-  PlusCircle,
+  Crown,
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  Shield,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
-import { PushNotificationTest } from "@/components/PushNotificationTest";
+import { Badge } from "@/components/ui/badge";
 
-// Componente para itens com barra de progresso (uso limitado para manter padrão)
-const ProgressItem = ({
-  title,
-  current,
-  limit,
+// Componente compacto para estatística
+const StatCard = ({
   icon,
-  color,
-  description,
-}: {
-  title: string;
-  current: number;
-  limit: number;
-  icon: React.ReactNode;
-  color: string;
-  description: string;
-}) => (
-  <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
-    <div className="flex items-center justify-between mb-3">
-      <div className="flex items-center gap-3">
-        <div
-          className={`p-2 rounded-lg bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg group-hover/item:scale-110 transition-transform duration-300`}
-        >
-          {icon}
-        </div>
-        <div>
-          <h4 className="font-semibold text-foreground">{title}</h4>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <div className={`text-lg font-bold text-${color}-600 dark:text-${color}-400`}>
-          {current}
-        </div>
-        <div className="text-xs text-muted-foreground">
-          de {limit === -1 ? "∞" : limit}
-        </div>
-      </div>
-    </div>
-    {limit !== -1 && (
-      <Progress
-        value={Math.min((current / limit) * 100, 100)}
-        className={`h-3 bg-${color}-100 dark:bg-${color}-900/30`}
-      />
-    )}
-  </div>
-);
-
-// Componente para itens sem barra de progresso
-const InsightItem = ({
-  title,
+  label,
   value,
-  icon,
-  color,
-  description,
+  className = "",
 }: {
-  title: string;
-  value: string | number;
   icon: React.ReactNode;
-  color: string;
-  description: string;
+  label: string;
+  value: string | number;
+  className?: string;
 }) => (
-  <div className="p-4 rounded-xl bg-gradient-to-r from-background via-background/95 to-muted/20 backdrop-blur-sm border border-border/50 hover:shadow-lg transition-all duration-300 group/item">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div
-          className={`p-2 rounded-lg bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg group-hover/item:scale-110 transition-transform duration-300`}
-        >
-          {icon}
-        </div>
-        <div>
-          <h4 className="font-semibold text-foreground">{title}</h4>
-          <p className="text-xs text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      <div className="text-right">
-        <div className={`text-xl font-bold text-${color}-600 dark:text-${color}-400`}>
-          {value}
-        </div>
-      </div>
+  <div className={`flex items-center gap-3 p-3 rounded-lg bg-muted/50 ${className}`}>
+    <div className="p-2 rounded-full bg-primary/10 text-primary">
+      {icon}
+    </div>
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-semibold text-foreground">{value}</p>
     </div>
   </div>
 );
@@ -242,220 +175,144 @@ const Index: React.FC = () => {
       <HeroSection />
       <DailyOffersSection />
       
-      {/* Ranking Regional de Supermercados */}
-      <div className="container mx-auto py-8 px-4 sm:px-6">
+      {/* Ranking Regional - só aparece se tiver dados */}
+      <div className="container mx-auto py-6 px-4 sm:px-6">
         <RegionalRanking />
       </div>
 
-      <div className="container mx-auto py-8 sm:py-16 px-4 sm:px-6">
-        {/* Alerta de Expiração */}
-        {user && <SubscriptionExpiryAlert />}
-        
-        {/* Seção Meu Plano e Uso */}
-        {user && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-4 text-app-dark dark:text-white">
-              Meu plano e uso
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
-              {/* Card do Status do Plano (Esquerda) */}
-              <div className="min-h-[360px]">
-                <PlanStatus />
-              </div>
+      {/* Alerta de Expiração */}
+      {user && (
+        <div className="container mx-auto px-4 sm:px-6">
+          <SubscriptionExpiryAlert />
+        </div>
+      )}
 
-              {/* Card: Visão Geral do Uso (Direita - Refatorado) */}
-              <Card className="dark:bg-gray-800 min-h-[360px] flex flex-col justify-between relative overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="text-xl">
-                    Visão Geral do Seu Uso
-                  </CardTitle>
-                  <CardDescription className="dark:text-gray-400">
-                    Acompanhe suas atividades e benefícios do plano.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-start items-center px-6 py-4">
-                  {loadingDashboardStats ? (
-                    <div className="text-center py-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
-                      <p className="mt-2 text-gray-600">Carregando dados...</p>
+      {/* Resumo Compacto da Conta - apenas para usuários logados */}
+      {user && (
+        <div className="container mx-auto py-6 px-4 sm:px-6">
+          <Card className="overflow-hidden">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Info do Plano */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Crown className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">
+                        Plano {currentPlanDetails?.name || "Free"}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {profile?.plan === "free" ? "Gratuito" : "Ativo"}
+                      </Badge>
                     </div>
-                  ) : currentPlanDetails ? (
-                    <>
-                      <div className="w-full space-y-4">
-                        <InsightItem
-                          title="Dias na plataforma"
-                          description="Total de dias desde o cadastro"
-                          value={userDashboardStats.daysOnPlatform}
-                          icon={<Clock />}
-                          color="blue"
-                        />
-                        <InsightItem
-                          title="Seus Feedbacks"
-                          description="Total de feedbacks enviados"
-                          value={userDashboardStats.totalFeedbacks}
-                          icon={<MessageSquare />}
-                          color="purple"
-                        />
-                         <InsightItem
-                          title="Economia Total"
-                          description="Economia estimada (R$)"
-                          value={`R$ ${userDashboardStats.estimatedTotalSavings.toFixed(2).replace('.', ',')}`}
-                          icon={<DollarSign />}
-                          color="yellow"
-                        />
-                      </div>
-                      <div className="pt-8 text-center w-full">
-                          <p className="text-gray-600 dark:text-gray-300 mb-3">
-                            Ajude a comunidade e ganhe benefícios!
-                          </p>
-                          <Link to="/contribute">
-                            <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                              <PlusCircle className="w-5 h-5 mr-2" /> Adicionar uma Contribuição
-                            </Button>
-                          </Link>
-                        </div>
-                    </>
-                  ) : (
-                    <p className="text-gray-500">
-                      Faça login para ver seu uso detalhado.
+                    <p className="text-xs text-muted-foreground">
+                      {userDashboardStats.daysOnPlatform} dias na plataforma
                     </p>
+                  </div>
+                </div>
+
+                {/* Estatísticas em linha */}
+                {!loadingDashboardStats && (
+                  <div className="flex flex-wrap gap-2 sm:gap-4">
+                    <StatCard
+                      icon={<Clock className="w-4 h-4" />}
+                      label="Dias ativos"
+                      value={userDashboardStats.daysOnPlatform}
+                    />
+                    <StatCard
+                      icon={<DollarSign className="w-4 h-4" />}
+                      label="Economia"
+                      value={`R$ ${userDashboardStats.estimatedTotalSavings.toFixed(2).replace('.', ',')}`}
+                      className="bg-green-50 dark:bg-green-950/30"
+                    />
+                  </div>
+                )}
+
+                {/* Botões de ação */}
+                <div className="flex gap-2">
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm">
+                      Ver Perfil
+                    </Button>
+                  </Link>
+                  {profile?.plan === "free" && (
+                    <Link to="/plans">
+                      <Button size="sm" className="gap-1">
+                        <Sparkles className="w-4 h-4" />
+                        Upgrade
+                      </Button>
+                    </Link>
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        {/* Seção de Teste de Push Notifications (apenas para usuários logados) */}
-        {user && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-4 text-app-dark dark:text-white">
-              🔔 Teste de Notificações Push
+      {/* Seção Por que usar - Consolidada e Compacta */}
+      <div className="container mx-auto py-8 sm:py-12 px-4 sm:px-6">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6 sm:p-8 rounded-2xl border border-border/50">
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-foreground">
+              Por que usar O Esperto Comparador?
             </h2>
-            <div className="max-w-lg mx-auto">
-              <PushNotificationTest />
-            </div>
-          </div>
-        )}
-
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
-            ✨ Como Funciona ✨
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
-            O Comparador Online ajuda você a encontrar os melhores preços em
-            diferentes supermercados de forma simples e eficiente.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:from-emerald-900/30 dark:via-gray-800 dark:to-green-900/30 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-emerald-100 dark:border-emerald-800/50 hover:scale-105 hover:-rotate-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                <span className="text-white text-2xl font-bold animate-pulse">
-                  🛒
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
-                Adicione Produtos
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                Insira os produtos que deseja comparar e os preços em diferentes
-                supermercados com nossa interface intuitiva.
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              Economize tempo e dinheiro nas suas compras com nossa plataforma inteligente
+            </p>
           </div>
 
-          <div className="group relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-blue-900/30 dark:via-gray-800 dark:to-cyan-900/30 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-blue-100 dark:border-blue-800/50 hover:scale-105 hover:rotate-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                <span className="text-white text-2xl font-bold animate-bounce">
-                  📊
-                </span>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                <DollarSign className="w-5 h-5" />
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                Compare Preços
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                Veja instantaneamente onde cada produto está mais barato e quanto
-                você pode economizar com análises em tempo real.
-              </p>
+              <div>
+                <h3 className="font-medium text-foreground">Economize até 40%</h3>
+                <p className="text-xs text-muted-foreground">Encontre os melhores preços</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Rápido e Fácil</h3>
+                <p className="text-xs text-muted-foreground">Compare em segundos</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Acompanhe Gastos</h3>
+                <p className="text-xs text-muted-foreground">Relatórios detalhados</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
+              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">100% Confiável</h3>
+                <p className="text-xs text-muted-foreground">Dados verificados</p>
+              </div>
             </div>
           </div>
 
-          <div className="group relative overflow-hidden bg-gradient-to-br from-amber-50 via-white to-yellow-50 dark:from-amber-900/30 dark:via-gray-800 dark:to-yellow-900/30 p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-amber-100 dark:border-amber-800/50 hover:scale-105 hover:-rotate-1 sm:col-span-2 lg:col-span-1">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                <span className="text-white text-2xl font-bold animate-pulse">
-                  💰
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
-                Economize
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                Faça suas compras com base nos resultados e acompanhe sua economia
-                ao longo do tempo com relatórios detalhados.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-12 sm:mt-20 relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-purple-900/20 dark:via-gray-800 dark:to-indigo-900/20 p-8 rounded-2xl shadow-2xl border border-purple-100 dark:border-purple-800/30">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-indigo-400/5"></div>
-          <div className="relative z-10 flex flex-col lg:flex-row items-center">
-            <div className="lg:w-1/2 mb-8 lg:mb-0 lg:pr-8">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                🚀 Por que usar o Comparador Online?
-              </h2>
-              <ul className="space-y-4">
-                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-900/20 dark:hover:to-green-900/20">
-                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-white font-bold text-sm">💰</span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors duration-300">
-                    Economize tempo e dinheiro em suas compras de supermercado
-                  </span>
-                </li>
-                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/20 dark:hover:to-cyan-900/20">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-white font-bold text-sm">⚡</span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors duration-300">
-                    Compare preços em diferentes mercados de forma rápida e fácil
-                  </span>
-                </li>
-                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 dark:hover:from-amber-900/20 dark:hover:to-orange-900/20">
-                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-white font-bold text-sm">📊</span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors duration-300">
-                    Acompanhe seus gastos mensais e identifique oportunidades de economia
-                  </span>
-                </li>
-                <li className="group flex items-start p-3 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 dark:hover:from-purple-900/20 dark:hover:to-indigo-900/20">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mr-4 flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-white font-bold text-sm">✨</span>
-                  </div>
-                  <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors duration-300">
-                    Interface intuitiva e fácil de usar
-                  </span>
-                </li>
-              </ul>
-            </div>
-            <div className="lg:w-1/2 relative">
-              <div className="relative group">
-                <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
-                <img
-                  src="https://images.unsplash.com/photo-1579113800032-c38bd7635818?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
-                  alt="Economizando nas compras"
-                  className="relative rounded-xl shadow-2xl w-full max-w-md mx-auto transform group-hover:scale-105 transition-all duration-500"
-                />
-              </div>
-            </div>
+          <div className="mt-6 text-center">
+            <Link to="/comparison">
+              <Button className="gap-2">
+                Começar a Comparar
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
