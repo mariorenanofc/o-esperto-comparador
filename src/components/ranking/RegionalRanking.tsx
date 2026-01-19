@@ -59,18 +59,9 @@ export const RegionalRanking: React.FC = () => {
     );
   }
 
+  // Ocultar completamente se não houver dados
   if (!ranking || ranking.stores.length === 0) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Store className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-lg mb-2">Sem dados na sua região</h3>
-          <p className="text-muted-foreground">
-            Contribua com preços para ajudar a criar o ranking da sua cidade!
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return null;
   }
 
   return (
