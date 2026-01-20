@@ -1,11 +1,20 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from "recharts";
-import { CalendarDays, TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
+import { XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart, ReferenceLine } from "recharts";
+import { motion } from "framer-motion";
+import { 
+  CalendarDays, 
+  TrendingUp, 
+  TrendingDown, 
+  ArrowUpDown,
+  Sparkles,
+  BarChart3,
+  Target,
+  Wallet
+} from "lucide-react";
 
 interface MonthlyData {
   monthKey: string;
@@ -25,7 +34,6 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
   const [selectedPeriod, setSelectedPeriod] = useState<"3months" | "6months" | "1year" | "all">("6months");
   const [viewType, setViewType] = useState<"savings" | "comparisons" | "efficiency">("savings");
 
-  // Filtrar dados baseado no período selecionado
   const getFilteredData = () => {
     if (selectedPeriod === "all") return monthlyData;
     
@@ -40,7 +48,6 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
 
   const filteredData = getFilteredData();
 
-  // Calcular estatísticas de comparação
   const calculateTrends = () => {
     if (filteredData.length < 2) return null;
 
@@ -72,7 +79,6 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
 
   const trends = calculateTrends();
 
-  // Preparar dados para o gráfico
   const chartData = filteredData.map(item => ({
     ...item,
     efficiency: item.comparisons && item.comparisons > 0 
@@ -83,8 +89,8 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
   const getYAxisLabel = () => {
     switch (viewType) {
       case "savings": return "Economia (R$)";
-      case "comparisons": return "Número de Comparações";
-      case "efficiency": return "Economia por Comparação (R$)";
+      case "comparisons": return "Comparações";
+      case "efficiency": return "Economia/Comparação";
       default: return "";
     }
   };
@@ -98,39 +104,61 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
     }
   };
 
-  const getColor = () => {
+  const getColorScheme = () => {
     switch (viewType) {
-      case "savings": return "#10B981"; // green
-      case "comparisons": return "#3B82F6"; // blue
-      case "efficiency": return "#8B5CF6"; // purple
-      default: return "#10B981";
+      case "savings": return { main: "hsl(160, 60%, 45%)", light: "hsl(160, 60%, 45%)" };
+      case "comparisons": return { main: "hsl(220, 70%, 50%)", light: "hsl(220, 70%, 50%)" };
+      case "efficiency": return { main: "hsl(270, 60%, 55%)", light: "hsl(270, 60%, 55%)" };
+      default: return { main: "hsl(160, 60%, 45%)", light: "hsl(160, 60%, 45%)" };
     }
   };
+
+  const colors = getColorScheme();
 
   const TrendIcon = ({ trend }: { trend?: 'up' | 'down' | 'stable' }) => {
     switch (trend) {
-      case 'up': return <TrendingUp className="w-4 h-4 text-green-500" />;
-      case 'down': return <TrendingDown className="w-4 h-4 text-red-500" />;
-      default: return <ArrowUpDown className="w-4 h-4 text-gray-500" />;
+      case 'up': return <TrendingUp className="w-5 h-5 text-emerald-500" />;
+      case 'down': return <TrendingDown className="w-5 h-5 text-red-500" />;
+      default: return <ArrowUpDown className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-xl font-bold flex items-center justify-center gap-2">
-          <CalendarDays className="w-5 h-5 text-primary" />
-          Comparação Histórica
-        </h3>
-        <p className="text-sm text-muted-foreground">
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-8"
+    >
+      {/* Header */}
+      <motion.div variants={itemVariants} className="text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-blue-500/10 border border-primary/20 mb-4">
+          <CalendarDays className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">Análise Temporal</span>
+        </div>
+        <h3 className="text-2xl font-bold mb-2">Histórico de Economia</h3>
+        <p className="text-muted-foreground max-w-md mx-auto">
           Analise a evolução da sua economia ao longo do tempo
         </p>
-      </div>
+      </motion.div>
 
-      {/* Controles */}
-      <div className="flex flex-wrap gap-3 justify-center">
+      {/* Controls */}
+      <motion.div variants={itemVariants} className="flex flex-wrap gap-3 justify-center">
         <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px] bg-background">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -142,7 +170,7 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
         </Select>
 
         <Select value={viewType} onValueChange={(value: any) => setViewType(value)}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] bg-background">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -151,182 +179,230 @@ const HistoricalComparison: React.FC<HistoricalComparisonProps> = ({
             <SelectItem value="efficiency">Eficiência</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </motion.div>
 
-      {/* Estatísticas do Período */}
+      {/* Stats Cards */}
       {trends && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center justify-between text-base">
-                <span>Crescimento</span>
-                <TrendIcon trend={trends.trend} />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${
-                trends.savingsGrowth > 0 ? 'text-green-600' : 
-                trends.savingsGrowth < 0 ? 'text-red-600' : 
-                'text-gray-600'
+        <motion.div variants={itemVariants} className="grid gap-4 sm:grid-cols-3">
+          <Card className="overflow-hidden group hover:shadow-xl transition-all border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-background to-green-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+                  <TrendIcon trend={trends.trend} />
+                </div>
+                <Badge variant="outline" className={`text-xs ${
+                  trends.savingsGrowth > 0 ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                  trends.savingsGrowth < 0 ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                  'bg-muted text-muted-foreground'
+                }`}>
+                  {trends.savingsGrowth > 0 ? '+' : ''}{trends.savingsGrowth.toFixed(1)}%
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Crescimento</p>
+              <p className={`text-2xl font-bold ${
+                trends.savingsGrowth > 0 ? 'text-emerald-600 dark:text-emerald-400' : 
+                trends.savingsGrowth < 0 ? 'text-red-600 dark:text-red-400' : 
+                'text-muted-foreground'
               }`}>
                 {trends.savingsGrowth > 0 ? '+' : ''}{trends.savingsGrowth.toFixed(1)}%
-              </div>
-              <p className="text-sm text-muted-foreground">No período selecionado</p>
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Média Mensal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+          <Card className="overflow-hidden group hover:shadow-xl transition-all border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-background to-indigo-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                  <Wallet className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Média Mensal</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 R$ {trends.avgSavings.toFixed(2).replace(".", ",")}
-              </div>
-              <p className="text-sm text-muted-foreground">Economia média</p>
+              </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Total do Período</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
+          <Card className="overflow-hidden group hover:shadow-xl transition-all border-purple-500/20 bg-gradient-to-br from-purple-500/10 via-background to-pink-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg">
+                  <Target className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Total do Período</p>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 R$ {trends.totalSavings.toFixed(2).replace(".", ",")}
-              </div>
-              <p className="text-sm text-muted-foreground">Economia acumulada</p>
+              </p>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       )}
 
-      {/* Gráfico */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{getYAxisLabel()} ao Longo do Tempo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 w-full">
-            <ChartContainer
-              config={{
-                data: {
-                  label: getYAxisLabel(),
-                  color: getColor(),
-                },
-              }}
-              className="h-full w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-                  <defs>
-                    <linearGradient id="dataGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={getColor()} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={getColor()} stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="label" 
-                    fontSize={12}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis 
-                    fontSize={12}
-                    tickFormatter={(value) => {
-                      if (viewType === "savings" || viewType === "efficiency") {
-                        return `R$ ${value.toFixed(0)}`;
-                      }
-                      return value.toString();
-                    }}
-                  />
-                  <ChartTooltip 
-                    content={
-                      <ChartTooltipContent 
-                        formatter={(value) => {
-                          if (viewType === "savings" || viewType === "efficiency") {
-                            return [`R$ ${Number(value).toFixed(2)}`, getYAxisLabel()];
-                          }
-                          return [value.toString(), getYAxisLabel()];
-                        }}
+      {/* Main Chart */}
+      <motion.div variants={itemVariants}>
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-muted/50 to-transparent border-b">
+            <CardTitle className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <span className="block">{getYAxisLabel()} ao Longo do Tempo</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {filteredData.length} {filteredData.length === 1 ? 'mês' : 'meses'} de dados
+                </span>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-8">
+            {filteredData.length > 0 ? (
+              <div className="h-80 sm:h-96 w-full">
+                <ChartContainer
+                  config={{
+                    data: {
+                      label: getYAxisLabel(),
+                      color: colors.main,
+                    },
+                  }}
+                  className="h-full w-full"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 20, right: 20, left: 10, bottom: 60 }}>
+                      <defs>
+                        <linearGradient id="historicalGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={colors.main} stopOpacity={0.4} />
+                          <stop offset="50%" stopColor={colors.main} stopOpacity={0.15} />
+                          <stop offset="100%" stopColor={colors.main} stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
+                      <XAxis 
+                        dataKey="label" 
+                        fontSize={12}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        tickLine={false}
+                        axisLine={false}
+                        className="fill-muted-foreground"
                       />
-                    } 
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey={getDataKey()}
-                    stroke={getColor()}
-                    fill="url(#dataGradient)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Destaques do Período */}
-      {trends && (
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base text-green-700 dark:text-green-400">
-                <TrendingUp className="w-4 h-4" />
-                Melhor Mês
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                <div className="font-semibold">{trends.maxMonth.label}</div>
-                <div className="text-lg font-bold text-green-600">
-                  R$ {trends.maxMonth.savings.toFixed(2).replace(".", ",")}
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {trends.maxMonth.comparisons || 0} comparações
-                </Badge>
+                      <YAxis 
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        className="fill-muted-foreground"
+                        tickFormatter={(value) => {
+                          if (viewType === "savings" || viewType === "efficiency") {
+                            return `R$ ${value.toFixed(0)}`;
+                          }
+                          return value.toString();
+                        }}
+                        width={65}
+                      />
+                      {trends && (
+                        <ReferenceLine 
+                          y={trends.avgSavings} 
+                          stroke={colors.main}
+                          strokeDasharray="5 5"
+                          strokeOpacity={0.6}
+                        />
+                      )}
+                      <ChartTooltip 
+                        content={
+                          <ChartTooltipContent 
+                            formatter={(value) => {
+                              if (viewType === "savings" || viewType === "efficiency") {
+                                return [`R$ ${Number(value).toFixed(2).replace(".", ",")}`, getYAxisLabel()];
+                              }
+                              return [value.toString(), getYAxisLabel()];
+                            }}
+                          />
+                        } 
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey={getDataKey()}
+                        stroke={colors.main}
+                        fill="url(#historicalGradient)"
+                        strokeWidth={3}
+                        dot={{ fill: colors.main, strokeWidth: 2, r: 5, stroke: "hsl(var(--background))" }}
+                        activeDot={{ r: 8, fill: colors.main, stroke: "hsl(var(--background))", strokeWidth: 3 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200 bg-orange-50 dark:bg-orange-900/10 dark:border-orange-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base text-orange-700 dark:text-orange-400">
-                <TrendingDown className="w-4 h-4" />
-                Menor Economia
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                <div className="font-semibold">{trends.minMonth.label}</div>
-                <div className="text-lg font-bold text-orange-600">
-                  R$ {trends.minMonth.savings.toFixed(2).replace(".", ",")}
+            ) : (
+              <div className="h-80 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <CalendarDays className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h4 className="font-semibold text-lg mb-2">Nenhum dado encontrado</h4>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    Faça mais comparações para visualizar o histórico.
+                  </p>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {trends.minMonth.comparisons || 0} comparações
-                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {filteredData.length === 0 && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <CalendarDays className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">
-              Nenhum dado encontrado para o período selecionado.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Faça mais comparações para visualizar o histórico.
-            </p>
+            )}
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Best/Worst Months */}
+      {trends && filteredData.length > 1 && (
+        <motion.div variants={itemVariants} className="grid gap-4 md:grid-cols-2">
+          <Card className="overflow-hidden border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-background to-green-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-muted-foreground">Melhor Mês</span>
+                    <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                      Destaque
+                    </Badge>
+                  </div>
+                  <div className="font-bold text-lg">{trends.maxMonth.label}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                    R$ {trends.maxMonth.savings.toFixed(2).replace(".", ",")}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-background to-orange-500/5">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg">
+                  <TrendingDown className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-muted-foreground">Menor Economia</span>
+                    <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+                      Atenção
+                    </Badge>
+                  </div>
+                  <div className="font-bold text-lg">{trends.minMonth.label}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    R$ {trends.minMonth.savings.toFixed(2).replace(".", ",")}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
