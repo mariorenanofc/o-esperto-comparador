@@ -1,11 +1,44 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CategoryBadge } from "@/components/ui/category-filter";
-import { Search } from "lucide-react";
+import { 
+  Package, 
+  Apple, 
+  Milk, 
+  Beef, 
+  Fish, 
+  Cookie, 
+  Coffee, 
+  ShoppingBasket,
+  Wheat,
+  Candy,
+  IceCream,
+  Egg,
+  Carrot,
+  Wine,
+  Sparkles,
+  Home,
+  Baby,
+  PawPrint,
+  ChevronLeft,
+  ChevronRight,
+  Filter
+} from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import { Product } from "@/lib/types";
 
 interface FilterStats {
+  totalProducts?: number;
+  filteredProducts?: number;
+  categoriesCount?: number;
   hasActiveFilters: boolean;
 }
 
@@ -15,9 +48,110 @@ interface ProductGridProps {
   filterStats: FilterStats;
   onClearFilters: () => void;
   onProductClick?: (product: Product) => void;
+  itemsPerPage?: number;
   emptyStateTitle?: string;
   emptyStateDescription?: string;
 }
+
+// Map categories to icons
+const categoryIcons: Record<string, React.ElementType> = {
+  'frutas': Apple,
+  'verduras': Carrot,
+  'legumes': Carrot,
+  'hortifruti': Apple,
+  'laticinios': Milk,
+  'laticínios': Milk,
+  'leite': Milk,
+  'carnes': Beef,
+  'carne': Beef,
+  'açougue': Beef,
+  'peixes': Fish,
+  'peixe': Fish,
+  'frutos do mar': Fish,
+  'padaria': Cookie,
+  'pães': Cookie,
+  'paes': Cookie,
+  'biscoitos': Cookie,
+  'bolachas': Cookie,
+  'cafe': Coffee,
+  'café': Coffee,
+  'bebidas': Coffee,
+  'cereais': Wheat,
+  'grãos': Wheat,
+  'graos': Wheat,
+  'massas': Wheat,
+  'doces': Candy,
+  'chocolates': Candy,
+  'bomboniere': Candy,
+  'congelados': IceCream,
+  'sorvetes': IceCream,
+  'ovos': Egg,
+  'bebidas alcoólicas': Wine,
+  'bebidas alcoolicas': Wine,
+  'vinhos': Wine,
+  'cervejas': Wine,
+  'limpeza': Sparkles,
+  'higiene': Sparkles,
+  'perfumaria': Sparkles,
+  'casa': Home,
+  'utilidades': Home,
+  'bebe': Baby,
+  'bebê': Baby,
+  'infantil': Baby,
+  'pet': PawPrint,
+  'animais': PawPrint,
+  'mercearia': ShoppingBasket,
+  'outros': Package,
+};
+
+const getCategoryIcon = (category: string): React.ElementType => {
+  const lowerCategory = category.toLowerCase();
+  
+  // Check for exact match first
+  if (categoryIcons[lowerCategory]) {
+    return categoryIcons[lowerCategory];
+  }
+  
+  // Check for partial match
+  for (const [key, icon] of Object.entries(categoryIcons)) {
+    if (lowerCategory.includes(key) || key.includes(lowerCategory)) {
+      return icon;
+    }
+  }
+  
+  return Package;
+};
+
+const getCategoryColor = (category: string): string => {
+  const lowerCategory = category.toLowerCase();
+  
+  if (lowerCategory.includes('fruta') || lowerCategory.includes('hortifruti')) {
+    return 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20';
+  }
+  if (lowerCategory.includes('carne') || lowerCategory.includes('açougue')) {
+    return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20';
+  }
+  if (lowerCategory.includes('latic') || lowerCategory.includes('leite')) {
+    return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
+  }
+  if (lowerCategory.includes('padaria') || lowerCategory.includes('pão') || lowerCategory.includes('pao')) {
+    return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+  }
+  if (lowerCategory.includes('bebida') || lowerCategory.includes('café') || lowerCategory.includes('cafe')) {
+    return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20';
+  }
+  if (lowerCategory.includes('limpeza') || lowerCategory.includes('higiene')) {
+    return 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20';
+  }
+  if (lowerCategory.includes('doce') || lowerCategory.includes('chocolate')) {
+    return 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20';
+  }
+  if (lowerCategory.includes('congelado') || lowerCategory.includes('sorvete')) {
+    return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
+  }
+  
+  return 'bg-muted text-muted-foreground border-border';
+};
 
 const ProductGrid: React.FC<ProductGridProps> = ({
   products,
@@ -25,82 +159,240 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   filterStats,
   onClearFilters,
   onProductClick,
+  itemsPerPage = 12,
   emptyStateTitle = "Nenhum produto encontrado",
   emptyStateDescription
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Reset to page 1 when products change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [products.length, filterStats.hasActiveFilters]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return products.slice(startIndex, endIndex);
+  }, [products, currentPage, itemsPerPage]);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to top of grid
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    }
+  };
+
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('ellipsis');
+      }
+      
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis');
+      }
+      
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">Carregando produtos...</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-muted rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-5 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
   if (products.length === 0) {
     return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">{emptyStateTitle}</h3>
-          <p className="text-muted-foreground mb-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <Card className="p-8 md:p-12 text-center bg-gradient-to-br from-muted/50 to-muted/30 border-dashed">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+            <Package className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">{emptyStateTitle}</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
             {emptyStateDescription || (filterStats.hasActiveFilters 
-              ? "Tente ajustar os filtros para encontrar produtos."
-              : "Não há produtos cadastrados ainda."
+              ? "Tente ajustar os filtros para ver mais resultados"
+              : "Ainda não há produtos cadastrados no catálogo"
             )}
           </p>
           {filterStats.hasActiveFilters && (
-            <Button onClick={onClearFilters} variant="outline">
+            <Button 
+              variant="outline" 
+              onClick={onClearFilters}
+              className="gap-2"
+            >
+              <Filter className="h-4 w-4" />
               Limpar filtros
             </Button>
           )}
-        </CardContent>
-      </Card>
+        </Card>
+      </motion.div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products.map((product) => (
-        <Card 
-          key={product.id} 
-          className={`hover:shadow-lg transition-shadow ${onProductClick ? 'cursor-pointer' : ''}`}
-          onClick={() => onProductClick?.(product)}
-        >
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-lg line-clamp-2">
-                {product.name}
-              </CardTitle>
-              <CategoryBadge category={product.category} size="sm" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span>Quantidade:</span>
-                <span className="font-medium">{product.quantity} {product.unit}</span>
-              </div>
-              
-              {product.prices && Object.keys(product.prices).length > 0 && (
-                <div className="pt-2 border-t">
-                  <span className="font-medium text-foreground">Preços disponíveis:</span>
-                  <div className="mt-1 space-y-1">
-                    {Object.entries(product.prices).map(([storeId, price]) => (
-                      <div key={storeId} className="flex justify-between text-xs">
-                        <span>Loja {storeId.slice(-4)}</span>
-                        <span className="font-medium text-app-success">
-                          R$ {price.toFixed(2)}
+    <div className="space-y-6">
+      {/* Products Grid - 3 columns */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6"
+      >
+        {paginatedProducts.map((product, index) => {
+          const CategoryIcon = getCategoryIcon(product.category);
+          const colorClass = getCategoryColor(product.category);
+          
+          return (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.03 }}
+            >
+              <Card 
+                className="group hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden h-full"
+                onClick={() => onProductClick?.(product)}
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    {/* Category Icon */}
+                    <div className={`p-3 rounded-xl border shrink-0 ${colorClass} group-hover:scale-110 transition-transform duration-300`}>
+                      <CategoryIcon className="h-6 w-6" />
+                    </div>
+                    
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                      
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-muted-foreground">
+                          {product.quantity} {product.unit}
                         </span>
                       </div>
-                    ))}
+                      
+                      <div className="mt-3">
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs truncate max-w-full ${colorClass}`}
+                        >
+                          {product.category}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="flex flex-col items-center gap-4 pt-4"
+        >
+          {/* Page info */}
+          <p className="text-sm text-muted-foreground">
+            Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, products.length)} de {products.length} produtos
+          </p>
+          
+          {/* Pagination controls */}
+          <Pagination>
+            <PaginationContent className="flex-wrap justify-center gap-1">
+              <PaginationItem>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Anterior</span>
+                </Button>
+              </PaginationItem>
+              
+              {getPageNumbers().map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === 'ellipsis' ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={() => goToPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="gap-1"
+                >
+                  <span className="hidden sm:inline">Próximo</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </motion.div>
+      )}
     </div>
   );
 };
