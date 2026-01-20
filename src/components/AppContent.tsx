@@ -45,6 +45,7 @@ import ApiDocs from "@/pages/ApiDocs";
 import PWAInstallBanner from "./PWAInstallBanner";
 import { PWAInstallPromotion } from "./PWAInstallPromotion";
 import { OfflineIndicator } from "./OfflineIndicator";
+import Footer from "./Footer";
 
 export const AppContent: React.FC = () => {
   // Initialize real-time user status tracking inside the provider context
@@ -56,193 +57,196 @@ export const AppContent: React.FC = () => {
       <PWAInstallPromotion />
       <OfflineIndicator />
       
-      <div className="min-h-screen bg-background">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/comparison" element={<Comparison />} />
-          <Route path="/products" element={<ProductCatalog />} />
-          <Route path="/api-docs" element={<ApiDocs />} />
-          <Route
-            path="/contribute"
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/comparison" element={<Comparison />} />
+            <Route path="/products" element={<ProductCatalog />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
+            <Route
+              path="/contribute"
+              element={
+                <ProtectedRoute>
+                  <Contribute />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/reports" 
+              element={
+                <ProtectedRoute>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path="/economy" 
+              element={
+                <ProtectedRoute>
+                  <Economy />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/plans"
+              element={
+                <ProtectedRoute>
+                  <Plans />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            {/* New Feature Routes */}
+            <Route
+              path="/alerts"
+              element={
+                <ProtectedRoute>
+                  <Alerts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smart-list"
+              element={
+                <ProtectedRoute>
+                  <SmartList />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/gamification" element={<Gamification />} />
+          {/* Admin Routes */}
+          <Route 
+            path="/admin" 
             element={
-              <ProtectedRoute>
-                <Contribute />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <Dashboard />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
           <Route 
-            path="/reports" 
+            path="/admin/users" 
             element={
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminUsers />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
           <Route 
-            path="/economy" 
+            path="/admin/user/:userId" 
             element={
-              <ProtectedRoute>
-                <Economy />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <UserDetailPage />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
-          <Route
-            path="/profile"
+          <Route 
+            path="/admin/users/:userId" 
             element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <UserDetailPage />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
-          <Route
-            path="/plans"
+          <Route 
+            path="/admin/content" 
             element={
-              <ProtectedRoute>
-                <Plans />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <Content />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
-          <Route
-            path="/notifications"
+          <Route 
+            path="/admin/notifications" 
             element={
-              <ProtectedRoute>
-                <Notifications />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminNotifications />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
-          {/* New Feature Routes */}
-          <Route
-            path="/alerts"
+          <Route 
+            path="/admin/billing" 
             element={
-              <ProtectedRoute>
-                <Alerts />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <Billing />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
-          <Route
-            path="/smart-list"
+          <Route 
+            path="/admin/security" 
             element={
-              <ProtectedRoute>
-                <SmartList />
-              </ProtectedRoute>
-            }
+              <AdminRoute>
+                <AdminLayout>
+                  <Security />
+                </AdminLayout>
+              </AdminRoute>
+            } 
           />
-          <Route path="/gamification" element={<Gamification />} />
-        {/* Admin Routes */}
-        <Route 
-          path="/admin" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <Dashboard />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/users" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <AdminUsers />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/user/:userId" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <UserDetailPage />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/users/:userId" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <UserDetailPage />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/content" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <Content />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/notifications" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <AdminNotifications />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/billing" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <Billing />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/security" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <Security />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/settings" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <AdminSettings />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/analytics" 
-          element={
-            <AdminRoute>
-              <AdminLayout>
-                <Analytics />
-              </AdminLayout>
-            </AdminRoute>
-          } 
-        />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-          {/* User Authentication Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signin" element={<Navigate to="/login" replace />} />
-          <Route path="/sign-in" element={<Navigate to="/login" replace />} />
-          <Route path="/signup" element={<SignUp />} />
-          
-          {/* Admin Authentication Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/not-authorized" element={<NotAuthorized />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+          <Route 
+            path="/admin/settings" 
+            element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminSettings />
+                </AdminLayout>
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/analytics" 
+            element={
+              <AdminRoute>
+                <AdminLayout>
+                  <Analytics />
+                </AdminLayout>
+              </AdminRoute>
+            } 
+          />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            {/* User Authentication Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signin" element={<Navigate to="/login" replace />} />
+            <Route path="/sign-in" element={<Navigate to="/login" replace />} />
+            <Route path="/signup" element={<SignUp />} />
+            
+            {/* Admin Authentication Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/not-authorized" element={<NotAuthorized />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+        <Footer />
       </div>
     </>
   );
