@@ -118,8 +118,11 @@ export const useNotificationSettings = () => {
   };
 
   const updateSettings = async (newSettings: Partial<NotificationSettings>) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      throw new Error('Usuário não autenticado. Faça login novamente.');
+    }
 
+    const previousSettings = { ...settings };
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
 
@@ -128,14 +131,35 @@ export const useNotificationSettings = () => {
         .from('notification_settings')
         .upsert({
           user_id: user.id,
-          ...updatedSettings
+          push_enabled: updatedSettings.push_enabled,
+          email_enabled: updatedSettings.email_enabled,
+          sound_enabled: updatedSettings.sound_enabled,
+          desktop_enabled: updatedSettings.desktop_enabled,
+          contributions_enabled: updatedSettings.contributions_enabled,
+          suggestions_enabled: updatedSettings.suggestions_enabled,
+          admin_notifications_enabled: updatedSettings.admin_notifications_enabled,
+          marketing_enabled: updatedSettings.marketing_enabled,
+          location_city: updatedSettings.location_city || null,
+          location_state: updatedSettings.location_state || null,
+          quiet_hours_enabled: updatedSettings.quiet_hours_enabled,
+          quiet_hours_start: updatedSettings.quiet_hours_start,
+          quiet_hours_end: updatedSettings.quiet_hours_end,
+          offers_enabled: updatedSettings.offers_enabled,
+          subscription_reminders_enabled: updatedSettings.subscription_reminders_enabled,
+        }, {
+          onConflict: 'user_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase upsert error:', error.message, error.code, error.details);
+        throw new Error(`Erro ao salvar: ${error.message}`);
+      }
+      
+      return true;
     } catch (error) {
       console.error('Error updating settings:', error);
       // Reverter em caso de erro
-      setSettings(settings);
+      setSettings(previousSettings);
       throw error;
     }
   };
