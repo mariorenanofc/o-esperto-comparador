@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
 import { Badge } from "@/components/ui/badge";
+import { AnimatedSection, AnimatedList, AnimatedListItem } from "@/components/ui/animated-section";
 
 // Componente compacto para estatística
 const StatCard = ({
@@ -176,20 +177,20 @@ const Index: React.FC = () => {
       <DailyOffersSection />
       
       {/* Ranking Regional - só aparece se tiver dados */}
-      <div className="container mx-auto py-6 px-4 sm:px-6">
+      <AnimatedSection className="container mx-auto py-6 px-4 sm:px-6" delay={0.1}>
         <RegionalRanking />
-      </div>
+      </AnimatedSection>
 
       {/* Alerta de Expiração */}
       {user && (
-        <div className="container mx-auto px-4 sm:px-6">
+        <AnimatedSection className="container mx-auto px-4 sm:px-6" delay={0.15}>
           <SubscriptionExpiryAlert />
-        </div>
+        </AnimatedSection>
       )}
 
       {/* Resumo Compacto da Conta - apenas para usuários logados */}
       {user && (
-        <div className="container mx-auto py-6 px-4 sm:px-6">
+        <AnimatedSection className="container mx-auto py-6 px-4 sm:px-6" delay={0.2}>
           <Card className="overflow-hidden">
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -249,11 +250,11 @@ const Index: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </AnimatedSection>
       )}
 
       {/* Seção Por que usar - Consolidada e Compacta */}
-      <div className="container mx-auto py-8 sm:py-12 px-4 sm:px-6">
+      <AnimatedSection className="container mx-auto py-8 sm:py-12 px-4 sm:px-6" delay={0.25}>
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/5 p-6 sm:p-8 rounded-2xl border border-border/50">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold mb-2 text-foreground">
@@ -264,47 +265,55 @@ const Index: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
-              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
-                <DollarSign className="w-5 h-5" />
+          <AnimatedList className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" staggerDelay={0.1}>
+            <AnimatedListItem>
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
+                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                  <DollarSign className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Economize até 40%</h3>
+                  <p className="text-xs text-muted-foreground">Encontre os melhores preços</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium text-foreground">Economize até 40%</h3>
-                <p className="text-xs text-muted-foreground">Encontre os melhores preços</p>
-              </div>
-            </div>
+            </AnimatedListItem>
 
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                <Zap className="w-5 h-5" />
+            <AnimatedListItem>
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Rápido e Fácil</h3>
+                  <p className="text-xs text-muted-foreground">Compare em segundos</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium text-foreground">Rápido e Fácil</h3>
-                <p className="text-xs text-muted-foreground">Compare em segundos</p>
-              </div>
-            </div>
+            </AnimatedListItem>
 
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
-                <TrendingUp className="w-5 h-5" />
+            <AnimatedListItem>
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
+                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Acompanhe Gastos</h3>
+                  <p className="text-xs text-muted-foreground">Relatórios detalhados</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium text-foreground">Acompanhe Gastos</h3>
-                <p className="text-xs text-muted-foreground">Relatórios detalhados</p>
-              </div>
-            </div>
+            </AnimatedListItem>
 
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all">
-              <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
-                <Shield className="w-5 h-5" />
+            <AnimatedListItem>
+              <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">100% Confiável</h3>
+                  <p className="text-xs text-muted-foreground">Dados verificados</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium text-foreground">100% Confiável</h3>
-                <p className="text-xs text-muted-foreground">Dados verificados</p>
-              </div>
-            </div>
-          </div>
+            </AnimatedListItem>
+          </AnimatedList>
 
           <div className="mt-6 text-center">
             <Link to="/comparison">
@@ -315,7 +324,7 @@ const Index: React.FC = () => {
             </Link>
           </div>
         </div>
-      </div>
+      </AnimatedSection>
 
       <footer className="bg-app-dark dark:bg-gray-950 text-white py-6 sm:py-8 border-t dark:border-gray-800">
         <div className="container mx-auto px-4 sm:px-6">
