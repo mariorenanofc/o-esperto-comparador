@@ -96,14 +96,8 @@ export const AppContent: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/plans"
-              element={
-                <ProtectedRoute>
-                  <Plans />
-                </ProtectedRoute>
-              }
-            />
+            {/* Plans is public to improve conversion */}
+            <Route path="/plans" element={<Plans />} />
             <Route
               path="/notifications"
               element={
