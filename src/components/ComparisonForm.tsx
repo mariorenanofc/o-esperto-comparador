@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { ErrorBoundaryWithRetry } from "@/components/ErrorBoundaryWithRetry";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { logger } from "@/lib/logger";
+import { ComparisonStepper, ComparisonStep } from "@/components/comparison/ComparisonStepper";
 
 const LOCAL_STORAGE_KEY = "comparisonDataSaved";
 
@@ -554,8 +555,23 @@ const ComparisonFormContent: React.FC = () => {
     }
   };
 
+  // Calculate current step based on state
+  const currentStep: ComparisonStep = useMemo(() => {
+    if (showResults && !isEditingMode) return 3;
+    if (comparisonData.stores.length > 0) return 2;
+    return 1;
+  }, [showResults, isEditingMode, comparisonData.stores.length]);
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Visual Stepper */}
+      <ComparisonStepper
+        currentStep={currentStep}
+        storesCount={comparisonData.stores.length}
+        productsCount={comparisonData.products.length}
+        hasResults={showResults && !isEditingMode}
+      />
+
       {/* Seção de Adicionar Mercados e Produtos - Visível apenas em modo de edição */}
       {isEditingMode && (
         <>
