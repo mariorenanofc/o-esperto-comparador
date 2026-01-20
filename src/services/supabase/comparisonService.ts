@@ -6,65 +6,50 @@ import { logger } from '@/lib/logger';
 
 export const supabaseComparisonService = {
   async getUserComparisons(userId: string) {
-    return errorHandler.retry(
-      async () => {
-        logger.info('Fetching comparisons for user', { userId });
-        
-        const { data, error } = await supabase
-          .from('comparisons')
-          .select(`
-            *,
-            comparison_products (
+    try {
+      logger.info('Fetching comparisons for user', { userId });
+      
+      // Query otimizada com JOIN para evitar N+1
+      const { data, error } = await supabase
+        .from('comparisons')
+        .select(`
+          *,
+          comparison_products (
+            id,
+            product:products (
               id,
-              product:products (
-                id,
-                name,
-                quantity,
-                unit,
-                category
-              )
+              name,
+              quantity,
+              unit,
+              category
             )
-          `)
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+          ),
+          prices:product_prices (
+            price,
+            product:products(id, name, quantity, unit),
+            store:stores(id, name)
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
+      if (error) {
+        logger.error('Error fetching comparisons', error);
+        throw error;
+      }
 
-        logger.info('Fetched comparisons', { count: data?.length });
-        
-        // Buscar preços para cada comparação
-        const comparisonsWithPrices = await Promise.all(
-          (data || []).map(async (comparison) => {
-            return errorHandler.handleAsync(
-              async () => {
-                const { data: prices, error: pricesError } = await supabase
-                  .from('product_prices')
-                  .select(`
-                    price,
-                    product:products(id, name, quantity, unit),
-                    store:stores(id, name)
-                  `)
-                  .eq('comparison_id', comparison.id);
-
-                if (pricesError) throw pricesError;
-
-                return {
-                  ...comparison,
-                  prices: prices || []
-                };
-              },
-              { component: 'comparisonService', action: 'buscar preços', metadata: { comparisonId: comparison.id } },
-              { severity: 'low', showToast: false }
-            ) || { ...comparison, prices: [] };
-          })
-        );
-
-        return comparisonsWithPrices;
-      },
-      3,
-      1500,
-      { component: 'comparisonService', action: 'buscar comparações', userId }
-    );
+      logger.info('Fetched comparisons with prices', { count: data?.length });
+      
+      // Garantir que cada comparação tenha o array de prices
+      return (data || []).map(comparison => ({
+        ...comparison,
+        prices: comparison.prices || []
+      }));
+    } catch (error) {
+      logger.error('Failed to fetch user comparisons', error);
+      // Retornar array vazio em vez de propagar o erro para evitar loading infinito
+      return [];
+    }
   },
 
   async saveComparison(userId: string, comparisonData: ComparisonData) {
