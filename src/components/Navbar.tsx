@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ import {
   ChevronRight,
   ChevronDown,
   Wrench,
-  FileText
+  FileText,
+  Check
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -36,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "./ThemeToggle";
+import { cn } from "@/lib/utils";
 
 interface MobileNavItemProps {
   to: string;
@@ -76,7 +78,10 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, isLoaded } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const isActiveRoute = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
     await signOut();
@@ -204,21 +209,42 @@ const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                    <Link 
+                      to="/profile" 
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer",
+                        isActiveRoute("/profile") && "text-primary font-medium"
+                      )}
+                    >
                       <User className="h-4 w-4" />
                       Perfil
+                      {isActiveRoute("/profile") && <Check className="h-3 w-3 ml-auto" />}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/notifications" className="flex items-center gap-2 cursor-pointer">
+                    <Link 
+                      to="/notifications" 
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer",
+                        isActiveRoute("/notifications") && "text-primary font-medium"
+                      )}
+                    >
                       <Bell className="h-4 w-4" />
                       Notificações
+                      {isActiveRoute("/notifications") && <Check className="h-3 w-3 ml-auto" />}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/plans" className="flex items-center gap-2 cursor-pointer">
+                    <Link 
+                      to="/plans" 
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer",
+                        isActiveRoute("/plans") && "text-primary font-medium"
+                      )}
+                    >
                       <CreditCard className="h-4 w-4" />
                       Meu Plano
+                      {isActiveRoute("/plans") && <Check className="h-3 w-3 ml-auto" />}
                     </Link>
                   </DropdownMenuItem>
                   {isLoaded && isAdmin && (
