@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import {
   Card,
@@ -11,25 +12,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Check, Star, HelpCircle } from "lucide-react";
+import { Check, Star, HelpCircle, LogIn } from "lucide-react";
 import { PLANS } from "@/lib/plans";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
 
 const Plans: React.FC = () => {
+  const navigate = useNavigate();
   const { currentPlan, createCheckout, isLoading } = useSubscription();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
 
+  const isLoggedIn = !!user;
   const isAdmin = profile?.plan === "admin";
   
   const handleSelectPlan = (planId: any) => {
+    // If not logged in, redirect to signup
+    if (!isLoggedIn) {
+      navigate('/signup');
+      return;
+    }
     if (planId === "free") return;
     if (currentPlan === "pro" && (planId === "premium" || planId === "free")) return;
     createCheckout(planId);
   };
 
   const getButtonText = (plan: any) => {
+    if (!isLoggedIn) {
+      return plan.id === 'free' ? '🆓 Começar Grátis' : `🚀 Assinar ${plan.name}`;
+    }
     if (isAdmin) return "👑 Acesso Admin";
     if (currentPlan === plan.id) return "✅ Plano Atual";
     if (currentPlan === "pro" && (plan.id === "premium" || plan.id === "free")) return "🔒 Bloqueado";
@@ -38,6 +49,7 @@ const Plans: React.FC = () => {
   };
 
   const isButtonDisabled = (plan: any) => {
+    if (!isLoggedIn) return false; // Allow clicking to redirect
     if (isAdmin) return true;
     if (isLoading) return true;
     if (currentPlan === plan.id) return true;
@@ -61,20 +73,26 @@ const Plans: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <Navbar />
 
       <div className="container mx-auto py-8 md:py-12 px-4 md:px-6">
-        <SubscriptionExpiryAlert />
+        {isLoggedIn && <SubscriptionExpiryAlert />}
         
         {/* Header */}
         <div className="text-center mb-10 md:mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-hero-primary via-primary to-hero-accent bg-clip-text text-transparent mb-4">
             ✨ Escolha o Plano Ideal
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Economize mais com as ferramentas certas. Todos os planos incluem acesso às ofertas do dia.
           </p>
+          {!isLoggedIn && (
+            <p className="text-sm text-muted-foreground mt-2">
+              <LogIn className="w-4 h-4 inline mr-1" aria-hidden="true" />
+              Crie sua conta gratuitamente para começar
+            </p>
+          )}
         </div>
 
         {/* Cards de Planos - Tamanhos uniformes */}
@@ -84,26 +102,26 @@ const Plans: React.FC = () => {
               key={plan.id}
               className={`relative transition-all duration-300 hover:shadow-xl ${
                 plan.popular
-                  ? "border-emerald-400 border-2 shadow-lg bg-gradient-to-br from-emerald-50/50 via-white to-green-50/50 dark:from-emerald-900/20 dark:via-gray-800 dark:to-green-900/20"
+                  ? "border-primary border-2 shadow-lg bg-gradient-to-br from-primary/5 via-background to-primary/10"
                   : "border-border hover:border-primary/50"
-              } ${currentPlan === plan.id ? "ring-2 ring-blue-400/50" : ""}`}
+              } ${currentPlan === plan.id ? "ring-2 ring-primary/50" : ""}`}
             >
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-medium px-3 py-1 text-xs">
-                  <Star className="w-3 h-3 mr-1" />
+                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground font-medium px-3 py-1 text-xs">
+                  <Star className="w-3 h-3 mr-1" aria-hidden="true" />
                   Popular
                 </Badge>
               )}
 
               {currentPlan === plan.id && (
-                <Badge className="absolute -top-3 right-4 bg-blue-500 text-white text-xs px-2 py-1">
+                <Badge className="absolute -top-3 right-4 bg-secondary text-secondary-foreground text-xs px-2 py-1">
                   Atual
                 </Badge>
               )}
 
               <CardHeader className="text-center pt-6 pb-4">
-                <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white text-xl">
+                <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-r from-hero-primary to-hero-accent rounded-xl flex items-center justify-center">
+                  <span className="text-white text-xl" aria-hidden="true">
                     {plan.id === 'free' ? '🆓' : plan.id === 'premium' ? '⭐' : '🚀'}
                   </span>
                 </div>
@@ -122,8 +140,8 @@ const Plans: React.FC = () => {
               <CardContent className="space-y-2 px-5">
                 {plan.features.map((feature, index) => (
                   <div key={index} className="flex items-start gap-2 text-sm">
-                    <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-2.5 h-2.5 text-white" />
+                    <div className="w-4 h-4 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-2.5 h-2.5 text-primary-foreground" aria-hidden="true" />
                     </div>
                     <span className="text-muted-foreground">{feature}</span>
                   </div>
@@ -134,9 +152,9 @@ const Plans: React.FC = () => {
                 <Button
                   className={`w-full ${
                     plan.popular 
-                      ? "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white" 
+                      ? "bg-primary hover:bg-primary/90 text-primary-foreground" 
                       : currentPlan === plan.id
-                      ? "bg-blue-500 hover:bg-blue-600 text-white"
+                      ? "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                       : ""
                   }`}
                   variant={currentPlan === plan.id || plan.popular ? "default" : "outline"}

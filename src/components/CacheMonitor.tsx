@@ -12,11 +12,14 @@ interface CacheMonitorProps {
 }
 
 export const CacheMonitor: React.FC<CacheMonitorProps> = ({ 
-  isDevelopment = process.env.NODE_ENV === 'development' 
+  isDevelopment = import.meta.env.DEV 
 }) => {
   const stats = useCacheStats();
 
-  if (!isDevelopment) {
+  // Only show in development mode or when explicitly enabled
+  const shouldShow = isDevelopment || import.meta.env.VITE_SHOW_CACHE_MONITOR === 'true';
+  
+  if (!shouldShow) {
     return null;
   }
 
