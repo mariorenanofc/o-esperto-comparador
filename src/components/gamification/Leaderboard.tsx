@@ -53,7 +53,7 @@ export const Leaderboard: React.FC = () => {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" aria-hidden="true" />
           <h3 className="font-semibold text-lg mb-2">Nenhum contribuidor ainda</h3>
           <p className="text-muted-foreground">
             Seja o primeiro a contribuir e aparecer no ranking!
@@ -67,7 +67,7 @@ export const Leaderboard: React.FC = () => {
     <Card>
       <CardHeader className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20">
         <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-500" />
+          <Trophy className="w-5 h-5 text-yellow-500" aria-hidden="true" />
           Ranking de Contribuidores
         </CardTitle>
       </CardHeader>
@@ -106,7 +106,7 @@ export const Leaderboard: React.FC = () => {
 
               <div className="text-right">
                 <div className="font-bold text-hero-primary flex items-center gap-1">
-                  <TrendingUp className="w-4 h-4" />
+                  <TrendingUp className="w-4 h-4" aria-hidden="true" />
                   {entry.xp_points}
                 </div>
                 <p className="text-xs text-muted-foreground">XP</p>

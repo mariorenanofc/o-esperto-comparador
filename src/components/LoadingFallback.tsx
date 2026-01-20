@@ -15,9 +15,9 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
     : "flex items-center justify-center p-8";
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} role="status" aria-live="polite" aria-label={message}>
       <div className="text-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-app-primary mx-auto" />
+        <Loader2 className="h-8 w-8 animate-spin text-app-primary mx-auto" aria-hidden="true" />
         <p className="text-sm text-muted-foreground">{message}</p>
       </div>
     </div>
@@ -25,7 +25,7 @@ export const LoadingFallback: React.FC<LoadingFallbackProps> = ({
 };
 
 export const SkeletonCard: React.FC = () => (
-  <div className="animate-pulse">
+  <div className="animate-pulse" aria-busy="true" aria-label="Carregando conteúdo">
     <div className="bg-gray-200 dark:bg-gray-700 rounded-lg h-32 w-full"></div>
     <div className="mt-4 space-y-2">
       <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
@@ -35,7 +35,7 @@ export const SkeletonCard: React.FC = () => (
 );
 
 export const SkeletonTable: React.FC = () => (
-  <div className="animate-pulse space-y-4">
+  <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Carregando tabela">
     <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
     {[...Array(5)].map((_, i) => (
       <div key={i} className="flex space-x-4">

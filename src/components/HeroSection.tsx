@@ -54,8 +54,10 @@ const HeroSection: React.FC = () => {
           <motion.div 
             variants={fadeInUp}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-hero-primary/10 border border-hero-primary/20 mb-8"
+            role="status"
+            aria-label="Economia de até 40% ao comparar preços"
           >
-            <Sparkles className="w-4 h-4 text-hero-primary" />
+            <Sparkles className="w-4 h-4 text-hero-primary" aria-hidden="true" />
             <span className="text-sm font-medium text-hero-primary">
               Compare preços e economize até 40%
             </span>
@@ -103,7 +105,7 @@ const HeroSection: React.FC = () => {
                 className="group border-hero-primary/30 text-hero-primary hover:bg-hero-primary/10 hover:border-hero-primary/50"
               >
                 Contribuir com preços
-                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Button>
             </Link>
             <Link to="/reports">

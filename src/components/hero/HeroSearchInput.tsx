@@ -117,7 +117,7 @@ export const HeroSearchInput: React.FC<HeroSearchInputProps> = ({ onSearch }) =>
         
         {/* Input container */}
         <div className="relative flex items-center bg-white dark:bg-gray-900 rounded-xl shadow-2xl border-2 border-transparent hover:border-hero-primary/30 transition-all duration-300">
-          <div className="flex items-center pl-5 text-hero-primary">
+          <div className="flex items-center pl-5 text-hero-primary" aria-hidden="true">
             <Search className="w-6 h-6" />
           </div>
           
@@ -134,17 +134,22 @@ export const HeroSearchInput: React.FC<HeroSearchInputProps> = ({ onSearch }) =>
             onFocus={() => setShowSuggestions(true)}
             onKeyDown={handleKeyDown}
             className="flex-1 border-0 bg-transparent text-lg py-6 px-4 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
+            aria-label="Buscar produto"
+            aria-autocomplete="list"
+            aria-expanded={showSuggestions && suggestions.length > 0}
+            aria-controls="search-suggestions"
           />
           
           {isLoading && (
-            <Loader2 className="w-5 h-5 mr-2 text-muted-foreground animate-spin" />
+            <Loader2 className="w-5 h-5 mr-2 text-muted-foreground animate-spin" aria-label="Buscando sugestões" />
           )}
           
           <Button
             onClick={handleSearch}
             className="m-2 px-6 py-6 bg-gradient-to-r from-hero-primary to-hero-accent hover:from-hero-primary/90 hover:to-hero-accent/90 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            aria-label="Buscar produtos"
           >
-            <Search className="w-5 h-5 mr-2" />
+            <Search className="w-5 h-5 mr-2" aria-hidden="true" />
             Buscar
           </Button>
         </div>
@@ -154,18 +159,23 @@ export const HeroSearchInput: React.FC<HeroSearchInputProps> = ({ onSearch }) =>
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
+          id="search-suggestions"
+          role="listbox"
+          aria-label="Sugestões de produtos"
           className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-border/50 overflow-hidden z-50 animate-fade-in"
         >
           {suggestions.map((suggestion, index) => (
             <button
               key={suggestion.id}
               onClick={() => handleSuggestionClick(suggestion)}
+              role="option"
+              aria-selected={selectedIndex === index}
               className={cn(
                 "w-full px-5 py-3 flex items-center gap-3 hover:bg-hero-primary/10 transition-colors text-left",
                 selectedIndex === index && "bg-hero-primary/10"
               )}
             >
-              <TrendingUp className="w-4 h-4 text-hero-primary" />
+              <TrendingUp className="w-4 h-4 text-hero-primary" aria-hidden="true" />
               <div>
                 <span className="font-medium text-foreground">{suggestion.name}</span>
                 <span className="text-sm text-muted-foreground ml-2">

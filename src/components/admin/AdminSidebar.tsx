@@ -123,14 +123,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
         <div className="p-4 border-b border-border">
           {!collapsed ? (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center" aria-hidden="true">
                 <Settings className="w-4 h-4 text-primary-foreground" />
               </div>
               <span className="font-semibold text-foreground">Admin</span>
             </div>
           ) : (
             <div className="flex justify-center">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center" aria-hidden="true">
                 <Settings className="w-4 h-4 text-primary-foreground" />
               </div>
             </div>
@@ -150,9 +150,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
                       end={item.end}
                       className={getNavClasses(item.url, item.end)}
                       onClick={onNavigate}
+                      aria-current={isActive(item.url, item.end) ? "page" : undefined}
                     >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4" aria-hidden="true" />
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -211,10 +211,10 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Logout */}
         <div className="mt-auto p-4 border-t border-border">
-          <SidebarMenuButton onClick={handleSignOut} className="w-full text-muted-foreground hover:text-foreground hover:bg-muted/50">
-            <LogOut className="h-4 w-4" />
+          <SidebarMenuButton onClick={handleSignOut} className="w-full text-muted-foreground hover:text-foreground hover:bg-muted/50" aria-label="Sair do sistema">
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            {!collapsed && <span>Sair</span>}
             {!collapsed && <span>Sair</span>}
           </SidebarMenuButton>
         </div>

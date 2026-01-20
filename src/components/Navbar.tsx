@@ -51,10 +51,11 @@ const MobileNavItem: React.FC<MobileNavItemProps> = ({ to, icon: Icon, label, on
     to={to} 
     className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
     onClick={onClick}
+    aria-label={`Navegar para ${label}`}
   >
-    <Icon className="h-5 w-5" />
+    <Icon className="h-5 w-5" aria-hidden="true" />
     <span className="flex-1">{label}</span>
-    <ChevronRight className="h-4 w-4 opacity-50" />
+    <ChevronRight className="h-4 w-4 opacity-50" aria-hidden="true" />
   </Link>
 );
 
@@ -99,8 +100,8 @@ const Navbar = () => {
     <nav className="bg-card shadow-md border-b border-border">
       <div className="container mx-auto px-4 sm:px-6 py-4">
         <div className="flex justify-between items-center">
-          <Link to="/" className="flex items-center space-x-2">
-            <ShoppingCart className="h-7 w-7 sm:h-8 sm:w-8 text-app-secondary" />
+          <Link to="/" className="flex items-center space-x-2" aria-label="Página inicial - O Esperto Comparador">
+            <ShoppingCart className="h-7 w-7 sm:h-8 sm:w-8 text-app-secondary" aria-hidden="true" />
             <span className="text-lg sm:text-xl font-bold text-foreground">
               O Esperto Comparador
             </span>
@@ -282,8 +283,8 @@ const Navbar = () => {
             <ThemeToggle />
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Abrir menu de navegação">
+                  <Menu className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="p-0 w-[300px] sm:w-[320px]">

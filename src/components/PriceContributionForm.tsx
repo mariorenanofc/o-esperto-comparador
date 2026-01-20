@@ -49,15 +49,15 @@ const PriceContributionFormContent: React.FC<PriceContributionFormProps> = ({
             <ProductInfoFields formData={formData} setFormData={setFormData} />
 
             {locationLoading && (
-              <div className="text-sm text-blue-600 p-3 bg-blue-50 rounded-lg flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                📍 Detectando sua localização automaticamente...
+              <div className="text-sm text-blue-600 p-3 bg-blue-50 rounded-lg flex items-center gap-2" role="status" aria-live="polite">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span aria-hidden="true">📍</span> Detectando sua localização automaticamente...
               </div>
             )}
 
             {formData.city && formData.state && (
-              <div className="text-sm text-green-600 p-3 bg-green-50 rounded-lg">
-                📍 Localização: {formData.city}, {formData.state}
+              <div className="text-sm text-green-600 p-3 bg-green-50 rounded-lg" role="status">
+                <span aria-hidden="true">📍</span> Localização: {formData.city}, {formData.state}
               </div>
             )}
 
@@ -78,7 +78,7 @@ const PriceContributionFormContent: React.FC<PriceContributionFormProps> = ({
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                     Enviando...
                   </>
                 ) : (

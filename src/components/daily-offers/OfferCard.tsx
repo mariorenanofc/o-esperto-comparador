@@ -106,12 +106,12 @@ const OfferCard: React.FC<OfferCardProps> = ({
               >
                 {alertCreated ? (
                   <>
-                    <Check className="w-4 h-4 mr-1" />
+                    <Check className="w-4 h-4 mr-1" aria-hidden="true" />
                     Alerta ativo
                   </>
                 ) : (
                   <>
-                    <BellPlus className="w-4 h-4 mr-1" />
+                    <BellPlus className="w-4 h-4 mr-1" aria-hidden="true" />
                     Criar alerta
                   </>
                 )}
@@ -125,7 +125,7 @@ const OfferCard: React.FC<OfferCardProps> = ({
             </div>
             
             <div className="flex items-center">
-              <MapPin size={14} className="mr-1" />
+              <MapPin size={14} className="mr-1" aria-hidden="true" />
               <span>{offer.city}, {offer.state}</span>
             </div>
             

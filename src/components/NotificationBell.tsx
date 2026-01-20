@@ -37,10 +37,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         size="icon"
         onClick={() => setShowPanel(!showPanel)}
         className="relative bg-background/80 backdrop-blur-sm border-border/50 hover:bg-muted/50"
+        aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ''}`}
+        aria-expanded={showPanel}
+        aria-haspopup="true"
       >
-        <Bell className="h-4 w-4" />
+        <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadCount > 0 && (
-          <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+          <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs" aria-hidden="true">
             {unreadCount}
           </Badge>
         )}
@@ -58,9 +61,9 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                   size="icon"
                   onClick={clearAllNotifications}
                   className="h-6 w-6"
-                  title="Limpar todas"
+                  aria-label="Limpar todas as notificações"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3 w-3" aria-hidden="true" />
                 </Button>
               )}
               <Button
@@ -68,8 +71,9 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                 size="icon"
                 onClick={() => setShowPanel(false)}
                 className="h-6 w-6"
+                aria-label="Fechar painel de notificações"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>

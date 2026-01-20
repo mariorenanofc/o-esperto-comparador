@@ -45,16 +45,16 @@ export const OfflineIndicator: React.FC = () => {
   }
 
   return (
-    <div className="fixed top-20 right-4 z-50 bg-background/90 backdrop-blur-sm border rounded-lg p-3 shadow-lg max-w-sm">
+    <div className="fixed top-20 right-4 z-50 bg-background/90 backdrop-blur-sm border rounded-lg p-3 shadow-lg max-w-sm" role="status" aria-live="polite">
       <div className="flex items-center gap-2">
         {isOffline ? (
           <>
-            <WifiOff className="h-4 w-4 text-destructive" />
+            <WifiOff className="h-4 w-4 text-destructive" aria-hidden="true" />
             <span className="text-sm font-medium text-destructive">Modo Offline</span>
           </>
         ) : (
           <>
-            <Wifi className="h-4 w-4 text-green-500" />
+            <Wifi className="h-4 w-4 text-green-500" aria-hidden="true" />
             <span className="text-sm font-medium text-green-600">Conectado</span>
           </>
         )}
@@ -63,7 +63,7 @@ export const OfflineIndicator: React.FC = () => {
       {hasUnsyncedData && (
         <div className="mt-2 space-y-2">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertCircle className="h-4 w-4 text-amber-500" aria-hidden="true" />
             <span className="text-xs text-muted-foreground">Dados não sincronizados:</span>
           </div>
           
@@ -86,8 +86,9 @@ export const OfflineIndicator: React.FC = () => {
               onClick={handleSync}
               disabled={isSyncing}
               className="w-full"
+              aria-label={isSyncing ? 'Sincronizando dados' : 'Sincronizar dados'}
             >
-              <RotateCw className={`h-3 w-3 mr-1 ${isSyncing ? 'animate-spin' : ''}`} />
+              <RotateCw className={`h-3 w-3 mr-1 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden="true" />
               {isSyncing ? 'Sincronizando...' : 'Sincronizar'}
             </Button>
           )}
