@@ -54,29 +54,61 @@ export const LocationSettings: React.FC = () => {
     }
 
     if (!user?.id) {
-      toast.error('Usuário não autenticado');
+      toast.error('Usuário não autenticado. Faça login novamente.');
+      return;
+    }
+
+    // Validate state format (2 letters)
+    const stateValue = state.trim().toUpperCase();
+    if (stateValue.length !== 2) {
+      toast.error('Estado deve ter 2 letras (ex: SP, RJ)');
       return;
     }
 
     try {
       setSaving(true);
       
-      const { error } = await supabase
+      // First check if settings exist
+      const { data: existing } = await supabase
         .from('notification_settings')
-        .upsert({
-          user_id: user.id,
-          location_city: city.trim(),
-          location_state: state.trim().toUpperCase()
-        }, {
-          onConflict: 'user_id'
-        });
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      let error;
+      
+      if (existing) {
+        // Update existing record
+        const result = await supabase
+          .from('notification_settings')
+          .update({
+            location_city: city.trim(),
+            location_state: stateValue
+          })
+          .eq('user_id', user.id);
+        error = result.error;
+      } else {
+        // Insert new record
+        const result = await supabase
+          .from('notification_settings')
+          .insert({
+            user_id: user.id,
+            location_city: city.trim(),
+            location_state: stateValue
+          });
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Supabase error:', error.message, error.code);
+        throw new Error(error.message);
+      }
 
       toast.success('Localização atualizada com sucesso!');
     } catch (error) {
       console.error('Error updating location:', error);
-      toast.error('Erro ao atualizar localização');
+      const message = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro ao atualizar: ${message}`);
     } finally {
       setSaving(false);
     }
