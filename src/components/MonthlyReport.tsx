@@ -7,9 +7,10 @@ import { comparisonService } from "@/services/comparisonService";
 import PriceTable from "./PriceTable";
 import ReportFilters, { ReportFilters as ReportFiltersType } from "./reports/ReportFilters";
 import ReportMetrics from "./reports/ReportMetrics";
+import ReportsCharts from "./reports/ReportsCharts";
 import { ComparisonData, Product, Store } from "@/lib/types";
 import { logger } from "@/lib/logger";
-import { RefreshCw, FileText } from "lucide-react";
+import { RefreshCw, FileText, BarChart3 } from "lucide-react";
 
 // Definição da estrutura de um produto retornado junto com a comparação
 interface ComparisonProductDetails {
@@ -403,6 +404,17 @@ const MonthlyReport: React.FC = () => {
         totalComparisons={totals.totalComparisons}
         totalSavings={totals.totalSavings}
       />
+
+      {/* Seção de Gráficos */}
+      {reports.length > 0 && !selectedReport && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-lg font-semibold">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h2>Análise Visual</h2>
+          </div>
+          <ReportsCharts reports={reports} />
+        </div>
+      )}
       
       <div className="bg-card p-4 sm:p-6 rounded-lg shadow">
         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Relatórios Mensais</h2>
@@ -475,7 +487,7 @@ const MonthlyReport: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-500">
+                  <p className="text-xl sm:text-2xl font-bold text-primary">
                     R$ {selectedReport.total_spent.toFixed(2).replace(".", ",")}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">
