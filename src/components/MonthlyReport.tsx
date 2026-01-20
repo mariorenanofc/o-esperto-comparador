@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import { reportsService } from "@/services/reportsService";
 import { comparisonService } from "@/services/comparisonService";
 import PriceTable from "./PriceTable";
 import ReportFilters, { ReportFilters as ReportFiltersType } from "./reports/ReportFilters";
 import ReportMetrics from "./reports/ReportMetrics";
 import { ComparisonData, Product, Store } from "@/lib/types";
-import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { logger } from "@/lib/logger";
+import { RefreshCw, FileText } from "lucide-react";
 
 // Definição da estrutura de um produto retornado junto com a comparação
 interface ComparisonProductDetails {
@@ -57,13 +57,13 @@ interface MonthlyReportData {
 
 const MonthlyReport: React.FC = () => {
   const { user } = useAuth();
-  const { handleAsync } = useErrorHandler({ component: 'MonthlyReport' });
   const [reports, setReports] = useState<MonthlyReportData[]>([]);
   const [filteredReports, setFilteredReports] = useState<MonthlyReportData[]>([]);
   const [userComparisons, setUserComparisons] = useState<UserComparison[]>([]);
   const [selectedReport, setSelectedReport] = useState<MonthlyReportData | null>(null);
   const [selectedComparisonIndex, setSelectedComparisonIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<ReportFiltersType>({
     period: "all",
     sortBy: "date",
@@ -72,94 +72,127 @@ const MonthlyReport: React.FC = () => {
     minComparisons: 1
   });
 
+  // Refs para controlar o ciclo de vida e evitar loops
+  const loadedRef = useRef(false);
+  const isMountedRef = useRef(true);
+
   const loadUserData = useCallback(async () => {
-    if (!user) return;
-
-    setLoading(true);
-    
-    const result = await handleAsync(
-      async () => {
-        logger.info('Loading user comparisons and reports', { userId: user.id });
-        const comparisons: UserComparison[] = await comparisonService.getUserComparisons(user.id);
-        logger.info('User comparisons loaded', { count: comparisons.length });
-        return comparisons;
-      },
-      { action: 'load_user_data' },
-      { severity: 'medium', showToast: true }
-    );
-
-    if (!result) {
+    if (!user) {
       setLoading(false);
       return;
     }
 
-    const comparisons = result;
-    setUserComparisons(comparisons);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      logger.info('Loading user comparisons and reports', { userId: user.id });
+      const comparisons: UserComparison[] = await comparisonService.getUserComparisons(user.id);
+      
+      // Verificar se o componente ainda está montado
+      if (!isMountedRef.current) return;
+      
+      logger.info('User comparisons loaded', { count: comparisons.length });
+      setUserComparisons(comparisons);
 
-    const groupedByMonth = comparisons.reduce(
-      (
-        acc: Record<string, MonthlyReportData>,
-        comparison: UserComparison
-      ) => {
-        const date = new Date(comparison.created_at);
-        const month = date.getMonth() + 1;
-        const year = date.getFullYear();
-        const key = `${year}-${month}`;
+      const groupedByMonth = comparisons.reduce(
+        (
+          acc: Record<string, MonthlyReportData>,
+          comparison: UserComparison
+        ) => {
+          const date = new Date(comparison.created_at);
+          const month = date.getMonth() + 1;
+          const year = date.getFullYear();
+          const key = `${year}-${month}`;
 
-        if (!acc[key]) {
-          acc[key] = {
-            id: key,
-            month,
-            year,
-            total_spent: 0,
-            comparison_count: 0,
-            comparisons: [],
-          };
-        }
+          if (!acc[key]) {
+            acc[key] = {
+              id: key,
+              month,
+              year,
+              total_spent: 0,
+              comparison_count: 0,
+              comparisons: [],
+            };
+          }
 
-        acc[key].comparisons.push(comparison);
-        acc[key].comparison_count++;
+          acc[key].comparisons.push(comparison);
+          acc[key].comparison_count++;
 
-        let comparisonOptimalSpent = 0;
-        const productsInThisComparison =
-          comparison.comparison_products?.map((cp) => cp.product) || [];
+          let comparisonOptimalSpent = 0;
+          const productsInThisComparison =
+            comparison.comparison_products?.map((cp) => cp.product) || [];
 
-        productsInThisComparison.forEach((product) => {
-          let bestPriceForProduct = Infinity;
-          comparison.prices.forEach((priceDetail) => {
-            if (
-              priceDetail.product.id === product.id &&
-              priceDetail.price < bestPriceForProduct
-            ) {
-              bestPriceForProduct = priceDetail.price;
+          productsInThisComparison.forEach((product) => {
+            let bestPriceForProduct = Infinity;
+            comparison.prices?.forEach((priceDetail) => {
+              if (
+                priceDetail.product.id === product.id &&
+                priceDetail.price < bestPriceForProduct
+              ) {
+                bestPriceForProduct = priceDetail.price;
+              }
+            });
+            if (bestPriceForProduct !== Infinity) {
+              comparisonOptimalSpent += bestPriceForProduct * product.quantity;
             }
           });
-          if (bestPriceForProduct !== Infinity) {
-            comparisonOptimalSpent += bestPriceForProduct * product.quantity;
-          }
-        });
-        acc[key].total_spent += comparisonOptimalSpent;
+          acc[key].total_spent += comparisonOptimalSpent;
 
-        return acc;
-      },
-      {}
-    );
+          return acc;
+        },
+        {}
+      );
 
-    const sortedReports = Object.values(groupedByMonth).sort(
-      (a, b) => b.year - a.year || b.month - a.month
-    );
+      const sortedReports = Object.values(groupedByMonth).sort(
+        (a, b) => b.year - a.year || b.month - a.month
+      );
 
-    logger.info('Monthly reports generated', { count: sortedReports.length });
-    setReports(sortedReports);
-    setFilteredReports(sortedReports);
-    setLoading(false);
-  }, [user, handleAsync]);
+      if (isMountedRef.current) {
+        logger.info('Monthly reports generated', { count: sortedReports.length });
+        setReports(sortedReports);
+        setFilteredReports(sortedReports);
+      }
+    } catch (err) {
+      logger.error('Failed to load reports', err);
+      if (isMountedRef.current) {
+        setError('Não foi possível carregar seus relatórios. Tente novamente.');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
+    }
+  }, [user]); // Remover handleAsync das dependências
 
   useEffect(() => {
-    if (user) {
+    isMountedRef.current = true;
+    loadedRef.current = false;
+
+    if (user && !loadedRef.current) {
+      loadedRef.current = true;
       loadUserData();
+    } else if (!user) {
+      setLoading(false);
     }
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [user, loadUserData]);
+
+  // Timeout de segurança para evitar loading infinito
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading && isMountedRef.current) {
+        setLoading(false);
+        setError('O carregamento demorou muito. Tente novamente.');
+        logger.warn('Loading timeout reached for reports');
+      }
+    }, 15000); // 15 segundos
+
+    return () => clearTimeout(timeout);
+  }, [loading]);
 
   // Aplicar filtros
   useEffect(() => {
@@ -302,16 +335,60 @@ const MonthlyReport: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-lg">Carregando relatórios...</div>
+      <div className="space-y-4 sm:space-y-6">
+        {/* Skeleton para filtros */}
+        <div className="bg-card p-4 rounded-lg shadow">
+          <div className="flex flex-wrap gap-4">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+        
+        {/* Skeleton para cards de relatórios */}
+        <div className="bg-card p-4 sm:p-6 rounded-lg shadow">
+          <Skeleton className="h-7 w-48 mb-4" />
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader>
+                  <Skeleton className="h-6 w-36" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-24" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <FileText className="h-16 w-16 text-muted-foreground" />
+        <p className="text-lg text-muted-foreground text-center">{error}</p>
+        <Button 
+          onClick={() => {
+            loadedRef.current = false;
+            loadUserData();
+          }}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Tentar Novamente
+        </Button>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="text-center p-8">
-        <p>Faça login para ver seus relatórios.</p>
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+        <FileText className="h-16 w-16 text-muted-foreground" />
+        <p className="text-lg text-muted-foreground">Faça login para ver seus relatórios.</p>
       </div>
     );
   }
@@ -327,7 +404,7 @@ const MonthlyReport: React.FC = () => {
         totalSavings={totals.totalSavings}
       />
       
-      <div className="bg-white dark:bg-gray-950 p-4 sm:p-6 rounded-lg shadow">
+      <div className="bg-card p-4 sm:p-6 rounded-lg shadow">
         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Relatórios Mensais</h2>
 
         {selectedReport ? (
@@ -386,7 +463,7 @@ const MonthlyReport: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl sm:text-2xl font-bold text-app-blue">
+                  <p className="text-xl sm:text-2xl font-bold text-primary">
                     {selectedReport.comparison_count}
                   </p>
                 </CardContent>
@@ -398,10 +475,10 @@ const MonthlyReport: React.FC = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xl sm:text-2xl font-bold text-app-green">
+                  <p className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-500">
                     R$ {selectedReport.total_spent.toFixed(2).replace(".", ",")}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Soma das melhores ofertas encontradas por comparação
                   </p>
                 </CardContent>
@@ -415,7 +492,7 @@ const MonthlyReport: React.FC = () => {
             {selectedReport.comparisons?.map((comparison, index) => (
               <div
                 key={comparison.id}
-                className="border rounded-md p-3 sm:p-4 mb-3 sm:mb-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="border rounded-md p-3 sm:p-4 mb-3 sm:mb-4 cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={() =>
                   setSelectedComparisonIndex(
                     selectedComparisonIndex === index ? null : index
@@ -430,11 +507,11 @@ const MonthlyReport: React.FC = () => {
                           comparison.created_at
                         ).toLocaleDateString()}`}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Data:{" "}
                       {new Date(comparison.created_at).toLocaleDateString()}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {comparison.comparison_products?.length || 0} produtos
                     </p>
                   </div>
@@ -461,20 +538,23 @@ const MonthlyReport: React.FC = () => {
         ) : (
           <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {filteredReports.length === 0 ? (
-              <div className="col-span-full text-center p-8">
-                <p className="text-gray-500 dark:text-gray-400">
-                  Nenhuma comparação encontrada ainda.
-                </p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
-                  Faça sua primeira comparação na página "Comparar Preços" para
-                  ver os relatórios aqui.
-                </p>
+              <div className="col-span-full flex flex-col items-center justify-center p-8 space-y-4">
+                <FileText className="h-12 w-12 text-muted-foreground" />
+                <div className="text-center">
+                  <p className="text-muted-foreground">
+                    Nenhuma comparação encontrada ainda.
+                  </p>
+                  <p className="text-sm text-muted-foreground/70 mt-2">
+                    Faça sua primeira comparação na página "Comparar Preços" para
+                    ver os relatórios aqui.
+                  </p>
+                </div>
               </div>
             ) : (
               filteredReports.map((report) => (
                 <Card
                   key={`${report.month}-${report.year}`}
-                  className="cursor-pointer hover:shadow-md transition-shadow dark:bg-gray-800 dark:hover:bg-gray-700"
+                  className="cursor-pointer hover:shadow-md hover:border-primary/50 transition-all"
                   onClick={() => setSelectedReport(report)}
                 >
                   <CardHeader>
@@ -483,7 +563,7 @@ const MonthlyReport: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                       {report.comparison_count} comparação(ões)
                     </p>
                   </CardContent>
