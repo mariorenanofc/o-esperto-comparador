@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, Settings, History } from 'lucide-react';
 import { NotificationSettings } from './NotificationSettings';
 import { NotificationHistory } from './NotificationHistory';
-import { LocationSettings } from './LocationSettings';
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -29,7 +28,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="history" className="flex-1 overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="history" className="flex items-center gap-2">
               <History className="w-4 h-4" />
               Histórico
@@ -37,10 +36,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               Configurações
-            </TabsTrigger>
-            <TabsTrigger value="location" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Localização
             </TabsTrigger>
           </TabsList>
 
@@ -51,10 +46,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
             <TabsContent value="settings" className="mt-0">
               <NotificationSettings />
-            </TabsContent>
-
-            <TabsContent value="location" className="mt-0">
-              <LocationSettings />
             </TabsContent>
           </div>
         </Tabs>
