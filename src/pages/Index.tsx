@@ -24,6 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
 import { Badge } from "@/components/ui/badge";
 import { AnimatedSection, AnimatedList, AnimatedListItem } from "@/components/ui/animated-section";
+import { AccountSummarySkeleton, RankingSkeleton, WhyUseSkeleton } from "@/components/skeletons/HomePageSkeletons";
 
 // Componente compacto para estatística
 const StatCard = ({
@@ -171,7 +172,7 @@ const Index: React.FC = () => {
   }, [user, profile]);
 
   return (
-    <div className="min-h-screen bg-app-gray dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
       <DailyOffersSection />
@@ -191,31 +192,33 @@ const Index: React.FC = () => {
       {/* Resumo Compacto da Conta - apenas para usuários logados */}
       {user && (
         <AnimatedSection className="container mx-auto py-6 px-4 sm:px-6" delay={0.2}>
-          <Card className="overflow-hidden">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                {/* Info do Plano */}
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <Crown className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">
-                        Plano {currentPlanDetails?.name || "Free"}
-                      </span>
-                      <Badge variant="secondary" className="text-xs">
-                        {profile?.plan === "free" ? "Gratuito" : "Ativo"}
-                      </Badge>
+          {loadingDashboardStats ? (
+            <AccountSummarySkeleton />
+          ) : (
+            <Card className="overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Info do Plano */}
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Crown className="w-5 h-5 text-primary" />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {userDashboardStats.daysOnPlatform} dias na plataforma
-                    </p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">
+                          Plano {currentPlanDetails?.name || "Free"}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {profile?.plan === "free" ? "Gratuito" : "Ativo"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {userDashboardStats.daysOnPlatform} dias na plataforma
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                {/* Estatísticas em linha */}
-                {!loadingDashboardStats && (
+                  {/* Estatísticas em linha */}
                   <div className="flex flex-wrap gap-2 sm:gap-4">
                     <StatCard
                       icon={<Clock className="w-4 h-4" />}
@@ -226,30 +229,30 @@ const Index: React.FC = () => {
                       icon={<DollarSign className="w-4 h-4" />}
                       label="Economia"
                       value={`R$ ${userDashboardStats.estimatedTotalSavings.toFixed(2).replace('.', ',')}`}
-                      className="bg-green-50 dark:bg-green-950/30"
+                      className="bg-accent/50"
                     />
                   </div>
-                )}
 
-                {/* Botões de ação */}
-                <div className="flex gap-2">
-                  <Link to="/profile">
-                    <Button variant="outline" size="sm">
-                      Ver Perfil
-                    </Button>
-                  </Link>
-                  {profile?.plan === "free" && (
-                    <Link to="/plans">
-                      <Button size="sm" className="gap-1">
-                        <Sparkles className="w-4 h-4" />
-                        Upgrade
+                  {/* Botões de ação */}
+                  <div className="flex gap-2">
+                    <Link to="/profile">
+                      <Button variant="outline" size="sm">
+                        Ver Perfil
                       </Button>
                     </Link>
-                  )}
+                    {profile?.plan === "free" && (
+                      <Link to="/plans">
+                        <Button size="sm" className="gap-1">
+                          <Sparkles className="w-4 h-4" />
+                          Upgrade
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </AnimatedSection>
       )}
 
@@ -268,7 +271,7 @@ const Index: React.FC = () => {
           <AnimatedList className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" staggerDelay={0.1}>
             <AnimatedListItem>
               <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
-                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div>
@@ -280,7 +283,7 @@ const Index: React.FC = () => {
 
             <AnimatedListItem>
               <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
-                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                <div className="p-2 rounded-lg bg-secondary/50 text-secondary-foreground">
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
@@ -292,7 +295,7 @@ const Index: React.FC = () => {
 
             <AnimatedListItem>
               <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
-                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
+                <div className="p-2 rounded-lg bg-accent/50 text-accent-foreground">
                   <TrendingUp className="w-5 h-5" />
                 </div>
                 <div>
@@ -304,7 +307,7 @@ const Index: React.FC = () => {
 
             <AnimatedListItem>
               <div className="flex items-start gap-3 p-4 rounded-xl bg-background/50 border border-border/30 hover:shadow-md transition-all hover:-translate-y-1">
-                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
@@ -325,96 +328,6 @@ const Index: React.FC = () => {
           </div>
         </div>
       </AnimatedSection>
-
-      <footer className="bg-app-dark dark:bg-gray-950 text-white py-6 sm:py-8 border-t dark:border-gray-800">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex flex-col lg:flex-row justify-between lg:space-x-8">
-            <div className="mb-6 lg:mb-0 lg:w-1/3">
-              <h3 className="text-lg font-semibold mb-2">
-                O Esperto Comparador
-              </h3>
-              <p className="text-gray-300 dark:text-gray-400 text-sm sm:text-base">
-                Economize tempo e dinheiro nas suas compras de supermercado.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-6 sm:gap-8 sm:grid-cols-3 lg:w-2/3">
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Links</h3>
-                <ul className="space-y-1">
-                  <li>
-                    <Link
-                      to="/"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Início
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/comparison"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Comparar
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/reports"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Relatórios
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/contribute"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Contribuir
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/plans"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Planos
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold mb-2">Legal</h3>
-                <ul className="space-y-1">
-                  <li>
-                    <Link
-                      to="/terms"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Termos
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/privacy"
-                      className="text-gray-300 dark:text-gray-400 hover:text-white text-sm"
-                    >
-                      Privacidade
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 dark:border-gray-800 mt-6 sm:mt-8 pt-4 sm:pt-6 text-center">
-            {/* Ano atualizado automaticamente */}
-            <p className="text-gray-300 dark:text-gray-400 text-xs sm:text-sm">
-              © {new Date().getFullYear()} Comparador Online. Todos os direitos
-              reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
