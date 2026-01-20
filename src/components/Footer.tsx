@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion, type Variants, type Easing } from "framer-motion";
 import { 
   Facebook, 
   Instagram, 
@@ -14,6 +15,56 @@ import {
   FileText,
   Shield
 } from "lucide-react";
+
+const easeOut: Easing = [0.16, 1, 0.3, 1];
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: easeOut,
+    },
+  },
+};
+
+const socialVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.3,
+      ease: easeOut,
+    },
+  },
+};
+
+const bottomBarVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      delay: 0.5,
+      ease: easeOut,
+    },
+  },
+};
 
 const Footer: React.FC = () => {
   const location = useLocation();
@@ -64,13 +115,23 @@ const Footer: React.FC = () => {
       {/* Main Footer Content */}
       <div className="relative border-t border-border/50">
         <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
             {/* Brand Section */}
-            <div className="space-y-4">
+            <motion.div className="space-y-4" variants={itemVariants}>
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <motion.div 
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center"
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
                   <ShoppingCart className="w-5 h-5 text-primary-foreground" />
-                </div>
+                </motion.div>
                 <div>
                   <h3 className="font-bold text-lg text-foreground">O Esperto</h3>
                   <p className="text-xs text-muted-foreground">Comparador</p>
@@ -81,106 +142,170 @@ const Footer: React.FC = () => {
               </p>
               
               {/* Social Links */}
-              <div className="flex items-center gap-3 pt-2">
-                {socialLinks.map((social) => (
-                  <a
+              <motion.div 
+                className="flex items-center gap-3 pt-2"
+                variants={containerVariants}
+              >
+                {socialLinks.map((social, index) => (
+                  <motion.a
                     key={social.label}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-9 h-9 rounded-lg bg-muted/50 hover:bg-primary/10 flex items-center justify-center transition-colors group"
                     aria-label={social.label}
+                    variants={socialVariants}
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     <social.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </a>
+                  </motion.a>
                 ))}
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {/* Navigation Links */}
-            <div className="space-y-4">
+            <motion.div className="space-y-4" variants={itemVariants}>
               <h4 className="font-semibold text-foreground flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4 text-primary" />
                 Navegação
               </h4>
               <ul className="space-y-2">
-                {mainLinks.map((link) => (
-                  <li key={link.to}>
+                {mainLinks.map((link, index) => (
+                  <motion.li 
+                    key={link.to}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3 + index * 0.05 }}
+                  >
                     <Link
                       to={link.to}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                     >
-                      <link.icon className="w-3.5 h-3.5" />
-                      {link.label}
+                      <motion.span
+                        whileHover={{ x: 3 }}
+                        className="flex items-center gap-2"
+                      >
+                        <link.icon className="w-3.5 h-3.5" />
+                        {link.label}
+                      </motion.span>
                     </Link>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* Tools Links */}
-            <div className="space-y-4">
+            <motion.div className="space-y-4" variants={itemVariants}>
               <h4 className="font-semibold text-foreground flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-primary" />
                 Ferramentas
               </h4>
               <ul className="space-y-2">
-                {toolLinks.map((link) => (
-                  <li key={link.to}>
+                {toolLinks.map((link, index) => (
+                  <motion.li 
+                    key={link.to}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.35 + index * 0.05 }}
+                  >
                     <Link
                       to={link.to}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                     >
-                      <link.icon className="w-3.5 h-3.5" />
-                      {link.label}
+                      <motion.span
+                        whileHover={{ x: 3 }}
+                        className="flex items-center gap-2"
+                      >
+                        <link.icon className="w-3.5 h-3.5" />
+                        {link.label}
+                      </motion.span>
                     </Link>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* Legal & Info */}
-            <div className="space-y-4">
+            <motion.div className="space-y-4" variants={itemVariants}>
               <h4 className="font-semibold text-foreground flex items-center gap-2">
                 <Shield className="w-4 h-4 text-primary" />
                 Informações
               </h4>
               <ul className="space-y-2">
-                {legalLinks.map((link) => (
-                  <li key={link.to}>
+                {legalLinks.map((link, index) => (
+                  <motion.li 
+                    key={link.to}
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 + index * 0.05 }}
+                  >
                     <Link
                       to={link.to}
                       className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
-                      {link.label}
+                      <motion.span whileHover={{ x: 3 }} className="inline-block">
+                        {link.label}
+                      </motion.span>
                     </Link>
-                  </li>
+                  </motion.li>
                 ))}
               </ul>
               
               {/* Newsletter hint */}
-              <div className="pt-4">
+              <motion.div 
+                className="pt-4"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.6 }}
+              >
                 <p className="text-xs text-muted-foreground">
                   Ative as notificações para receber ofertas exclusivas na sua região!
                 </p>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-border/30">
+        <motion.div 
+          className="border-t border-border/30"
+          variants={bottomBarVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
           <div className="container mx-auto px-4 py-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <p>
                 © {currentYear} O Esperto Comparador. Todos os direitos reservados.
               </p>
-              <p className="flex items-center gap-1">
-                Feito com <Heart className="w-3 h-3 text-destructive fill-current" /> no Brasil
-              </p>
+              <motion.p 
+                className="flex items-center gap-1"
+                whileHover={{ scale: 1.02 }}
+              >
+                Feito com{" "}
+                <motion.span
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{ 
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatType: "loop",
+                  }}
+                >
+                  <Heart className="w-3 h-3 text-destructive fill-current" />
+                </motion.span>{" "}
+                no Brasil
+              </motion.p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   );
