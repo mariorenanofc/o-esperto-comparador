@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import ContributeCallToAction from "./daily-offers/ContributeCallToAction";
 import { useOptimizedDailyOffers } from "@/hooks/useOptimizedData";
+import { motion } from "framer-motion";
 
 const DailyOffersSection: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -100,7 +101,13 @@ const DailyOffersSection: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6 relative">
+    <motion.div 
+      className="w-full max-w-6xl mx-auto space-y-6 relative px-4 sm:px-6 py-8"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       <DailyOffersHeader
         city={city}
         actualOffersCount={offers.length}
@@ -108,23 +115,36 @@ const DailyOffersSection: React.FC = () => {
       />
 
       {offers.length > 0 ? (
-        <OffersGrid
-          visibleOffers={offersToDisplayInGrid}
-          displayOffers={offers}
-          isSignedIn={currentUserIsSignedIn}
-          isFreePlanLoggedIn={currentUserIsSignedIn && currentPlan === "free"}
-          maxDailyOffersVisible={maxDailyOffersVisibleByPlan}
-          showAllForGuest={showAllForGuest}
-        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <OffersGrid
+            visibleOffers={offersToDisplayInGrid}
+            displayOffers={offers}
+            isSignedIn={currentUserIsSignedIn}
+            isFreePlanLoggedIn={currentUserIsSignedIn && currentPlan === "free"}
+            maxDailyOffersVisible={maxDailyOffersVisibleByPlan}
+            showAllForGuest={showAllForGuest}
+          />
+        </motion.div>
       ) : (
-        <div className="space-y-6">
-          <Card className="w-full p-8 text-center bg-gradient-to-br from-blue-50 to-green-50 border-dashed border-2">
+        <motion.div 
+          className="space-y-6"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card className="w-full p-8 text-center bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950/30 dark:to-green-950/30 border-dashed border-2">
             <CardContent className="space-y-4">
               <div className="text-4xl mb-4">🏪</div>
-              <h3 className="text-xl font-semibold text-gray-800">
+              <h3 className="text-xl font-semibold text-foreground">
                 Nenhuma oferta encontrada para {city || "sua região"}
               </h3>
-              <p className="text-gray-600 max-w-md mx-auto">
+              <p className="text-muted-foreground max-w-md mx-auto">
                 Seja o primeiro a compartilhar preços em sua cidade! Sua contribuição 
                 ajuda outros consumidores a economizar.
               </p>
@@ -137,7 +157,7 @@ const DailyOffersSection: React.FC = () => {
                   🔄 Verificar Novamente
                 </Button>
                 {currentUserIsSignedIn && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     💡 Contribua com preços e ganhe pontos na comunidade!
                   </p>
                 )}
@@ -145,23 +165,34 @@ const DailyOffersSection: React.FC = () => {
             </CardContent>
           </Card>
           <ContributeCallToAction />
-        </div>
+        </motion.div>
       )}
 
       {showLoginOverlayForGuests && (
-        <LoginOverlay
-          totalOffers={totalOffersAvailable}
-          onShowAll={handleShowAllForGuest}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <LoginOverlay
+            totalOffers={totalOffersAvailable}
+            onShowAll={handleShowAllForGuest}
+          />
+        </motion.div>
       )}
 
       {showUpgradeOverlayForFreeUser && (
-        <div className="absolute inset-0 flex items-end justify-center pb-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 text-center shadow-lg max-w-md">
-            <h3 className="text-lg font-semibold mb-2 text-app-blue">
+        <motion.div 
+          className="absolute inset-0 flex items-end justify-center pb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="bg-background/90 backdrop-blur-sm rounded-lg p-6 text-center shadow-lg max-w-md border">
+            <h3 className="text-lg font-semibold mb-2 text-primary">
               Desbloqueie Todas as Ofertas!
             </h3>
-            <p className="text-gray-600 mb-4 text-sm">
+            <p className="text-muted-foreground mb-4 text-sm">
               Seu plano Gratuito exibe apenas {maxDailyOffersVisibleByPlan} de{" "}
               {totalOffersAvailable} ofertas diárias. Existem **mais{" "}
               {offersBlurredForFree}** ofertas disponíveis! Faça upgrade para
@@ -169,15 +200,15 @@ const DailyOffersSection: React.FC = () => {
             </p>
             <div className="space-y-2">
               <Link to="/plans">
-                <Button className="w-full bg-app-green hover:bg-green-600">
+                <Button className="w-full">
                   Ver Planos e Fazer Upgrade
                 </Button>
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
