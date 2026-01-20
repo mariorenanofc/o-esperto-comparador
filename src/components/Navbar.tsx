@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { 
   ShoppingCart, 
   Menu, 
-  X, 
   Settings, 
   User, 
   Bell, 
@@ -19,12 +18,23 @@ import {
   TrendingUp,
   CreditCard,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  Wrench,
+  FileText
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "./ThemeToggle";
 
 interface MobileNavItemProps {
@@ -91,115 +101,150 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
+          {/* Desktop Menu - Simplificado */}
+          <div className="hidden md:flex items-center space-x-1">
+            {/* Links Principais */}
             <Link 
               to="/comparison" 
-              className="text-muted-foreground hover:text-app-secondary transition-colors"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
             >
-              Comparar Preços
+              Comparar
             </Link>
             <Link 
               to="/products" 
-              className="text-muted-foreground hover:text-app-secondary transition-colors"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
             >
               Produtos
             </Link>
             <Link 
               to="/contribute" 
-              className="text-muted-foreground hover:text-app-secondary transition-colors"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
             >
               Contribuir
             </Link>
             <Link 
-              to="/reports" 
-              className="text-muted-foreground hover:text-app-secondary transition-colors"
-            >
-              Relatórios
-            </Link>
-            <Link 
               to="/economy" 
-              className="text-muted-foreground hover:text-app-secondary transition-colors"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
             >
               Economia
             </Link>
-            
+
+            {/* Dropdown Ferramentas (apenas para logados) */}
             {user && (
-              <>
-                <Link 
-                  to="/alerts" 
-                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
-                >
-                  <Target className="w-4 h-4" />
-                  Alertas
-                </Link>
-                <Link 
-                  to="/smart-list" 
-                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
-                >
-                  <ListChecks className="w-4 h-4" />
-                  Lista Inteligente
-                </Link>
-                <Link 
-                  to="/gamification" 
-                  className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
-                >
-                  <Trophy className="w-4 h-4" />
-                  Ranking
-                </Link>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-1 text-muted-foreground hover:text-app-secondary">
+                    <Wrench className="h-4 w-4" />
+                    Ferramentas
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Ferramentas</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/alerts" className="flex items-center gap-2 cursor-pointer">
+                      <Target className="h-4 w-4" />
+                      Alertas de Preço
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/smart-list" className="flex items-center gap-2 cursor-pointer">
+                      <ListChecks className="h-4 w-4" />
+                      Lista Inteligente
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/gamification" className="flex items-center gap-2 cursor-pointer">
+                      <Trophy className="h-4 w-4" />
+                      Ranking
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/reports" className="flex items-center gap-2 cursor-pointer">
+                      <FileText className="h-4 w-4" />
+                      Relatórios
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             
             <Link 
               to="/plans" 
-              className="text-muted-foreground hover:text-app-secondary transition-colors"
+              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
             >
               Planos
             </Link>
-            
-            {user && (
-              <Link 
-                to="/notifications" 
-                className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
-              >
-                <Bell className="w-4 h-4" />
-                Notificações
-              </Link>
-            )}
-            
-            {user && isLoaded && isAdmin && (
-              <Link 
-                to="/admin" 
-                className="text-muted-foreground hover:text-app-secondary transition-colors flex items-center gap-1"
-              >
-                <Settings className="w-4 h-4" />
-                Admin
-              </Link>
-            )}
 
             <ThemeToggle />
 
+            {/* Área do Usuário */}
             {user ? (
-              <div className="flex items-center space-x-3">
-                <Link to="/profile">
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Perfil
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 ml-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                      <AvatarFallback className="bg-app-secondary text-white text-sm">
+                        {getUserInitials(user.email || "")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </Button>
-                </Link>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                  <AvatarFallback className="bg-app-secondary text-white text-sm">
-                    {getUserInitials(user.email || "")}
-                  </AvatarFallback>
-                </Avatar>
-                <Button onClick={handleSignOut} variant="outline" size="sm">
-                  Sair
-                </Button>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover border shadow-lg">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Minha Conta</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      Perfil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/notifications" className="flex items-center gap-2 cursor-pointer">
+                      <Bell className="h-4 w-4" />
+                      Notificações
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/plans" className="flex items-center gap-2 cursor-pointer">
+                      <CreditCard className="h-4 w-4" />
+                      Meu Plano
+                    </Link>
+                  </DropdownMenuItem>
+                  {isLoaded && isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center gap-2 cursor-pointer text-app-secondary">
+                          <Settings className="h-4 w-4" />
+                          Admin
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link to="/login">
-                <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-white">
+                <Button size="sm" className="bg-app-primary hover:bg-app-primary/90 text-white ml-2">
                   Entrar
                 </Button>
               </Link>
@@ -241,7 +286,7 @@ const Navbar = () => {
 
                       {/* Economia */}
                       <MobileNavGroup label="Economia">
-                        <MobileNavItem to="/reports" icon={BarChart3} label="Relatórios" onClick={closeMenu} />
+                        <MobileNavItem to="/reports" icon={FileText} label="Relatórios" onClick={closeMenu} />
                         <MobileNavItem to="/economy" icon={TrendingUp} label="Economia" onClick={closeMenu} />
                         <MobileNavItem to="/plans" icon={CreditCard} label="Planos" onClick={closeMenu} />
                       </MobileNavGroup>
@@ -262,7 +307,7 @@ const Navbar = () => {
                       {user && (
                         <>
                           <Separator className="my-3" />
-                          <MobileNavGroup label="Configurações">
+                          <MobileNavGroup label="Conta">
                             <MobileNavItem to="/notifications" icon={Bell} label="Notificações" onClick={closeMenu} />
                             {isLoaded && isAdmin && (
                               <MobileNavItem to="/admin" icon={Settings} label="Admin" onClick={closeMenu} />
