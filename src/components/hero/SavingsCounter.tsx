@@ -75,7 +75,7 @@ export const SavingsCounter: React.FC = () => {
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300" />
         <div className="relative flex flex-col items-center p-6 bg-white/90 dark:bg-gray-900/90 rounded-xl border border-green-200 dark:border-green-800/50 backdrop-blur-sm">
-          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-lg" aria-hidden="true">
             <TrendingDown className="w-6 h-6 text-white" />
           </div>
           <AnimatedCounter 
@@ -93,7 +93,7 @@ export const SavingsCounter: React.FC = () => {
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300" />
         <div className="relative flex flex-col items-center p-6 bg-white/90 dark:bg-gray-900/90 rounded-xl border border-blue-200 dark:border-blue-800/50 backdrop-blur-sm">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-lg" aria-hidden="true">
             <Users className="w-6 h-6 text-white" />
           </div>
           <AnimatedCounter 
@@ -110,7 +110,7 @@ export const SavingsCounter: React.FC = () => {
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-300" />
         <div className="relative flex flex-col items-center p-6 bg-white/90 dark:bg-gray-900/90 rounded-xl border border-purple-200 dark:border-purple-800/50 backdrop-blur-sm">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mb-4 shadow-lg" aria-hidden="true">
             <ShoppingCart className="w-6 h-6 text-white" />
           </div>
           <AnimatedCounter 

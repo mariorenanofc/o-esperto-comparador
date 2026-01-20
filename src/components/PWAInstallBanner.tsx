@@ -19,7 +19,7 @@ const PWAInstallBanner = () => {
     <Card className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 border-2 border-primary/20 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-xl">
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0" aria-hidden="true">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
               <Smartphone className="w-6 h-6 text-white" />
             </div>
@@ -39,7 +39,7 @@ const PWAInstallBanner = () => {
                 size="sm"
                 className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <Download className="w-4 h-4 mr-1" />
+                <Download className="w-4 h-4 mr-1" aria-hidden="true" />
                 Instalar
               </Button>
               
@@ -59,8 +59,9 @@ const PWAInstallBanner = () => {
             variant="ghost"
             size="sm"
             className="flex-shrink-0 w-8 h-8 p-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            aria-label="Fechar banner de instalação"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </div>

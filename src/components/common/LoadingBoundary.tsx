@@ -34,7 +34,7 @@ const DefaultErrorFallback = ({
 }) => (
   <Card className="m-4">
     <CardContent className="flex flex-col items-center justify-center p-6 space-y-4">
-      <AlertCircle className="h-8 w-8 text-destructive" />
+      <AlertCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
       <div className="text-center space-y-2">
         <h3 className="font-semibold">Erro ao carregar</h3>
         <p className="text-sm text-muted-foreground">
@@ -75,10 +75,10 @@ const OfflineIndicator = () => {
   if (isOnline) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50" role="alert" aria-live="assertive">
       <Card className="bg-destructive text-destructive-foreground">
         <CardContent className="flex items-center gap-2 px-4 py-2">
-          <WifiOff className="h-4 w-4" />
+          <WifiOff className="h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">Sem conexão</span>
         </CardContent>
       </Card>

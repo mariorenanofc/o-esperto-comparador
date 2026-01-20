@@ -21,36 +21,40 @@ export const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps>
   const getStatusInfo = () => {
     if (status.isConnected) {
       return {
-        icon: <Wifi className="w-3 h-3" />,
+        icon: <Wifi className="w-3 h-3" aria-hidden="true" />,
         text: "Online",
         variant: "default" as const,
-        className: "bg-green-100 text-green-800 border-green-200"
+        className: "bg-green-100 text-green-800 border-green-200",
+        ariaLabel: "Status: Conectado"
       };
     }
     
     if (status.usingFallback) {
       return {
-        icon: <RefreshCw className="w-3 h-3 animate-spin" />,
+        icon: <RefreshCw className="w-3 h-3 animate-spin" aria-hidden="true" />,
         text: "Fallback",
         variant: "secondary" as const,
-        className: "bg-yellow-100 text-yellow-800 border-yellow-200"
+        className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        ariaLabel: "Status: Usando conexão alternativa"
       };
     }
     
     if (status.retryCount > 0) {
       return {
-        icon: <AlertTriangle className="w-3 h-3" />,
+        icon: <AlertTriangle className="w-3 h-3" aria-hidden="true" />,
         text: `Reconnecting (${status.retryCount}/3)`,
         variant: "destructive" as const,
-        className: "bg-orange-100 text-orange-800 border-orange-200"
+        className: "bg-orange-100 text-orange-800 border-orange-200",
+        ariaLabel: `Status: Reconectando, tentativa ${status.retryCount} de 3`
       };
     }
     
     return {
-      icon: <WifiOff className="w-3 h-3" />,
+      icon: <WifiOff className="w-3 h-3" aria-hidden="true" />,
       text: "Offline",
       variant: "destructive" as const,
-      className: "bg-red-100 text-red-800 border-red-200"
+      className: "bg-red-100 text-red-800 border-red-200",
+      ariaLabel: "Status: Desconectado"
     };
   };
 
@@ -60,6 +64,8 @@ export const ConnectionStatusIndicator: React.FC<ConnectionStatusIndicatorProps>
     <Badge 
       variant={statusInfo.variant}
       className={`${statusInfo.className} ${className}`}
+      role="status"
+      aria-label={statusInfo.ariaLabel}
     >
       <div className="flex items-center gap-1">
         {statusInfo.icon}

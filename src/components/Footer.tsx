@@ -129,8 +129,9 @@ const Footer: React.FC = () => {
                   className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center"
                   whileHover={{ scale: 1.05, rotate: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
+                  aria-hidden="true"
                 >
-                  <ShoppingCart className="w-5 h-5 text-primary-foreground" />
+                  <ShoppingCart className="w-5 h-5 text-primary-foreground" aria-hidden="true" />
                 </motion.div>
                 <div>
                   <h3 className="font-bold text-lg text-foreground">O Esperto</h3>
@@ -167,7 +168,7 @@ const Footer: React.FC = () => {
             {/* Navigation Links */}
             <motion.div className="space-y-4" variants={itemVariants}>
               <h4 className="font-semibold text-foreground flex items-center gap-2">
-                <ShoppingCart className="w-4 h-4 text-primary" />
+                <ShoppingCart className="w-4 h-4 text-primary" aria-hidden="true" />
                 Navegação
               </h4>
               <ul className="space-y-2">
@@ -187,7 +188,7 @@ const Footer: React.FC = () => {
                         whileHover={{ x: 3 }}
                         className="flex items-center gap-2"
                       >
-                        <link.icon className="w-3.5 h-3.5" />
+                        <link.icon className="w-3.5 h-3.5" aria-hidden="true" />
                         {link.label}
                       </motion.span>
                     </Link>
@@ -199,7 +200,7 @@ const Footer: React.FC = () => {
             {/* Tools Links */}
             <motion.div className="space-y-4" variants={itemVariants}>
               <h4 className="font-semibold text-foreground flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-primary" />
+                <Trophy className="w-4 h-4 text-primary" aria-hidden="true" />
                 Ferramentas
               </h4>
               <ul className="space-y-2">
@@ -219,7 +220,7 @@ const Footer: React.FC = () => {
                         whileHover={{ x: 3 }}
                         className="flex items-center gap-2"
                       >
-                        <link.icon className="w-3.5 h-3.5" />
+                        <link.icon className="w-3.5 h-3.5" aria-hidden="true" />
                         {link.label}
                       </motion.span>
                     </Link>
@@ -231,7 +232,7 @@ const Footer: React.FC = () => {
             {/* Legal & Info */}
             <motion.div className="space-y-4" variants={itemVariants}>
               <h4 className="font-semibold text-foreground flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
+                <Shield className="w-4 h-4 text-primary" aria-hidden="true" />
                 Informações
               </h4>
               <ul className="space-y-2">
