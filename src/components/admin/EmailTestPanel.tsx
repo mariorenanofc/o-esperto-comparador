@@ -245,13 +245,13 @@ export const EmailTestPanel = () => {
         <div className="border-t pt-4">
           <h4 className="font-medium mb-3">ℹ️ Informações</h4>
           <div className="space-y-2 text-sm text-muted-foreground">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded text-blue-800">
-              📧 <strong>Domínio de Envio:</strong> Emails são enviados de <code>onboarding@resend.dev</code> até que um domínio personalizado seja verificado no Resend.
+            <div className="p-3 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded text-blue-800 dark:text-blue-300">
+              📧 <strong>Domínio de Envio:</strong> Emails são enviados de <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">onboarding@resend.dev</code> até que um domínio personalizado seja verificado no Resend.
             </div>
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800">
+            <div className="p-3 bg-amber-50/50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded text-amber-800 dark:text-amber-300">
               ⏱️ <strong>Tempo de Entrega:</strong> Emails podem demorar alguns segundos para chegar. Verifique a pasta de spam.
             </div>
-            <div className="p-3 bg-green-50 border border-green-200 rounded text-green-800">
+            <div className="p-3 bg-green-50/50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded text-green-800 dark:text-green-300">
               ✅ <strong>Modo Teste:</strong> Todos os emails enviados daqui são marcados como teste e incluem dados de debug.
             </div>
           </div>

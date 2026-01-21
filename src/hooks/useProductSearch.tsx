@@ -125,20 +125,20 @@ export const useOptimizedProductFilters = () => {
   // Produtos por categoria
   const { categoryProducts, hasCategory } = useProductsByCategory(filters.category);
 
-  // Produtos filtrados finais
+  // Produtos filtrados finais - usar filtragem local para maior confiabilidade
   const filteredProducts = useMemo(() => {
     let products: NormalizedProduct[] = allProducts;
 
     // Se há busca, use os resultados da busca
-    if (hasSearchQuery) {
+    if (hasSearchQuery && searchResults.length > 0) {
       products = searchResults;
     }
 
-    // Se há categoria, filtre por categoria
-    if (hasCategory) {
-      products = hasSearchQuery 
-        ? searchResults.filter(p => p.category === filters.category)
-        : categoryProducts;
+    // Aplicar filtro de categoria LOCALMENTE (mais confiável que RPC)
+    if (filters.category && filters.category !== 'all') {
+      products = products.filter(p => 
+        p.category.toLowerCase() === filters.category.toLowerCase()
+      );
     }
 
     // Ordenação
@@ -163,7 +163,7 @@ export const useOptimizedProductFilters = () => {
     });
 
     return sorted;
-  }, [allProducts, searchResults, categoryProducts, hasSearchQuery, hasCategory, filters]);
+  }, [allProducts, searchResults, hasSearchQuery, filters]);
 
   // Categorias disponíveis
   const availableCategories = useMemo((): string[] => {

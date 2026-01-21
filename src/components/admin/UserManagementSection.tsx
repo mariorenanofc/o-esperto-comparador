@@ -161,8 +161,8 @@ const UserManagementSectionContent = () => {
         <CardContent>
           {users.length === 0 ? (
             <div className="text-center py-8">
-              <User className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="text-gray-500 mt-2">Nenhum usuário encontrado.</p>
+              <User className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
+              <p className="text-muted-foreground mt-2">Nenhum usuário encontrado.</p>
             </div>
           ) : (
             <Table>
@@ -173,16 +173,15 @@ const UserManagementSectionContent = () => {
                   <TableHead>Plano</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Cadastro</TableHead>
-                  <TableHead>Ações</TableHead>{" "}
-                  {/* Adicione uma coluna para ações se os botões não estiverem na linha clicável */}
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
                   <TableRow
                     key={user.id}
-                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" // Torna a linha clicável
-                    onClick={() => navigate(`/admin/users/${user.id}`)} // <-- ADICIONE ESTA LINHA
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/admin/users/${user.id}`)}
                   >
                     <TableCell className="font-medium">
                       {user.name || "Nome não informado"}
@@ -191,8 +190,8 @@ const UserManagementSectionContent = () => {
                     <TableCell>{getPlanBadge(user.plan)}</TableCell>
                     <TableCell>{getStatusBadge(user.is_online)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Calendar className="w-4 h-4 mr-1" />
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 mr-1" aria-hidden="true" />
                         {new Date(user.created_at).toLocaleDateString("pt-BR")}
                       </div>
                     </TableCell>

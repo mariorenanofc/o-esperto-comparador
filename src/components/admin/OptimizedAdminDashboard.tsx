@@ -108,46 +108,46 @@ export const OptimizedAdminDashboard = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
-                  <h4 className="font-medium text-yellow-800">⚠️ Extension in Public Schema</h4>
-                  <p className="text-sm text-yellow-700 mt-1">
+                <div className="p-4 border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/20 rounded-lg">
+                  <h4 className="font-medium text-amber-800 dark:text-amber-300">⚠️ Extension in Public Schema</h4>
+                  <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
                     Extensões estão instaladas no schema público. Considere mover para schema específico.
                   </p>
                   <a 
                     href="https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-sm text-yellow-600 underline"
+                    className="text-sm text-amber-600 dark:text-amber-400 underline"
                   >
                     Ver documentação →
                   </a>
                 </div>
 
-                <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
-                  <h4 className="font-medium text-red-800">🔒 Leaked Password Protection</h4>
-                  <p className="text-sm text-red-700 mt-1">
+                <div className="p-4 border border-red-200 dark:border-red-800/50 bg-red-50/50 dark:bg-red-900/20 rounded-lg">
+                  <h4 className="font-medium text-red-800 dark:text-red-300">🔒 Leaked Password Protection</h4>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-1">
                     Proteção contra senhas vazadas não está ativa. Ative no dashboard do Supabase.
                   </p>
                   <a 
                     href="https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-sm text-red-600 underline"
+                    className="text-sm text-red-600 dark:text-red-400 underline"
                   >
                     Configurar segurança →
                   </a>
                 </div>
 
-                <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-800">📦 PostgreSQL Version</h4>
-                  <p className="text-sm text-blue-700 mt-1">
+                <div className="p-4 border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 rounded-lg">
+                  <h4 className="font-medium text-blue-800 dark:text-blue-300">📦 PostgreSQL Version</h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
                     Versão do PostgreSQL possui patches de segurança disponíveis. Atualize via dashboard.
                   </p>
                   <a 
                     href="https://supabase.com/docs/guides/platform/upgrading" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 underline"
+                    className="text-sm text-blue-600 dark:text-blue-400 underline"
                   >
                     Guia de upgrade →
                   </a>
