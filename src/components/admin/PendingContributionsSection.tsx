@@ -148,34 +148,34 @@ export const PendingContributionsSection = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {pendingContributions.length === 0 ? (
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               Nenhuma contribuição pendente encontrada.
             </p>
           ) : (
             pendingContributions.map((contribution) => (
               <div
                 key={contribution.id}
-                className="border rounded-lg p-4 space-y-3 bg-yellow-50 dark:bg-gray-950"
+                className="border rounded-lg p-4 space-y-3 bg-amber-50/50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold">
                       {contribution.product_name}
                     </h3>
-                    <p className="text-lg font-bold text-green-600">
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
                       R$ {contribution.price.toFixed(2)} (
                       {contribution.quantity} {contribution.unit})
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {contribution.store_name}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {contribution.city}, {contribution.state}
                     </p>
                   </div>
                   <div className="text-right">
                     {getStatusBadge(contribution.verified)}
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {new Date(contribution.created_at).toLocaleDateString(
                         "pt-BR"
                       )}
@@ -183,9 +183,9 @@ export const PendingContributionsSection = () => {
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   <p>
-                    <strong>Contribuidor:</strong>{" "}
+                    <strong className="text-foreground">Contribuidor:</strong>{" "}
                     {contribution.contributor_name}
                   </p>
                 </div>
@@ -232,25 +232,25 @@ export const PendingContributionsSection = () => {
             {approvedContributions.map((contribution) => (
               <div
                 key={contribution.id}
-                className="border rounded-lg p-4 space-y-3 bg-green-50 dark:bg-gray-950"
+                className="border rounded-lg p-4 space-y-3 bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30"
               >
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold">
                       {contribution.product_name}
                     </h3>
-                    <p className="text-lg font-bold text-green-600">
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
                       R$ {contribution.price.toFixed(2)} (
                       {contribution.quantity} {contribution.unit})
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {contribution.store_name} - {contribution.city},{" "}
                       {contribution.state}
                     </p>
                   </div>
                   <div className="text-right">
                     {getStatusBadge(contribution.verified)}
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {new Date(contribution.created_at).toLocaleDateString(
                         "pt-BR"
                       )}
@@ -258,9 +258,9 @@ export const PendingContributionsSection = () => {
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   <p>
-                    <strong>Contribuidor:</strong>{" "}
+                    <strong className="text-foreground">Contribuidor:</strong>{" "}
                     {contribution.contributor_name}
                   </p>
                 </div>

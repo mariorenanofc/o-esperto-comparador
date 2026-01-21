@@ -23,7 +23,8 @@ import {
   PawPrint,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  Layers
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -34,6 +35,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { Product } from "@/lib/types";
+import { groupDuplicateProducts, formatVariantText, GroupedProduct } from "@/lib/productNormalization";
 
 interface FilterStats {
   totalProducts?: number;
@@ -51,6 +53,7 @@ interface ProductGridProps {
   itemsPerPage?: number;
   emptyStateTitle?: string;
   emptyStateDescription?: string;
+  groupDuplicates?: boolean;
 }
 
 // Map categories to icons
@@ -161,23 +164,30 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   onProductClick,
   itemsPerPage = 12,
   emptyStateTitle = "Nenhum produto encontrado",
-  emptyStateDescription
+  emptyStateDescription,
+  groupDuplicates = true
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Agrupa produtos duplicados se habilitado
+  const displayProducts = useMemo(() => {
+    if (!groupDuplicates) return products.map(p => ({ ...p, variantCount: 1, variants: [p], displayName: p.name }));
+    return groupDuplicateProducts(products as any) as (Product & { variantCount: number; variants: Product[]; displayName: string })[];
+  }, [products, groupDuplicates]);
   
   // Reset to page 1 when products change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [products.length, filterStats.hasActiveFilters]);
+  }, [displayProducts.length, filterStats.hasActiveFilters]);
 
   // Pagination logic
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const totalPages = Math.ceil(displayProducts.length / itemsPerPage);
   
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return products.slice(startIndex, endIndex);
-  }, [products, currentPage, itemsPerPage]);
+    return displayProducts.slice(startIndex, endIndex);
+  }, [displayProducts, currentPage, itemsPerPage]);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -239,7 +249,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     );
   }
 
-  if (products.length === 0) {
+  if (displayProducts.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -248,7 +258,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       >
         <Card className="p-8 md:p-12 text-center bg-gradient-to-br from-muted/50 to-muted/30 border-dashed">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-            <Package className="h-10 w-10 text-muted-foreground" />
+            <Package className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
           </div>
           <h3 className="text-xl font-semibold mb-2">{emptyStateTitle}</h3>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">
@@ -263,7 +273,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
               onClick={onClearFilters}
               className="gap-2"
             >
-              <Filter className="h-4 w-4" />
+              <Filter className="h-4 w-4" aria-hidden="true" />
               Limpar filtros
             </Button>
           )}
@@ -274,6 +284,16 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Info sobre agrupamento */}
+      {groupDuplicates && displayProducts.length < products.length && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-4 py-2 rounded-lg">
+          <Layers className="h-4 w-4" aria-hidden="true" />
+          <span>
+            {products.length} produtos agrupados em {displayProducts.length} itens únicos
+          </span>
+        </div>
+      )}
+
       {/* Products Grid - 3 columns */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -300,19 +320,29 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   <div className="flex items-start gap-4">
                     {/* Category Icon */}
                     <div className={`p-3 rounded-xl border shrink-0 ${colorClass} group-hover:scale-110 transition-transform duration-300`}>
-                      <CategoryIcon className="h-6 w-6" />
+                      <CategoryIcon className="h-6 w-6" aria-hidden="true" />
                     </div>
                     
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                        {product.name}
+                        {(product as any).displayName || product.name}
                       </h3>
                       
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm text-muted-foreground">
                           {product.quantity} {product.unit}
                         </span>
+                        {/* Indicador de variantes */}
+                        {(product as any).variantCount > 1 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-primary/10 text-primary border-primary/20"
+                          >
+                            <Layers className="h-3 w-3 mr-1" aria-hidden="true" />
+                            {formatVariantText((product as any).variantCount)}
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="mt-3">
@@ -342,7 +372,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
         >
           {/* Page info */}
           <p className="text-sm text-muted-foreground">
-            Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, products.length)} de {products.length} produtos
+            Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, displayProducts.length)} de {displayProducts.length} {groupDuplicates ? 'itens' : 'produtos'}
           </p>
           
           {/* Pagination controls */}

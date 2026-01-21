@@ -116,25 +116,25 @@ export const FeedbackSection = () => {
     switch (category) {
       case "improvement":
         return (
-          <Badge variant="outline" className="bg-blue-50 dark:text-gray-800">
+          <Badge variant="outline" className="bg-blue-100/50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800">
             Melhoria
           </Badge>
         );
       case "feature":
         return (
-          <Badge variant="outline" className="bg-green-50 dark:text-gray-800">
+          <Badge variant="outline" className="bg-green-100/50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
             Nova Funcionalidade
           </Badge>
         );
       case "bug":
         return (
-          <Badge variant="outline" className="bg-red-50 dark:text-gray-800">
+          <Badge variant="outline" className="bg-red-100/50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800">
             Bug
           </Badge>
         );
       case "other":
         return (
-          <Badge variant="outline" className="bg-gray-50 dark:text-gray-800">
+          <Badge variant="outline" className="bg-muted text-muted-foreground">
             Outro
           </Badge>
         );
@@ -220,19 +220,19 @@ export const FeedbackSection = () => {
         <CardContent className="space-y-4">
           {suggestions.length === 0 ? (
             <div className="text-center py-8">
-              <MessageSquare className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="text-gray-500 mt-2">Nenhuma sugestão encontrada.</p>
+              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
+              <p className="text-muted-foreground mt-2">Nenhuma sugestão encontrada.</p>
             </div>
           ) : (
             suggestions.map((suggestion) => (
               <div
                 key={suggestion.id}
-                className="border rounded-lg p-4 space-y-3"
+                className="border rounded-lg p-4 space-y-3 bg-card"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-semibold">{suggestion.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {suggestion.description}
                     </p>
                   </div>
@@ -242,17 +242,17 @@ export const FeedbackSection = () => {
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   <p>
-                    <strong>Usuário:</strong>{" "}
+                    <strong className="text-foreground">Usuário:</strong>{" "}
                     {suggestion.profiles?.name || "Nome não disponível"}
                   </p>
                   <p>
-                    <strong>Email:</strong>{" "}
+                    <strong className="text-foreground">Email:</strong>{" "}
                     {suggestion.profiles?.email || "Email não disponível"}
                   </p>
                   <p>
-                    <strong>Data:</strong>{" "}
+                    <strong className="text-foreground">Data:</strong>{" "}
                     {new Date(suggestion.created_at).toLocaleDateString(
                       "pt-BR"
                     )}
@@ -283,7 +283,7 @@ export const FeedbackSection = () => {
                         variant="outline"
                         size="sm"
                         disabled={actionLoading === suggestion.id}
-                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        className="text-green-600 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20"
                       >
                         <CheckCircle className="w-4 h-4 mr-1" />
                         Implementar

@@ -47,7 +47,7 @@ export const PlatformStatsCards: React.FC<PlatformStatsProps> = ({
 
   const getGrowthBadge = (rate: number) => {
     if (rate > 0) {
-      return <Badge className="bg-green-100 text-green-800">+{rate.toFixed(1)}%</Badge>;
+      return <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">+{rate.toFixed(1)}%</Badge>;
     } else if (rate < 0) {
       return <Badge variant="destructive">-{Math.abs(rate).toFixed(1)}%</Badge>;
     }
@@ -68,10 +68,10 @@ export const PlatformStatsCards: React.FC<PlatformStatsProps> = ({
       value: analytics.premiumUsers.toLocaleString(),
       description: `${((analytics.premiumUsers / analytics.totalUsers) * 100).toFixed(1)}% conversão`,
       icon: TrendingUp,
-      trend: <Badge className="bg-purple-100 text-purple-800">
+      trend: <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
         {analytics.premiumUsers}/{analytics.totalUsers}
       </Badge>,
-      color: "text-purple-600",
+      color: "text-purple-600 dark:text-purple-400",
     },
     {
       title: "Contribuições",
@@ -80,8 +80,8 @@ export const PlatformStatsCards: React.FC<PlatformStatsProps> = ({
       icon: ShoppingCart,
       trend: analytics.pendingContributions > 0 
         ? <Badge variant="outline">{analytics.pendingContributions} ⏳</Badge>
-        : <Badge className="bg-green-100 text-green-800">✓ Em dia</Badge>,
-      color: "text-green-600",
+        : <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">✓ Em dia</Badge>,
+      color: "text-green-600 dark:text-green-400",
     },
     {
       title: "Sugestões",
@@ -90,8 +90,8 @@ export const PlatformStatsCards: React.FC<PlatformStatsProps> = ({
       icon: MessageSquare,
       trend: analytics.openSuggestions > 0 
         ? <Badge variant="outline">{analytics.openSuggestions} 📝</Badge>
-        : <Badge className="bg-green-100 text-green-800">✓ Em dia</Badge>,
-      color: "text-orange-600",
+        : <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">✓ Em dia</Badge>,
+      color: "text-orange-600 dark:text-orange-400",
     },
     {
       title: "Comparações",
@@ -99,7 +99,7 @@ export const PlatformStatsCards: React.FC<PlatformStatsProps> = ({
       description: `${analytics.comparisonsThisMonth} este mês`,
       icon: Activity,
       trend: <Badge variant="outline">{analytics.comparisonsThisMonth} 📊</Badge>,
-      color: "text-indigo-600",
+      color: "text-indigo-600 dark:text-indigo-400",
     },
   ];
 
@@ -113,8 +113,8 @@ export const PlatformStatsCards: React.FC<PlatformStatsProps> = ({
         ? <Badge variant="destructive">⚠️ Alto</Badge>
         : dbUsage.percent_used > 50
         ? <Badge variant="outline">⚠️ Médio</Badge>
-        : <Badge className="bg-green-100 text-green-800">✓ OK</Badge>,
-      color: dbUsage.percent_used > 80 ? "text-red-600" : "text-blue-600",
+        : <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">✓ OK</Badge>,
+      color: dbUsage.percent_used > 80 ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400",
     });
   }
 

@@ -144,8 +144,8 @@ export const ActiveUsersSection = () => {
         <CardContent>
           {activeUsers.length === 0 ? (
             <div className="text-center py-8">
-              <UserCheck className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="text-gray-500 mt-2">Nenhum usuário ativo no momento.</p>
+              <UserCheck className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
+              <p className="text-muted-foreground mt-2">Nenhum usuário ativo no momento.</p>
             </div>
           ) : (
             <Table>
@@ -167,14 +167,14 @@ export const ActiveUsersSection = () => {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{getPlanBadge(user.plan)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Clock className="w-4 h-4 mr-1" />
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4 mr-1" aria-hidden="true" />
                         {formatLastActivity(user.last_activity)}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="default" className="bg-green-600">
-                        <div className="w-2 h-2 bg-white rounded-full mr-1"></div>
+                      <Badge variant="default" className="bg-green-600 dark:bg-green-700">
+                        <div className="w-2 h-2 bg-white rounded-full mr-1" aria-hidden="true"></div>
                         Online
                       </Badge>
                     </TableCell>
