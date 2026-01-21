@@ -1,7 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DailyOffer } from '@/lib/types';
 import { secureLogger } from '@/lib/secureLogger';
+
+const isDev = import.meta.env.DEV;
 
 export const fetchService = {
   // Map offers data excluding PII fields (contributor_name, user_id removed)
@@ -34,22 +35,22 @@ export const fetchService = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching offers:', error);
+        if (isDev) console.error('Error fetching offers:', error);
         throw error;
       }
 
       const offers = this.mapOffersData(data || []);
-      console.log('Fetched offers from secure view:', offers.length);
+      if (isDev) console.log('Fetched offers from secure view:', offers.length);
       
       return offers;
     } catch (error) {
-      console.error('Error in getTodaysOffers:', error);
+      if (isDev) console.error('Error in getTodaysOffers:', error);
       return [];
     }
   },
 
   async getAllContributions(): Promise<any[]> {
-    console.log('Fetching all contributions for admin...');
+    if (isDev) console.log('Fetching all contributions for admin...');
     
     try {
       // Para admin, mostrar todas as contribuições incluindo as pendentes (não verificadas)
@@ -63,14 +64,14 @@ export const fetchService = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching contributions:', error);
+        if (isDev) console.error('Error fetching contributions:', error);
         throw error;
       }
 
-      console.log('Fetched contributions (last 24h):', data?.length || 0);
+      if (isDev) console.log('Fetched contributions (last 24h):', data?.length || 0);
       return data || [];
     } catch (error) {
-      console.error('Error in getAllContributions:', error);
+      if (isDev) console.error('Error in getAllContributions:', error);
       return [];
     }
   },

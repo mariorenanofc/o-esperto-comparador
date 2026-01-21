@@ -12,6 +12,8 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+const isDev = import.meta.env.DEV;
+
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
   try {
@@ -19,23 +21,20 @@ async function registerServiceWorker() {
     await navigator.serviceWorker.ready;
     return reg;
   } catch (e) {
-    console.error("SW registration failed", e);
+    if (isDev) console.error("SW registration failed", e);
     return null;
   }
 }
 
 export async function initPushNotifications(userId: string) {
   try {
-    console.log("=== INITIALIZING PUSH NOTIFICATIONS ===");
-    console.log("User ID:", userId);
-    console.log("Navigator supports:", {
-      Notification: "Notification" in window,
-      serviceWorker: "serviceWorker" in navigator,
-      PushManager: "PushManager" in window
-    });
+    if (isDev) {
+      console.log("=== INITIALIZING PUSH NOTIFICATIONS ===");
+      console.log("User ID:", userId);
+    }
     
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-      console.log("Push notifications not supported");
+      if (isDev) console.log("Push notifications not supported");
       toast.error("Notificações push não suportadas neste navegador");
       return;
     }
@@ -46,7 +45,7 @@ export async function initPushNotifications(userId: string) {
       permission = await Notification.requestPermission();
     }
     
-    console.log("Notification permission:", permission);
+    if (isDev) console.log("Notification permission:", permission);
     if (permission !== "granted") {
       toast.error("Permissão de notificação negada");
       return;
@@ -58,44 +57,40 @@ export async function initPushNotifications(userId: string) {
       return;
     }
 
-    console.log("Service worker registered successfully");
+    if (isDev) console.log("Service worker registered successfully");
 
     // Get VAPID key from Edge Function
-    console.log("Fetching VAPID key...");
     const { data, error } = await supabase.functions.invoke("get-vapid");
-    console.log("VAPID response:", { data, error });
     if (error || !data?.publicKey) {
-      console.error("Failed to get VAPID public key", error);
+      if (isDev) console.error("Failed to get VAPID public key", error);
       toast.error("Falha ao obter chave VAPID: " + (error?.message || "Chave não encontrada"));
       return;
     }
 
-    console.log("VAPID public key retrieved successfully");
+    if (isDev) console.log("VAPID public key retrieved successfully");
 
     // Check existing subscription
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
-      console.log("Creating new push subscription...");
+      if (isDev) console.log("Creating new push subscription...");
       try {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(data.publicKey),
         });
-        console.log("New push subscription created");
+        if (isDev) console.log("New push subscription created");
       } catch (subError) {
-        console.error("Failed to create subscription:", subError);
+        if (isDev) console.error("Failed to create subscription:", subError);
         toast.error("Falha ao criar subscription de push");
         return;
       }
     } else {
-      console.log("Using existing push subscription");
+      if (isDev) console.log("Using existing push subscription");
     }
 
     const json = sub.toJSON() as any;
-    console.log("Push subscription JSON:", json);
 
     // Save in Supabase (upsert by endpoint)
-    console.log("Saving subscription to Supabase...");
     const { error: upsertError } = await supabase
       .from("push_subscriptions")
       .upsert(
@@ -110,14 +105,14 @@ export async function initPushNotifications(userId: string) {
       );
 
     if (upsertError) {
-      console.error("Failed to save push subscription", upsertError);
+      if (isDev) console.error("Failed to save push subscription", upsertError);
       toast.error("Falha ao salvar subscription");
     } else {
-      console.log("Push subscription saved successfully");
+      if (isDev) console.log("Push subscription saved successfully");
       toast.success("Notificações ativadas com sucesso!");
     }
   } catch (e) {
-    console.error("initPushNotifications error", e);
+    if (isDev) console.error("initPushNotifications error", e);
     toast.error("Erro ao inicializar notificações");
   }
 }

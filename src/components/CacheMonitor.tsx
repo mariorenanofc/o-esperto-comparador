@@ -12,12 +12,23 @@ interface CacheMonitorProps {
 }
 
 export const CacheMonitor: React.FC<CacheMonitorProps> = ({ 
-  isDevelopment = import.meta.env.DEV 
+  isDevelopment 
 }) => {
   const stats = useCacheStats();
 
+  // Detect production environments more robustly
+  const isProductionHost = typeof window !== 'undefined' && (
+    window.location.hostname.includes('lovable.app') ||
+    window.location.hostname.includes('vercel.app') ||
+    window.location.hostname.includes('netlify.app') ||
+    (!window.location.hostname.includes('localhost') && 
+     !window.location.hostname.includes('127.0.0.1'))
+  );
+
   // Only show in development mode or when explicitly enabled
-  const shouldShow = isDevelopment || import.meta.env.VITE_SHOW_CACHE_MONITOR === 'true';
+  const shouldShow = !isProductionHost && 
+    (isDevelopment ?? import.meta.env.DEV) && 
+    import.meta.env.VITE_SHOW_CACHE_MONITOR !== 'false';
   
   if (!shouldShow) {
     return null;
