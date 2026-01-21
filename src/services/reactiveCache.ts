@@ -1,5 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 
+const isDev = import.meta.env.DEV;
+
 // Cache reativo com invalidação inteligente
 export class ReactiveCacheService {
   private queryClient: QueryClient;
@@ -11,7 +13,7 @@ export class ReactiveCacheService {
 
   // Invalidação inteligente baseada em relações
   async invalidateRelated(action: string, data?: any) {
-    console.log(`🔄 Cache invalidation for action: ${action}`, data);
+    if (isDev) console.log(`🔄 Cache invalidation for action: ${action}`, data);
 
     switch (action) {
       case 'COMPARISON_CREATED':
@@ -110,11 +112,11 @@ export class ReactiveCacheService {
 
       case 'CACHE_CLEANUP':
         // Limpeza geral de cache
-        console.log('🧹 General cache cleanup triggered');
+        if (isDev) console.log('🧹 General cache cleanup triggered');
         break;
 
       default:
-        console.warn(`Unknown cache invalidation action: ${action}`);
+        if (isDev) console.warn(`Unknown cache invalidation action: ${action}`);
     }
 
     // Notificar subscribers
@@ -156,7 +158,7 @@ export class ReactiveCacheService {
         !queryState.dataUpdatedAt || 
         Date.now() - queryState.dataUpdatedAt > staleTimeMs) {
       
-      console.log(`🚀 Prefetching stale data for:`, queryKey);
+      if (isDev) console.log(`🚀 Prefetching stale data for:`, queryKey);
       await this.queryClient.prefetchQuery({
         queryKey,
         queryFn,
@@ -190,7 +192,7 @@ export class ReactiveCacheService {
 
   // Limpeza de cache antigo
   async cleanupStaleCache() {
-    console.log('🧹 Cleaning up stale cache...');
+    if (isDev) console.log('🧹 Cleaning up stale cache...');
     
     // Remove queries mais antigas que 1 hora
     this.queryClient.clear();
@@ -209,7 +211,7 @@ export class ReactiveCacheService {
 
   // Reset cache completo (em caso de erro crítico)
   async resetCache() {
-    console.log('🔄 Resetting entire cache...');
+    if (isDev) console.log('🔄 Resetting entire cache...');
     await this.queryClient.clear();
     await this.queryClient.resetQueries();
   }
@@ -234,7 +236,7 @@ export class ReactiveCacheService {
     const items = Array.from(this.invalidationQueue).map(item => JSON.parse(item));
     this.invalidationQueue.clear();
     
-    console.log(`🔄 Processing ${items.length} batched invalidations`);
+    if (isDev) console.log(`🔄 Processing ${items.length} batched invalidations`);
     
     for (const { action, data } of items) {
       await this.invalidateRelated(action, data);

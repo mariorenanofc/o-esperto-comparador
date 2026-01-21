@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -15,7 +14,6 @@ export const useContributionActions = () => {
     }
     
     setIsPriceModalOpen(true);
-    console.log("Share prices modal opened by user:", user.id);
   };
 
   const handleSuggestImprovement = () => {
@@ -25,7 +23,6 @@ export const useContributionActions = () => {
     }
     
     setIsSuggestionModalOpen(true);
-    console.log("Suggest improvement modal opened by user:", user.id);
   };
 
   const handleShareApp = () => {
@@ -55,7 +52,6 @@ export const useContributionActions = () => {
     const whatsappUrl = "https://chat.whatsapp.com/J3MNd2rtXey2ULOTifkbf";
     window.open(whatsappUrl, '_blank');
     toast.success("Redirecionando para o grupo do WhatsApp...");
-    console.log("WhatsApp group opened");
   };
 
   const closePriceModal = () => setIsPriceModalOpen(false);

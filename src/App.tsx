@@ -81,14 +81,16 @@ initializeCacheService(queryClient);
 function App() {
   // Add defensive check for React
   if (!React || !React.useEffect) {
-    console.error("React hooks not properly available");
+    if (import.meta.env.DEV) {
+      console.error("React hooks not properly available");
+    }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">
+          <h1 className="text-2xl font-bold text-destructive">
             Erro de carregamento
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-muted-foreground">
             Recarregue a página para tentar novamente.
           </p>
         </div>
