@@ -153,6 +153,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
                       aria-current={isActive(item.url, item.end) ? "page" : undefined}
                     >
                       <item.icon className="h-4 w-4" aria-hidden="true" />
+                      {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -176,7 +177,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
                       className={getNavClasses(item.url)}
                       onClick={onNavigate}
                     >
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-4 w-4" aria-hidden="true" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -201,7 +202,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
                       className={getNavClasses(item.url)}
                       onClick={onNavigate}
                     >
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-4 w-4" aria-hidden="true" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -214,7 +215,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, isMobile
         <div className="mt-auto p-4 border-t border-border">
           <SidebarMenuButton onClick={handleSignOut} className="w-full text-muted-foreground hover:text-foreground hover:bg-muted/50" aria-label="Sair do sistema">
             <LogOut className="h-4 w-4" aria-hidden="true" />
-            {!collapsed && <span>Sair</span>}
             {!collapsed && <span>Sair</span>}
           </SidebarMenuButton>
         </div>
