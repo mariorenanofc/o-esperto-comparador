@@ -16,6 +16,7 @@ interface Notification {
 
 interface ConnectionStatus {
   isConnected: boolean;
+  isConnecting: boolean;
   lastConnected: Date | null;
   retryCount: number;
   usingFallback: boolean;
@@ -26,6 +27,7 @@ export const useNotificationsHardened = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>({
     isConnected: false,
+    isConnecting: true,
     lastConnected: null,
     retryCount: 0,
     usingFallback: false
@@ -295,7 +297,8 @@ export const useNotificationsHardened = () => {
             successCount++;
             setConnectionStatus(prev => ({ 
               ...prev, 
-              isConnected: true, 
+              isConnected: true,
+              isConnecting: false,
               lastConnected: new Date(),
               retryCount: 0 
             }));
@@ -423,6 +426,7 @@ export const useNotificationsHardened = () => {
         setConnectionStatus(prev => ({ 
           ...prev, 
           isConnected: false,
+          isConnecting: false,
           retryCount: newRetryCount 
         }));
       }
