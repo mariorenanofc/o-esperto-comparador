@@ -10,6 +10,7 @@ interface SubscriptionContextType {
   currentPlan: PlanTier;
   isLoading: boolean;
   createCheckout: (planId: PlanTier) => Promise<void>;
+  createMercadoPagoCheckout: (planId: PlanTier) => Promise<void>;
   manageSubscription: () => Promise<void>;
   updateUserPlan: (planId: PlanTier) => Promise<void>;
   checkSubscription: () => Promise<void>;
@@ -93,6 +94,42 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const createMercadoPagoCheckout = async (planId: PlanTier) => {
+    if (!user) {
+      toast.error("Você precisa estar logado para assinar um plano");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    await errorHandler.retry(
+      async () => {
+        const { data, error } = await supabase.functions.invoke('create-mp-checkout', {
+          body: { planId }
+        });
+
+        if (error) throw new Error(error.message || 'Erro ao criar checkout do Mercado Pago');
+
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          logger.info('Mercado Pago checkout created', { planId, userId: user.id });
+        } else {
+          throw new Error("Nenhuma URL de checkout foi retornada");
+        }
+      },
+      2,
+      3000,
+      { 
+        component: 'useSubscription', 
+        action: 'createMercadoPagoCheckout',
+        userId: user.id,
+        metadata: { planId }
+      }
+    ).finally(() => {
+      setIsLoading(false);
+    });
+  };
+
   const manageSubscription = async () => {
     if (!user) {
       toast.error("Você precisa estar logado");
@@ -154,6 +191,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     currentPlan,
     isLoading,
     createCheckout,
+    createMercadoPagoCheckout,
     manageSubscription,
     updateUserPlan,
     checkSubscription,

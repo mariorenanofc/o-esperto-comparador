@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import {
@@ -13,31 +13,49 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Check, Star, HelpCircle, LogIn } from "lucide-react";
-import { PLANS } from "@/lib/plans";
+import { PLANS, PlanTier } from "@/lib/plans";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
 import { SubscriptionExpiryAlert } from "@/components/SubscriptionExpiryAlert";
+import { PaymentMethodSelector } from "@/components/PaymentMethodSelector";
 
 const Plans: React.FC = () => {
   const navigate = useNavigate();
-  const { currentPlan, createCheckout, isLoading } = useSubscription();
+  const { currentPlan, createCheckout, createMercadoPagoCheckout, isLoading } = useSubscription();
   const { profile, user } = useAuth();
+  const [showPaymentSelector, setShowPaymentSelector] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState<PlanTier | null>(null);
 
   const isLoggedIn = !!user;
   const isAdmin = profile?.plan === "admin";
   
-  const handleSelectPlan = (planId: any) => {
+  const handleSelectPlan = (planId: PlanTier) => {
     // If not logged in, redirect to signup
     if (!isLoggedIn) {
       navigate('/signup');
       return;
     }
     if (planId === "free") return;
-    if (currentPlan === "pro" && (planId === "premium" || planId === "free")) return;
-    createCheckout(planId);
+    if (currentPlan === "pro" && planId === "premium") return;
+    
+    // Open payment method selector
+    setSelectedPlanId(planId);
+    setShowPaymentSelector(true);
   };
 
-  const getButtonText = (plan: any) => {
+  const handlePaymentMethod = (method: "stripe" | "mercadopago") => {
+    if (!selectedPlanId) return;
+    
+    setShowPaymentSelector(false);
+    
+    if (method === "stripe") {
+      createCheckout(selectedPlanId);
+    } else {
+      createMercadoPagoCheckout(selectedPlanId);
+    }
+  };
+
+  const getButtonText = (plan: typeof PLANS[0]) => {
     if (!isLoggedIn) {
       return plan.id === 'free' ? '🆓 Começar Grátis' : `🚀 Assinar ${plan.name}`;
     }
@@ -48,7 +66,7 @@ const Plans: React.FC = () => {
     return `🚀 Escolher ${plan.name}`;
   };
 
-  const isButtonDisabled = (plan: any) => {
+  const isButtonDisabled = (plan: typeof PLANS[0]) => {
     if (!isLoggedIn) return false; // Allow clicking to redirect
     if (isAdmin) return true;
     if (isLoading) return true;
@@ -191,6 +209,15 @@ const Plans: React.FC = () => {
             ))}
           </Accordion>
         </div>
+
+        {/* Payment Method Selector Modal */}
+        <PaymentMethodSelector
+          isOpen={showPaymentSelector}
+          onClose={() => setShowPaymentSelector(false)}
+          onSelectMethod={handlePaymentMethod}
+          selectedPlan={selectedPlanId}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

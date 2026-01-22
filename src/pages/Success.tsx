@@ -11,18 +11,21 @@ export default function Success() {
   const [searchParams] = useSearchParams();
   const { checkSubscription } = useSubscription();
   const sessionId = searchParams.get("session_id");
+  const provider = searchParams.get("provider");
 
   useEffect(() => {
-    if (sessionId) {
-      // Wait a moment for Stripe to process, then check subscription
-      const timer = setTimeout(() => {
-        checkSubscription();
+    // Wait a moment for payment to process, then check subscription
+    const timer = setTimeout(() => {
+      checkSubscription();
+      if (provider === "mercadopago") {
+        toast.success("Pagamento via Mercado Pago processado com sucesso!");
+      } else if (sessionId) {
         toast.success("Pagamento processado com sucesso!");
-      }, 2000);
+      }
+    }, 2000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [sessionId, checkSubscription]);
+    return () => clearTimeout(timer);
+  }, [sessionId, provider, checkSubscription]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-4">
@@ -64,9 +67,11 @@ export default function Success() {
             </Button>
           </div>
 
-          {sessionId && (
+          {(sessionId || provider) && (
             <div className="text-xs text-muted-foreground border-t pt-4">
-              ID da Sessão: {sessionId.substring(0, 20)}...
+              {provider === "mercadopago" 
+                ? "Pagamento via Mercado Pago" 
+                : sessionId && `ID da Sessão: ${sessionId.substring(0, 20)}...`}
             </div>
           )}
         </CardContent>
