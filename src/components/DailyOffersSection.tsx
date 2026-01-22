@@ -26,8 +26,10 @@ const DailyOffersSection: React.FC = () => {
   const { data: allOffers = [], isLoading: offersLoading, error: offersError, refetch } = useOptimizedDailyOffers();
 
   // Filtrar ofertas por localização usando useMemo
+  // Se não houver localização disponível, mostrar todas as ofertas
   const offers = useMemo(() => {
-    if (!city || !state || geoLoading) return allOffers;
+    if (geoLoading) return [];
+    if (!city || !state) return allOffers;
     return allOffers.filter(
       (offer) =>
         offer.city?.toLowerCase() === city.toLowerCase() &&
@@ -110,6 +112,7 @@ const DailyOffersSection: React.FC = () => {
     >
       <DailyOffersHeader
         city={city}
+        state={state}
         actualOffersCount={offers.length}
         onRefresh={handleRefresh}
       />

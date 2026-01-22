@@ -3,13 +3,15 @@ import { TrendingDown, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DailyOffersHeaderProps {
-  city: string | null;
+  city: string;
+  state: string;
   actualOffersCount: number;
   onRefresh: () => void;
 }
 
 const DailyOffersHeader: React.FC<DailyOffersHeaderProps> = ({
   city,
+  state,
   actualOffersCount,
   onRefresh,
 }) => {
@@ -32,7 +34,7 @@ const DailyOffersHeader: React.FC<DailyOffersHeaderProps> = ({
       </div>
       <p className="text-lg text-gray-600 max-w-2xl mx-auto dark:text-gray-300">
         Preços compartilhados pela nossa comunidade hoje em{" "}
-        <strong>{city || "Trindade"}, PE</strong>
+        <strong>{city && state ? `${city}, ${state}` : "sua região"}</strong>
       </p>
       <div className="flex items-center justify-center mt-3 text-sm text-orange-600" role="alert">
         <AlertTriangle size={16} className="mr-2" aria-hidden="true" />

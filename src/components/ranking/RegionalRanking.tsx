@@ -74,7 +74,9 @@ export const RegionalRanking: React.FC = () => {
           </CardTitle>
           <Badge variant="secondary" className="flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {ranking.city}, {ranking.state}
+            {ranking.city && ranking.state 
+              ? `${ranking.city}, ${ranking.state}` 
+              : "Região não identificada"}
           </Badge>
         </div>
       </CardHeader>
