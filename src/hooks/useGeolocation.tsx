@@ -11,8 +11,8 @@ interface GeolocationData {
 
 export const useGeolocation = (): GeolocationData => {
   const [location, setLocation] = useState<GeolocationData>({
-    city: "Trindade",
-    state: "PE",
+    city: "",
+    state: "",
     loading: true,
     error: null,
   });
@@ -69,11 +69,12 @@ export const useGeolocation = (): GeolocationData => {
 
     const error = (err: GeolocationPositionError) => {
       console.error("Erro de geolocalização:", err);
-      setLocation(prev => ({
-        ...prev,
+      setLocation({
+        city: "",
+        state: "",
         loading: false,
         error: "Não foi possível obter sua localização"
-      }));
+      });
     };
 
     navigator.geolocation.getCurrentPosition(success, error, {

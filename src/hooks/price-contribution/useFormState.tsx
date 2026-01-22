@@ -22,18 +22,14 @@ export const useFormState = ({ city, state }: UseFormStateProps) => {
   });
 
   // Atualizar dados de localização automaticamente
+  // Só atualiza se houver valores válidos (não vazios)
   useEffect(() => {
-    console.log('=== ATUALIZANDO LOCALIZAÇÃO ===');
-    console.log('City:', city);
-    console.log('State:', state);
-    
-    if (city && state) {
+    if (city && city.trim() !== '' && state && state.trim() !== '') {
       setFormData(prev => ({
         ...prev,
         city,
         state
       }));
-      console.log('Localização atualizada no formulário');
     }
   }, [city, state]);
 
