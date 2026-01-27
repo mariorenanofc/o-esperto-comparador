@@ -62,9 +62,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user is admin using the admin client
+    // Check if user is admin using the authenticated user's context
+    // Use check_user_admin_status with the authenticated user's ID for proper authorization
     const { data: isAdmin, error: adminCheckError } = await supabaseAdmin
-      .rpc('is_user_admin');
+      .rpc('check_user_admin_status', { user_uuid: user.id });
     
     if (adminCheckError || !isAdmin) {
       console.error('Admin check failed:', adminCheckError);
