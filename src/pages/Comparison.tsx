@@ -1,10 +1,12 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import ComparisonForm from "@/components/ComparisonForm";
+import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
 
 const Comparison: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-secondary/20 dark:from-background dark:via-muted/10 dark:to-accent/5">
+      <SEOHead {...pageSEOConfigs.comparison} />
       <Navbar />
       <div className="container mx-auto py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6">
         <div className="text-center mb-6 sm:mb-8 md:mb-12">
