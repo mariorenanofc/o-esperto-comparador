@@ -80,14 +80,7 @@ export const AppContent: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/economy" 
-                element={
-                  <ProtectedRoute>
-                    <Economy />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/economy" element={<Economy />} />
               <Route
                 path="/profile"
                 element={

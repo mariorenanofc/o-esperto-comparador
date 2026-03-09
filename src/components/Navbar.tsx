@@ -9,20 +9,14 @@ import {
   Settings, 
   User, 
   Bell, 
-  Target, 
-  ListChecks, 
-  Trophy,
-  BarChart3,
-  Package,
+  Search,
   PlusCircle,
-  TrendingUp,
   CreditCard,
   LogOut,
   ChevronRight,
   ChevronDown,
-  Wrench,
-  FileText,
-  Check
+  Check,
+  TrendingUp
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -107,78 +101,44 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Desktop Menu - Simplificado */}
+          {/* Desktop Menu - 4 itens principais */}
           <div className="hidden md:flex items-center space-x-1">
-            {/* Links Principais */}
             <Link 
-              to="/comparison" 
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
+              to="/search" 
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-muted/50",
+                isActiveRoute("/search") ? "text-app-secondary" : "text-muted-foreground hover:text-app-secondary"
+              )}
             >
-              Comparar
-            </Link>
-            <Link 
-              to="/products" 
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
-            >
-              Produtos
+              <span className="flex items-center gap-1.5">
+                <Search className="h-4 w-4" />
+                Buscar
+              </span>
             </Link>
             <Link 
               to="/contribute" 
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-muted/50",
+                isActiveRoute("/contribute") ? "text-app-secondary" : "text-muted-foreground hover:text-app-secondary"
+              )}
             >
               Contribuir
             </Link>
             <Link 
               to="/economy" 
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-muted/50",
+                isActiveRoute("/economy") ? "text-app-secondary" : "text-muted-foreground hover:text-app-secondary"
+              )}
             >
               Economia
             </Link>
-
-            {/* Dropdown Ferramentas (apenas para logados) */}
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-1 text-muted-foreground hover:text-app-secondary">
-                    <Wrench className="h-4 w-4" />
-                    Ferramentas
-                    <ChevronDown className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg">
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">Ferramentas</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/alerts" className="flex items-center gap-2 cursor-pointer">
-                      <Target className="h-4 w-4" />
-                      Alertas de Preço
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/smart-list" className="flex items-center gap-2 cursor-pointer">
-                      <ListChecks className="h-4 w-4" />
-                      Lista Inteligente
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/gamification" className="flex items-center gap-2 cursor-pointer">
-                      <Trophy className="h-4 w-4" />
-                      Ranking
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/reports" className="flex items-center gap-2 cursor-pointer">
-                      <FileText className="h-4 w-4" />
-                      Relatórios
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            
             <Link 
               to="/plans" 
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-app-secondary transition-colors rounded-md hover:bg-muted/50"
+              className={cn(
+                "px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-muted/50",
+                isActiveRoute("/plans") ? "text-app-secondary" : "text-muted-foreground hover:text-app-secondary"
+              )}
             >
               Planos
             </Link>
@@ -210,39 +170,27 @@ const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link 
-                      to="/profile" 
-                      className={cn(
-                        "flex items-center gap-2 cursor-pointer",
-                        isActiveRoute("/profile") && "text-primary font-medium"
-                      )}
-                    >
+                    <Link to="/profile" className={cn("flex items-center gap-2 cursor-pointer", isActiveRoute("/profile") && "text-primary font-medium")}>
                       <User className="h-4 w-4" />
                       Perfil
                       {isActiveRoute("/profile") && <Check className="h-3 w-3 ml-auto" />}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link 
-                      to="/notifications" 
-                      className={cn(
-                        "flex items-center gap-2 cursor-pointer",
-                        isActiveRoute("/notifications") && "text-primary font-medium"
-                      )}
-                    >
+                    <Link to="/notifications" className={cn("flex items-center gap-2 cursor-pointer", isActiveRoute("/notifications") && "text-primary font-medium")}>
                       <Bell className="h-4 w-4" />
                       Notificações
                       {isActiveRoute("/notifications") && <Check className="h-3 w-3 ml-auto" />}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link 
-                      to="/plans" 
-                      className={cn(
-                        "flex items-center gap-2 cursor-pointer",
-                        isActiveRoute("/plans") && "text-primary font-medium"
-                      )}
-                    >
+                    <Link to="/comparison" className="flex items-center gap-2 cursor-pointer">
+                      <TrendingUp className="h-4 w-4" />
+                      Comparar Preços
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/plans" className={cn("flex items-center gap-2 cursor-pointer", isActiveRoute("/plans") && "text-primary font-medium")}>
                       <CreditCard className="h-4 w-4" />
                       Meu Plano
                       {isActiveRoute("/plans") && <Check className="h-3 w-3 ml-auto" />}
@@ -289,7 +237,6 @@ const Navbar = () => {
               </SheetTrigger>
               <SheetContent side="right" className="p-0 w-[300px] sm:w-[320px]">
                 <div className="flex flex-col h-full bg-card">
-                  {/* Header */}
                   <SheetHeader className="p-4 border-b border-border text-left">
                     <div className="flex items-center gap-3">
                       <ShoppingCart className="h-8 w-8 text-app-secondary" />
@@ -302,39 +249,18 @@ const Navbar = () => {
 
                   <ScrollArea className="flex-1">
                     <div className="p-3 space-y-1">
-                      {/* Navegação Principal */}
-                      <MobileNavGroup label="Navegação">
-                        <MobileNavItem to="/comparison" icon={BarChart3} label="Comparar Preços" onClick={closeMenu} />
-                        <MobileNavItem to="/products" icon={Package} label="Produtos" onClick={closeMenu} />
+                      <MobileNavGroup label="Principal">
+                        <MobileNavItem to="/search" icon={Search} label="Buscar Preços" onClick={closeMenu} />
                         <MobileNavItem to="/contribute" icon={PlusCircle} label="Contribuir" onClick={closeMenu} />
-                      </MobileNavGroup>
-
-                      <Separator className="my-3" />
-
-                      {/* Economia */}
-                      <MobileNavGroup label="Economia">
-                        <MobileNavItem to="/reports" icon={FileText} label="Relatórios" onClick={closeMenu} />
                         <MobileNavItem to="/economy" icon={TrendingUp} label="Economia" onClick={closeMenu} />
                         <MobileNavItem to="/plans" icon={CreditCard} label="Planos" onClick={closeMenu} />
                       </MobileNavGroup>
 
-                      {/* Ferramentas - Apenas para usuários logados */}
-                      {user && (
-                        <>
-                          <Separator className="my-3" />
-                          <MobileNavGroup label="Ferramentas">
-                            <MobileNavItem to="/alerts" icon={Target} label="Alertas de Preço" onClick={closeMenu} />
-                            <MobileNavItem to="/smart-list" icon={ListChecks} label="Lista Inteligente" onClick={closeMenu} />
-                            <MobileNavItem to="/gamification" icon={Trophy} label="Ranking" onClick={closeMenu} />
-                          </MobileNavGroup>
-                        </>
-                      )}
-
-                      {/* Configurações */}
                       {user && (
                         <>
                           <Separator className="my-3" />
                           <MobileNavGroup label="Conta">
+                            <MobileNavItem to="/comparison" icon={TrendingUp} label="Comparar Preços" onClick={closeMenu} />
                             <MobileNavItem to="/notifications" icon={Bell} label="Notificações" onClick={closeMenu} />
                             {isLoaded && isAdmin && (
                               <MobileNavItem to="/admin" icon={Settings} label="Admin" onClick={closeMenu} />
@@ -345,7 +271,6 @@ const Navbar = () => {
                     </div>
                   </ScrollArea>
 
-                  {/* Footer - User Info / Login */}
                   <div className="p-4 border-t border-border">
                     {user ? (
                       <div className="space-y-3">
