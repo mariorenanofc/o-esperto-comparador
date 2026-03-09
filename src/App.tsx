@@ -13,6 +13,7 @@ import { useDataPreloader } from "./hooks/useOptimizedData";
 import { CacheMonitor } from "./components/CacheMonitor";
 import { useAnalytics } from "./hooks/useAnalytics";
 import { ErrorBoundaryWithRetry } from "@/components/ErrorBoundaryWithRetry";
+import { HelmetProvider } from "react-helmet-async";
 
 // Importações diretas para evitar problemas
 import PushInitializer from "./components/PushInitializer";
