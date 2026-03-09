@@ -174,6 +174,7 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead {...pageSEOConfigs.home} />
       <Navbar />
       <HeroSection />
       <DailyOffersSection />
