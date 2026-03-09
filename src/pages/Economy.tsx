@@ -544,7 +544,6 @@ const Economy: React.FC = () => {
               </TabsContent>
             </Tabs>
           )}
-        </div>
       </div>
       </div>
   );
