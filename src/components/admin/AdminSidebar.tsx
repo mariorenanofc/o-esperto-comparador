@@ -9,6 +9,7 @@ import {
   Shield,
   Settings,
   BarChart3,
+  Megaphone,
   HelpCircle,
   LogOut
 } from "lucide-react";
@@ -52,6 +53,11 @@ const adminMenuItems = [
     title: "Faturamento",
     url: "/admin/billing",
     icon: CreditCard
+  },
+  {
+    title: "Marketing",
+    url: "/admin/marketing",
+    icon: Megaphone
   }
 ];
 

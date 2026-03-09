@@ -33,6 +33,7 @@ const Billing = React.lazy(() => import("@/pages/admin/Billing"));
 const Security = React.lazy(() => import("@/pages/admin/Security"));
 const AdminSettings = React.lazy(() => import("@/pages/admin/AdminSettings"));
 const Analytics = React.lazy(() => import("@/pages/admin/Analytics"));
+const Marketing = React.lazy(() => import("@/pages/admin/Marketing"));
 const Alerts = React.lazy(() => import("@/pages/Alerts"));
 const SmartList = React.lazy(() => import("@/pages/SmartList"));
 const Gamification = React.lazy(() => import("@/pages/Gamification"));
@@ -205,6 +206,16 @@ export const AppContent: React.FC = () => {
                   <AdminRoute>
                     <AdminLayout>
                       <Analytics />
+                    </AdminLayout>
+                  </AdminRoute>
+                } 
+              />
+              <Route 
+                path="/admin/marketing" 
+                element={
+                  <AdminRoute>
+                    <AdminLayout>
+                      <Marketing />
                     </AdminLayout>
                   </AdminRoute>
                 } 
