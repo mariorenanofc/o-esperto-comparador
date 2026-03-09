@@ -220,9 +220,9 @@ export const AppContent: React.FC = () => {
               <Route path="/success" element={<Success />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <Footer />
           </Suspense>
         </div>
-        <Footer />
       </div>
     </>
   );
