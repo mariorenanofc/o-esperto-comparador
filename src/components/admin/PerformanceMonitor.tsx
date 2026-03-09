@@ -31,26 +31,42 @@ export const PerformanceMonitor = () => {
     setLoading(true);
     const result = await handleAsync(
       async () => {
-        logger.info('Fetching performance stats');
-        const { data, error } = await supabase
-          .from('products')
-          .select('id')
-          .limit(1);
-        
-        if (error) throw error;
+        logger.info('Fetching real performance stats');
 
-        const mockStats: PerformanceStats = {
-          total_products: 0,
-          total_offers: 0,
-          recent_offers_24h: 0,
-          avg_response_time_ms: 0,
+        // Run all queries in parallel
+        const now = new Date();
+        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        const [productsRes, offersRes, recentOffersRes, perfLogsRes] = await Promise.all([
+          supabase.from('products').select('id', { count: 'exact', head: true }),
+          supabase.from('daily_offers').select('id', { count: 'exact', head: true }),
+          supabase.from('daily_offers').select('id', { count: 'exact', head: true }).gte('created_at', twentyFourHoursAgo),
+          supabase.from('api_performance_logs').select('response_time_ms').gte('created_at', sevenDaysAgo),
+        ]);
+
+        const totalProducts = productsRes.count ?? 0;
+        const totalOffers = offersRes.count ?? 0;
+        const recentOffers = recentOffersRes.count ?? 0;
+
+        let avgResponseTime = 0;
+        if (perfLogsRes.data && perfLogsRes.data.length > 0) {
+          const sum = perfLogsRes.data.reduce((acc, log) => acc + (log.response_time_ms || 0), 0);
+          avgResponseTime = Math.round(sum / perfLogsRes.data.length);
+        }
+
+        const realStats: PerformanceStats = {
+          total_products: totalProducts,
+          total_offers: totalOffers,
+          recent_offers_24h: recentOffers,
+          avg_response_time_ms: avgResponseTime,
           cache_optimization_active: true,
           indexes_created: true,
           last_updated: new Date().toISOString()
         };
 
-        logger.info('Performance stats updated', { stats: mockStats });
-        return mockStats;
+        logger.info('Performance stats updated', { stats: realStats });
+        return realStats;
       },
       { action: 'fetch_performance_stats' },
       { showToast: false, severity: 'low' }
@@ -78,8 +94,6 @@ export const PerformanceMonitor = () => {
 
   useEffect(() => {
     fetchPerformanceStats();
-    
-    // Auto-refresh a cada 2 minutos
     const interval = setInterval(fetchPerformanceStats, 2 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -111,9 +125,7 @@ export const PerformanceMonitor = () => {
             <Activity className="h-5 w-5" />
             Monitor de Performance
           </CardTitle>
-          <CardDescription>
-            Carregando métricas de performance...
-          </CardDescription>
+          <CardDescription>Carregando métricas de performance...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
@@ -140,12 +152,7 @@ export const PerformanceMonitor = () => {
               {health.status === 'poor' && '🔴 Crítico'}
             </Badge>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={fetchPerformanceStats}
-            disabled={loading}
-          >
+          <Button variant="outline" size="sm" onClick={fetchPerformanceStats} disabled={loading}>
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
@@ -175,7 +182,7 @@ export const PerformanceMonitor = () => {
           </div>
         </div>
 
-        {/* Estatísticas do Cache */}
+        {/* Cache Stats */}
         <div className="border-t pt-4">
           <h4 className="font-medium mb-3 flex items-center gap-2">
             📦 Cache Performance
@@ -195,18 +202,14 @@ export const PerformanceMonitor = () => {
               <div className="font-medium">{cacheStats.fetchingQueries}</div>
             </div>
             <div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCacheCleanup}
-              >
+              <Button variant="outline" size="sm" onClick={handleCacheCleanup}>
                 Limpar Cache
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Status das Otimizações */}
+        {/* Otimizações Ativas */}
         <div className="border-t pt-4">
           <h4 className="font-medium mb-3">🚀 Otimizações Ativas</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">

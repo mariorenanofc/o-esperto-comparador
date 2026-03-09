@@ -1,29 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
-  FileDown, 
-  FileSpreadsheet, 
-  FileText, 
-  Calendar, 
-  Users,
-  ShoppingCart,
-  MessageSquare,
-  Database,
-  Filter,
-  Loader2
+  FileDown, FileSpreadsheet, FileText, Calendar, Users,
+  ShoppingCart, MessageSquare, Database, Filter, Loader2
 } from "lucide-react";
 import { supabaseAdminService } from "@/services/supabase/adminService";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ReportConfig {
   type: string;
@@ -32,8 +23,17 @@ interface ReportConfig {
   includeFields: string[];
 }
 
+interface RecentExport {
+  id: string;
+  format: string;
+  created_at: string;
+  file_size_bytes: number | null;
+  plan: string | null;
+}
+
 export const ReportsExporter: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [recentExports, setRecentExports] = useState<RecentExport[]>([]);
   const [config, setConfig] = useState<ReportConfig>({
     type: 'users',
     dateRange: 'month',
@@ -42,34 +42,10 @@ export const ReportsExporter: React.FC = () => {
   });
 
   const reportTypes = [
-    {
-      id: 'users',
-      name: 'Relatório de Usuários',
-      description: 'Lista completa de usuários com estatísticas',
-      icon: Users,
-      fields: ['name', 'email', 'plan', 'created_at', 'last_activity', 'comparisons_made']
-    },
-    {
-      id: 'contributions',
-      name: 'Relatório de Contribuições',
-      description: 'Ofertas enviadas pelos usuários',
-      icon: ShoppingCart,
-      fields: ['product_name', 'store_name', 'price', 'city', 'verified', 'created_at']
-    },
-    {
-      id: 'suggestions',
-      name: 'Relatório de Sugestões',
-      description: 'Feedback e sugestões dos usuários',
-      icon: MessageSquare,
-      fields: ['title', 'category', 'status', 'created_at', 'user_email']
-    },
-    {
-      id: 'analytics',
-      name: 'Relatório Analítico',
-      description: 'Métricas e estatísticas da plataforma',
-      icon: Database,
-      fields: ['metric_name', 'value', 'period', 'growth_rate']
-    }
+    { id: 'users', name: 'Relatório de Usuários', description: 'Lista completa de usuários com estatísticas', icon: Users, fields: ['name', 'email', 'plan', 'created_at', 'last_activity', 'comparisons_made'] },
+    { id: 'contributions', name: 'Relatório de Contribuições', description: 'Ofertas enviadas pelos usuários', icon: ShoppingCart, fields: ['product_name', 'store_name', 'price', 'city', 'verified', 'created_at'] },
+    { id: 'suggestions', name: 'Relatório de Sugestões', description: 'Feedback e sugestões dos usuários', icon: MessageSquare, fields: ['title', 'category', 'status', 'created_at', 'user_email'] },
+    { id: 'analytics', name: 'Relatório Analítico', description: 'Métricas e estatísticas da plataforma', icon: Database, fields: ['metric_name', 'value', 'period', 'growth_rate'] }
   ];
 
   const dateRanges = [
@@ -81,22 +57,27 @@ export const ReportsExporter: React.FC = () => {
     { id: 'all', name: 'Todo o Período' }
   ];
 
+  useEffect(() => {
+    const fetchRecentExports = async () => {
+      const { data } = await supabase
+        .from('comparison_exports')
+        .select('id, format, created_at, file_size_bytes, plan')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (data) setRecentExports(data);
+    };
+    fetchRecentExports();
+  }, []);
+
   const handleFieldToggle = (field: string) => {
     setConfig(prev => {
       if (field === 'all') {
         const selectedType = reportTypes.find(t => t.id === prev.type);
-        return {
-          ...prev,
-          includeFields: prev.includeFields.includes('all') 
-            ? [] 
-            : ['all', ...(selectedType?.fields || [])]
-        };
+        return { ...prev, includeFields: prev.includeFields.includes('all') ? [] : ['all', ...(selectedType?.fields || [])] };
       }
-
       const newFields = prev.includeFields.includes(field)
         ? prev.includeFields.filter(f => f !== field && f !== 'all')
         : [...prev.includeFields.filter(f => f !== 'all'), field];
-
       return { ...prev, includeFields: newFields };
     });
   };
@@ -104,46 +85,21 @@ export const ReportsExporter: React.FC = () => {
   const generateReport = async () => {
     try {
       setLoading(true);
-      
       let data: any[] = [];
       let filename = '';
       
       switch (config.type) {
-        case 'users':
-          data = await supabaseAdminService.getAllUsers();
-          filename = `usuarios_${config.dateRange}`;
-          break;
-          
-        case 'contributions':
-          data = await supabaseAdminService.getAllContributions();
-          filename = `contribuicoes_${config.dateRange}`;
-          break;
-          
-        case 'suggestions':
-          data = await supabaseAdminService.getAllSuggestions();
-          filename = `sugestoes_${config.dateRange}`;
-          break;
-          
-        case 'analytics':
-          data = [await supabaseAdminService.getAnalytics()];
-          filename = `analytics_${config.dateRange}`;
-          break;
+        case 'users': data = await supabaseAdminService.getAllUsers(); filename = `usuarios_${config.dateRange}`; break;
+        case 'contributions': data = await supabaseAdminService.getAllContributions(); filename = `contribuicoes_${config.dateRange}`; break;
+        case 'suggestions': data = await supabaseAdminService.getAllSuggestions(); filename = `sugestoes_${config.dateRange}`; break;
+        case 'analytics': data = [await supabaseAdminService.getAnalytics()]; filename = `analytics_${config.dateRange}`; break;
       }
 
-      // Filter by date range
-      if (config.dateRange !== 'all' && data.length > 0) {
-        data = filterByDateRange(data, config.dateRange);
-      }
-
-      // Filter by selected fields
+      if (config.dateRange !== 'all' && data.length > 0) data = filterByDateRange(data, config.dateRange);
       if (!config.includeFields.includes('all')) {
         data = data.map(item => {
           const filtered: any = {};
-          config.includeFields.forEach(field => {
-            if (item.hasOwnProperty(field)) {
-              filtered[field] = item[field];
-            }
-          });
+          config.includeFields.forEach(field => { if (item.hasOwnProperty(field)) filtered[field] = item[field]; });
           return filtered;
         });
       }
@@ -152,21 +108,12 @@ export const ReportsExporter: React.FC = () => {
         const csv = generateCSV(data);
         downloadFile(csv, `${filename}.csv`, 'text/csv');
       } else {
-        // For PDF generation, you could use libraries like jsPDF or Puppeteer
         toast.info("Exportação PDF será implementada em breve");
         return;
       }
 
-      // Log the export action
-      await supabaseAdminService.logAdminAction('EXPORT_REPORT', null, {
-        type: config.type,
-        format: config.format,
-        dateRange: config.dateRange,
-        recordCount: data.length
-      });
-
+      await supabaseAdminService.logAdminAction('EXPORT_REPORT', null, { type: config.type, format: config.format, dateRange: config.dateRange, recordCount: data.length });
       toast.success(`Relatório ${config.format.toUpperCase()} gerado com sucesso!`);
-      
     } catch (error) {
       console.error('Report generation error:', error);
       toast.error('Erro ao gerar relatório');
@@ -178,56 +125,31 @@ export const ReportsExporter: React.FC = () => {
   const filterByDateRange = (data: any[], range: string): any[] => {
     const now = new Date();
     const filterDate = new Date();
-
     switch (range) {
-      case 'today':
-        filterDate.setHours(0, 0, 0, 0);
-        break;
-      case 'week':
-        filterDate.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        filterDate.setMonth(now.getMonth() - 1);
-        break;
-      case 'quarter':
-        filterDate.setMonth(now.getMonth() - 3);
-        break;
-      case 'year':
-        filterDate.setFullYear(now.getFullYear() - 1);
-        break;
-      default:
-        return data;
+      case 'today': filterDate.setHours(0, 0, 0, 0); break;
+      case 'week': filterDate.setDate(now.getDate() - 7); break;
+      case 'month': filterDate.setMonth(now.getMonth() - 1); break;
+      case 'quarter': filterDate.setMonth(now.getMonth() - 3); break;
+      case 'year': filterDate.setFullYear(now.getFullYear() - 1); break;
+      default: return data;
     }
-
-    return data.filter(item => {
-      const itemDate = new Date(item.created_at || item.date || now);
-      return itemDate >= filterDate;
-    });
+    return data.filter(item => new Date(item.created_at || item.date || now) >= filterDate);
   };
 
   const generateCSV = (data: any[]): string => {
     if (data.length === 0) return '';
-
     const headers = Object.keys(data[0]);
-    const rows = data.map(item => 
+    const rows = data.map(item =>
       headers.map(header => {
         let value = item[header];
-        if (value === null || value === undefined) {
-          value = '';
-        } else if (typeof value === 'object') {
-          value = JSON.stringify(value);
-        } else if (typeof value === 'boolean') {
-          value = value ? 'Sim' : 'Não';
-        } else if (typeof value === 'string' && value.includes(',')) {
-          value = `"${value}"`;
-        }
+        if (value === null || value === undefined) value = '';
+        else if (typeof value === 'object') value = JSON.stringify(value);
+        else if (typeof value === 'boolean') value = value ? 'Sim' : 'Não';
+        else if (typeof value === 'string' && value.includes(',')) value = `"${value}"`;
         return value;
       })
     );
-
-    return [headers, ...rows]
-      .map(row => row.join(','))
-      .join('\n');
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
   };
 
   const downloadFile = (content: string, fileName: string, mimeType: string) => {
@@ -250,22 +172,11 @@ export const ReportsExporter: React.FC = () => {
       {/* Report Type Selection */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {reportTypes.map((type) => (
-          <Card 
-            key={type.id}
-            className={`cursor-pointer transition-colors ${
-              config.type === type.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'
-            }`}
-            onClick={() => setConfig(prev => ({ ...prev, type: type.id }))}
-          >
+          <Card key={type.id} className={`cursor-pointer transition-colors ${config.type === type.id ? 'ring-2 ring-primary' : 'hover:bg-muted/50'}`} onClick={() => setConfig(prev => ({ ...prev, type: type.id }))}>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <type.icon className="w-5 h-5" />
-                {type.name}
-              </CardTitle>
+              <CardTitle className="flex items-center gap-2 text-lg"><type.icon className="w-5 h-5" />{type.name}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{type.description}</p>
-            </CardContent>
+            <CardContent><p className="text-sm text-muted-foreground">{type.description}</p></CardContent>
           </Card>
         ))}
       </div>
@@ -273,140 +184,88 @@ export const ReportsExporter: React.FC = () => {
       {/* Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Configurações do Relatório
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2"><Filter className="w-5 h-5" />Configurações do Relatório</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Date Range and Format */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Período</label>
               <Select value={config.dateRange} onValueChange={(value) => setConfig(prev => ({ ...prev, dateRange: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {dateRanges.map(range => (
-                    <SelectItem key={range.id} value={range.id}>
-                      {range.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{dateRanges.map(range => (<SelectItem key={range.id} value={range.id}>{range.name}</SelectItem>))}</SelectContent>
               </Select>
             </div>
-
             <div>
               <label className="text-sm font-medium mb-2 block">Formato</label>
               <Select value={config.format} onValueChange={(value: 'csv' | 'pdf') => setConfig(prev => ({ ...prev, format: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="csv">
-                    <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="w-4 h-4" />
-                      CSV (Excel)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="pdf">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      PDF
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="csv"><div className="flex items-center gap-2"><FileSpreadsheet className="w-4 h-4" />CSV (Excel)</div></SelectItem>
+                  <SelectItem value="pdf"><div className="flex items-center gap-2"><FileText className="w-4 h-4" />PDF</div></SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* Fields Selection */}
           <div>
             <label className="text-sm font-medium mb-3 block">Campos a Incluir</label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="all-fields"
-                  checked={config.includeFields.includes('all')}
-                  onCheckedChange={() => handleFieldToggle('all')}
-                />
-                <label htmlFor="all-fields" className="text-sm font-medium">
-                  Todos os campos
-                </label>
+                <Checkbox id="all-fields" checked={config.includeFields.includes('all')} onCheckedChange={() => handleFieldToggle('all')} />
+                <label htmlFor="all-fields" className="text-sm font-medium">Todos os campos</label>
               </div>
-              
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-3 p-3 border rounded-lg bg-muted/20">
                 {availableFields.map((field) => (
                   <div key={field} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={field}
-                      checked={config.includeFields.includes(field) || config.includeFields.includes('all')}
-                      onCheckedChange={() => handleFieldToggle(field)}
-                      disabled={config.includeFields.includes('all')}
-                    />
-                    <label htmlFor={field} className="text-sm">
-                      {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </label>
+                    <Checkbox id={field} checked={config.includeFields.includes(field) || config.includeFields.includes('all')} onCheckedChange={() => handleFieldToggle(field)} disabled={config.includeFields.includes('all')} />
+                    <label htmlFor={field} className="text-sm">{field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</label>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Generate Button */}
           <div className="flex justify-between items-center pt-4 border-t">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                Relatório será gerado em {config.format.toUpperCase()}
-              </span>
+              <span className="text-sm text-muted-foreground">Relatório será gerado em {config.format.toUpperCase()}</span>
             </div>
-            
-            <Button 
-              onClick={generateReport}
-              disabled={loading || config.includeFields.length === 0}
-              className="min-w-32"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando...
-                </>
-              ) : (
-                <>
-                  <FileDown className="w-4 h-4 mr-2" />
-                  Gerar Relatório
-                </>
-              )}
+            <Button onClick={generateReport} disabled={loading || config.includeFields.length === 0} className="min-w-32">
+              {loading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" />Gerando...</>) : (<><FileDown className="w-4 h-4 mr-2" />Gerar Relatório</>)}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Recent Exports */}
+      {/* Recent Exports - Real Data */}
       <Card>
-        <CardHeader>
-          <CardTitle>Exportações Recentes</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Exportações Recentes</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {/* This would be populated with actual export history */}
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <FileSpreadsheet className="w-4 h-4 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium">Relatório de Usuários</p>
-                  <p className="text-xs text-muted-foreground">CSV • 1,234 registros • Há 2 horas</p>
+            {recentExports.length > 0 ? (
+              recentExports.map((exp) => (
+                <div key={exp.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {exp.format === 'csv' ? <FileSpreadsheet className="w-4 h-4 text-green-600" /> : <FileText className="w-4 h-4 text-red-600" />}
+                    <div>
+                      <p className="text-sm font-medium">Exportação {exp.format.toUpperCase()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {exp.format.toUpperCase()}
+                        {exp.file_size_bytes ? ` • ${(exp.file_size_bytes / 1024).toFixed(1)} KB` : ''}
+                        {' • '}
+                        {formatDistanceToNow(new Date(exp.created_at), { addSuffix: true, locale: ptBR })}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline">Concluído</Badge>
                 </div>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                <FileDown className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhuma exportação realizada ainda</p>
               </div>
-              <Badge variant="outline">Concluído</Badge>
-            </div>
-
-            <div className="text-center text-muted-foreground py-4">
-              <FileDown className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Seus próximos relatórios aparecerão aqui</p>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>
