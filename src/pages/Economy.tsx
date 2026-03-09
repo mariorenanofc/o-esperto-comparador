@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { comparisonService } from "@/services/comparisonService";
