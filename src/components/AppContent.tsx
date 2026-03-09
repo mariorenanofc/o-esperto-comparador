@@ -64,7 +64,7 @@ export const AppContent: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/comparison" element={<Comparison />} />
               <Route path="/products" element={<ProductCatalog />} />
-              <Route path="/api-docs" element={<ApiDocs />} />
+              <Route path="/search" element={<Search />} />
               <Route
                 path="/contribute"
                 element={
