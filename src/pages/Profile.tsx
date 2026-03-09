@@ -56,18 +56,11 @@ export default function Profile() {
 
       if (error) throw error;
 
-      toast({
-        title: "✅ Perfil atualizado!",
-        description: "Suas informações foram salvas com sucesso.",
-      });
+      toast.success("✅ Perfil atualizado!", { description: "Suas informações foram salvas com sucesso." });
       setIsEditing(false);
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast({
-        title: "❌ Erro ao atualizar",
-        description: "Não foi possível salvar suas informações.",
-        variant: "destructive",
-      });
+      toast.error("❌ Erro ao atualizar", { description: "Não foi possível salvar suas informações." });
     } finally {
       setIsLoading(false);
     }
@@ -76,10 +69,7 @@ export default function Profile() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast({
-        title: "👋 Até logo!",
-        description: "Você foi desconectado com sucesso.",
-      });
+      toast.success("👋 Até logo!", { description: "Você foi desconectado com sucesso." });
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -90,11 +80,7 @@ export default function Profile() {
       await manageSubscription();
     } catch (error) {
       console.error('Error managing subscription:', error);
-      toast({
-        title: "❌ Erro",
-        description: "Não foi possível abrir o gerenciamento de assinatura.",
-        variant: "destructive",
-      });
+      toast.error("❌ Erro", { description: "Não foi possível abrir o gerenciamento de assinatura." });
     }
   };
 
@@ -103,11 +89,7 @@ export default function Profile() {
       await createCheckout(planId as any);
     } catch (error) {
       console.error('Error creating checkout:', error);
-      toast({
-        title: "❌ Erro",
-        description: "Não foi possível iniciar o processo de upgrade.",
-        variant: "destructive",
-      });
+      toast.error("❌ Erro", { description: "Não foi possível iniciar o processo de upgrade." });
     }
   };
 
