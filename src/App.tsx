@@ -13,6 +13,7 @@ import { useDataPreloader } from "./hooks/useOptimizedData";
 import { CacheMonitor } from "./components/CacheMonitor";
 import { useAnalytics } from "./hooks/useAnalytics";
 import { ErrorBoundaryWithRetry } from "@/components/ErrorBoundaryWithRetry";
+import { HelmetProvider } from "react-helmet-async";
 
 // Importações diretas para evitar problemas
 import PushInitializer from "./components/PushInitializer";
@@ -99,19 +100,21 @@ function App() {
   }
   return (
     <ErrorBoundaryWithRetry context={{ component: 'App', feature: 'root' }}>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <SecurityProvider sessionTimeoutMinutes={120}>
-              <SubscriptionProvider>
-                <Router>
-                  <AppWithHooks />
-                </Router>
-              </SubscriptionProvider>
-            </SecurityProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <SecurityProvider sessionTimeoutMinutes={120}>
+                <SubscriptionProvider>
+                  <Router>
+                    <AppWithHooks />
+                  </Router>
+                </SubscriptionProvider>
+              </SecurityProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </HelmetProvider>
     </ErrorBoundaryWithRetry>
   );
 }
