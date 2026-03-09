@@ -37,6 +37,7 @@ const Alerts = React.lazy(() => import("@/pages/Alerts"));
 const SmartList = React.lazy(() => import("@/pages/SmartList"));
 const Gamification = React.lazy(() => import("@/pages/Gamification"));
 const ApiDocs = React.lazy(() => import("@/pages/ApiDocs"));
+const Search = React.lazy(() => import("@/pages/Search"));
 
 // Direct imports for always-visible components
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -63,6 +64,7 @@ export const AppContent: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/comparison" element={<Comparison />} />
               <Route path="/products" element={<ProductCatalog />} />
+              <Route path="/search" element={<Search />} />
               <Route path="/api-docs" element={<ApiDocs />} />
               <Route
                 path="/contribute"
@@ -80,14 +82,7 @@ export const AppContent: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route 
-                path="/economy" 
-                element={
-                  <ProtectedRoute>
-                    <Economy />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/economy" element={<Economy />} />
               <Route
                 path="/profile"
                 element={

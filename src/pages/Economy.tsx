@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { comparisonService } from "@/services/comparisonService";
@@ -176,8 +175,67 @@ const Economy: React.FC = () => {
     visible: { opacity: 1, y: 0 }
   };
 
+  // Public preview for unauthenticated users
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-background to-green-50/30 dark:from-gray-900 dark:via-background dark:to-emerald-950/20">
+        <SEOHead {...pageSEOConfigs.economy} />
+        <Navbar />
+        <div className="container mx-auto py-12 px-6">
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-green-500 to-teal-600 bg-clip-text text-transparent mb-3">
+              Sua Economia Inteligente
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Acompanhe cada centavo economizado com suas comparações e descubra padrões para maximizar suas economias.
+            </p>
+          </div>
+
+          {/* Preview cards with blurred values */}
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4 mb-10">
+            {[
+              { label: "Economia Total", icon: PiggyBank, gradient: "from-emerald-500 to-green-600", border: "border-emerald-500/20", bg: "from-emerald-500/10 via-background to-green-500/5" },
+              { label: "Média Mensal", icon: Wallet, gradient: "from-blue-500 to-indigo-600", border: "border-blue-500/20", bg: "from-blue-500/10 via-background to-indigo-500/5" },
+              { label: "Melhor Mês", icon: Target, gradient: "from-amber-500 to-orange-600", border: "border-amber-500/20", bg: "from-amber-500/10 via-background to-orange-500/5" },
+              { label: "Comparações", icon: ChartBar, gradient: "from-purple-500 to-pink-600", border: "border-purple-500/20", bg: "from-purple-500/10 via-background to-pink-500/5" },
+            ].map((item, i) => (
+              <Card key={i} className={`relative overflow-hidden ${item.border} bg-gradient-to-br ${item.bg}`}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${item.gradient} shadow-lg`}>
+                      <item.icon className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-1">{item.label}</p>
+                  <p className="text-3xl font-bold text-muted-foreground/30 blur-sm select-none">R$ --,--</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* CTA to sign up */}
+          <Card className="max-w-lg mx-auto text-center overflow-hidden">
+            <CardContent className="p-8 space-y-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 w-fit mx-auto">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-foreground">Crie sua conta para ver seus dados</h2>
+              <p className="text-muted-foreground">
+                Faça comparações de preços e acompanhe quanto você economiza em cada compra.
+              </p>
+              <Link to="/login">
+                <Button className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white">
+                  Criar Conta Grátis
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-background to-green-50/30 dark:from-gray-900 dark:via-background dark:to-emerald-950/20">
         <SEOHead {...pageSEOConfigs.economy} />
         <Navbar />
@@ -485,9 +543,8 @@ const Economy: React.FC = () => {
               </TabsContent>
             </Tabs>
           )}
-        </div>
       </div>
-    </ProtectedRoute>
+      </div>
   );
 };
 
