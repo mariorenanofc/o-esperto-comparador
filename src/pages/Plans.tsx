@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
 import {
   Card,
   CardContent,
@@ -92,6 +93,7 @@ const Plans: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      <SEOHead {...pageSEOConfigs.plans} />
       <Navbar />
 
       <div className="container mx-auto py-8 md:py-12 px-4 md:px-6">

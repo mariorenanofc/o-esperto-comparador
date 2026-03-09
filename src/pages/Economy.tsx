@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
+import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -178,6 +179,7 @@ const Economy: React.FC = () => {
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-background to-green-50/30 dark:from-gray-900 dark:via-background dark:to-emerald-950/20">
+        <SEOHead {...pageSEOConfigs.economy} />
         <Navbar />
         
         {/* Hero Header */}
