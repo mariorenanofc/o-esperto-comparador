@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
 import DailyOffersSection from "@/components/DailyOffersSection";
 import { RegionalRanking } from "@/components/ranking/RegionalRanking";
 import { Card, CardContent } from "@/components/ui/card";
