@@ -100,19 +100,21 @@ function App() {
   }
   return (
     <ErrorBoundaryWithRetry context={{ component: 'App', feature: 'root' }}>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <SecurityProvider sessionTimeoutMinutes={120}>
-              <SubscriptionProvider>
-                <Router>
-                  <AppWithHooks />
-                </Router>
-              </SubscriptionProvider>
-            </SecurityProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <SecurityProvider sessionTimeoutMinutes={120}>
+                <SubscriptionProvider>
+                  <Router>
+                    <AppWithHooks />
+                  </Router>
+                </SubscriptionProvider>
+              </SecurityProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </HelmetProvider>
     </ErrorBoundaryWithRetry>
   );
 }
