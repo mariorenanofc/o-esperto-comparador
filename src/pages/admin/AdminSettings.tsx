@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Database, Bell, Mail, Globe } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { DbUsageCard } from "@/components/admin/DbUsageCard";
 
 const AdminSettings: React.FC = () => {
-  const { toast } = useToast();
   const [settings, setSettings] = useState({
     siteName: "EconomiaCerta",
     maintenanceMode: false,
@@ -21,10 +20,7 @@ const AdminSettings: React.FC = () => {
   });
 
   const handleSaveSettings = () => {
-    toast({
-      title: "Configurações salvas",
-      description: "As configurações foram atualizadas com sucesso",
-    });
+    toast.success("Configurações salvas", { description: "As configurações foram atualizadas com sucesso" });
   };
 
   const handleToggle = (key: string) => {

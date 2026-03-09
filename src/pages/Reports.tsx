@@ -2,11 +2,13 @@ import React from "react";
 import Navbar from "@/components/Navbar";
 import MonthlyReport from "@/components/MonthlyReport";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
 
 const Reports: React.FC = () => {
   return (
     <ProtectedRoute fallbackMessage="Você precisa estar logado para visualizar seus relatórios.">
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900/20">
+        <SEOHead {...pageSEOConfigs.reports} />
         <Navbar />
         <div className="container mx-auto py-6 sm:py-8 md:py-12 px-3 sm:px-4 md:px-6">
           <div className="text-center mb-6 sm:mb-8 md:mb-12">

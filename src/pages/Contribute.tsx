@@ -2,10 +2,12 @@ import React from "react";
 import Navbar from "@/components/Navbar";
 import ContributionSection from "@/components/ContributionSection";
 import { HandHeart } from "lucide-react";
+import { SEOHead, pageSEOConfigs } from "@/components/seo/SEOHead";
 
 const Contribute: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900/20">
+      <SEOHead {...pageSEOConfigs.contribute} />
       <Navbar />
       <div className="container mx-auto py-6 md:py-8 px-4 md:px-6">
         {/* Header com gradiente */}
