@@ -37,6 +37,7 @@ const Alerts = React.lazy(() => import("@/pages/Alerts"));
 const SmartList = React.lazy(() => import("@/pages/SmartList"));
 const Gamification = React.lazy(() => import("@/pages/Gamification"));
 const ApiDocs = React.lazy(() => import("@/pages/ApiDocs"));
+const Search = React.lazy(() => import("@/pages/Search"));
 
 // Direct imports for always-visible components
 import { AdminLayout } from "@/components/admin/AdminLayout";
